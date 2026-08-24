@@ -1,4 +1,4 @@
-# 🎓 A.L.T.E.R. — "University in a Box" AI Learning Engine
+# 🎓 Altor — "University in a Box" AI Learning Engine
 
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
@@ -6,11 +6,11 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-purple?style=flat-square)](https://web.dev/progressive-web-apps/)
 
-> An autonomous self-education web and mobile application inspired by Sandeep Swadia's **A.L.T.E.R. Framework** (*"How To Become Dangerously Self-Educated With AI"*).
+> **Altor** *(Latin: "The Cultivator and Fosterer of the Mind")* is an autonomous self-education web and mobile application inspired by the **A.L.T.E.R. Framework** (*"How To Become Dangerously Self-Educated With AI"*).
 
 ---
 
-## 🏛️ The 5 A.L.T.E.R. Pillars
+## 🏛️ The 5 A.L.T.E.R. Pillars in Altor
 
 - **🎓 A — Academic Advisor**: Builds custom multi-phase roadmaps, milestone projects, and the essential **Cut List** (what to explicitly skip to avoid tutorial hell and cognitive fatigue).
 - **📚 L — Master Librarian**: Filters 99% of Internet noise to curate the top 1% seminal books, papers, and lectures, backed by a persistent Grounded Knowledge Vault.
@@ -24,7 +24,7 @@
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/YOUR_USERNAME/alter-app.git
+git clone https://github.com/AW-Creates/alter-app.git
 cd alter-app
 npm install
 ```
@@ -43,17 +43,11 @@ The app runs out-of-the-box with built-in interactive demo simulations. To unloc
 
 ---
 
-## 🌐 1-Click Deployment
+## 🌐 1-Click Deployment (Netlify & Vercel)
 
 ### Netlify
-1. Run `npm run build`.
-2. Drag and drop the `dist/` directory into [Netlify Drop](https://app.netlify.com/drop).
-3. Your app is live with free SSL!
-
-### Vercel
-```bash
-npx vercel
-```
+1. Connect your GitHub repository `AW-Creates/alter-app` to Netlify.
+2. Netlify will automatically detect `netlify.toml` and deploy with continuous updates!
 
 ---
 
@@ -65,7 +59,7 @@ Open the deployed site on Android Chrome or iOS Safari and tap **"Add to Home Sc
 ### Native Android APK (Capacitor):
 ```bash
 npm install @capacitor/core @capacitor/cli @capacitor/android
-npx cap init "ALTER" "com.alter.university" --web-dir "dist"
+npx cap init "Altor" "com.altor.university" --web-dir "dist"
 npx cap add android
 npx cap open android
 ```

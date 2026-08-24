@@ -50,7 +50,7 @@ export const AppContent: React.FC = () => {
             <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
               <Compass className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-100">Welcome to A.L.T.E.R.</h2>
+            <h2 className="text-2xl font-bold text-slate-100">Welcome to Altor</h2>
             <p className="text-sm text-slate-400 max-w-md">
               Create your first learning journey to unleash your personal AI University in a Box.
             </p>
@@ -65,7 +65,7 @@ export const AppContent: React.FC = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation Bar (Thumb-friendly for Android / iOS) */}
+      {/* Mobile Bottom Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-1.5 shadow-2xl">
         <div className="grid grid-cols-5 gap-1">
           {mobileNavItems.map((item) => {

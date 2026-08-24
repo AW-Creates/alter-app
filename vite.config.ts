@@ -8,10 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'A.L.T.E.R. — University in a Box',
-        short_name: 'A.L.T.E.R.',
+        name: 'Altor — University in a Box',
+        short_name: 'Altor',
         description: 'Master any discipline autonomously using the 5 AI pillars: Advisor, Librarian, Tutor, Editor, and Roommate.',
         theme_color: '#0f172a',
         background_color: '#0f172a',

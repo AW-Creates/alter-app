@@ -85,7 +85,7 @@ export const Navbar: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `alter-university-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `altor-university-backup-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -125,7 +125,7 @@ export const Navbar: React.FC = () => {
               </div>
               <div className="hidden sm:block">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-base tracking-tight text-white">A.L.T.E.R.</span>
+                  <span className="font-extrabold text-base tracking-tight text-white">Altor</span>
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-sky-400 px-1.5 py-0.5 rounded border border-slate-700">
                     Univ
                   </span>
