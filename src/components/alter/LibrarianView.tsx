@@ -111,7 +111,7 @@ export const LibrarianView: React.FC = () => {
       ...prev,
       librarianData: {
         ...prev.librarianData,
-        groundedNotes: [newNote, ...prev.librarianData.groundedNotes]
+        groundedNotes: [newNote, ...(prev.librarianData.groundedNotes || prev.librarianData.vaultNotes || [])]
       }
     }));
 
