@@ -76,9 +76,9 @@ export interface ConceptCard {
 
 export interface LibrarianData {
   sources: CuratedSource[];
-  groundedNotes: VaultNote[];
+  groundedNotes?: VaultNote[];
   vaultNotes?: VaultNote[];
-  flashcards: ConceptCard[];
+  flashcards?: ConceptCard[];
   conceptCards?: ConceptCard[];
   chatHistory: ChatMessage[];
 }

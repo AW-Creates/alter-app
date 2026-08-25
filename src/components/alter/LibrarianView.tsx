@@ -31,6 +31,8 @@ export const LibrarianView: React.FC = () => {
   if (!activeJourney) return null;
 
   const { librarianData } = activeJourney;
+  const groundedNotes = librarianData.groundedNotes || librarianData.vaultNotes || [];
+  const flashcards = librarianData.flashcards || librarianData.conceptCards || [];
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,14 +175,14 @@ export const LibrarianView: React.FC = () => {
             className={`subtab ${activeSubTab === 'notes' ? 'active' : ''}`}
           >
             <FileText className="w-4 h-4" />
-            <span>Grounded notes ({librarianData.groundedNotes.length})</span>
+            <span>Grounded notes ({groundedNotes.length})</span>
           </button>
           <button
             onClick={() => setActiveSubTab('models')}
             className={`subtab ${activeSubTab === 'models' ? 'active' : ''}`}
           >
             <Lightbulb className="w-4 h-4" />
-            <span>Mental models ({librarianData.flashcards.length})</span>
+            <span>Mental models ({flashcards.length})</span>
           </button>
         </div>
 
@@ -290,7 +292,7 @@ export const LibrarianView: React.FC = () => {
               </form>
             )}
 
-            {librarianData.groundedNotes.map((note) => (
+            {groundedNotes.map((note) => (
               <div key={note.id} className="altor-card space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-[15px] text-white m-0">{note.title}</h4>
@@ -317,7 +319,7 @@ export const LibrarianView: React.FC = () => {
         {/* Tab 3: Mental Models Flashcards */}
         {activeSubTab === 'models' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {librarianData.flashcards.map((card) => (
+            {flashcards.map((card) => (
               <div key={card.id} className="altor-card space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono uppercase text-[var(--accent)]">
@@ -325,9 +327,9 @@ export const LibrarianView: React.FC = () => {
                   </span>
                   <span className="text-[10px] font-mono text-white/30">Mastery Card</span>
                 </div>
-                <h4 className="font-semibold text-white text-sm m-0">{card.front}</h4>
+                <h4 className="font-semibold text-white text-sm m-0">{card.front || card.term}</h4>
                 <p className="text-xs text-white/60 leading-relaxed m-0 border-t border-white/[0.07] pt-2">
-                  {card.back}
+                  {card.back || card.definition || card.mentalModel}
                 </p>
               </div>
             ))}
