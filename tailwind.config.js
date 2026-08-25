@@ -8,20 +8,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        void: '#04050a',
-        'surface-1': '#0a0d16',
-        'surface-2': '#0e131f',
-        'surface-3': '#131a29',
-        advisor: '#5eb8f5',
-        librarian: '#2dd4bf',
-        tutor: '#5fdb9e',
-        editor: '#eab054',
-        roommate: '#ee7fb8',
+        brand: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49',
+        },
+        // Persona accents — used as accents/glows, not fill colors. Kept
+        // slightly desaturated for a premium feel rather than neon.
+        advisor: '#5eb8f5',   // Sky blue
+        librarian: '#2dd4bf', // Teal (was too close to advisor's blue before)
+        tutor: '#5fdb9e',     // Emerald / mint
+        editor: '#eab054',    // Amber / gold
+        roommate: '#ee7fb8',  // Rose / pink
+        // Elevation scale — layered surfaces instead of one flat panel color
+        surface: {
+          void: '#04050a',
+          1: '#0a0d16',
+          2: '#0e131f',
+          3: '#131a29',
+        },
+        hairline: 'rgba(255,255,255,0.07)',
+        'hairline-strong': 'rgba(255,255,255,0.13)',
       },
       fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
         display: ['Fraunces', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       boxShadow: {
         card: '0 1px 2px rgba(0,0,0,0.4), 0 12px 32px -12px rgba(0,0,0,0.55)',

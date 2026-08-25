@@ -1,213 +1,239 @@
 import React, { useState } from 'react';
 import { useJourney } from '../../context/JourneyContext';
-import { X, Sparkles, Compass, Clock, Target, Layers, ArrowRight, Loader2 } from 'lucide-react';
 import { generateCurriculumWithAI, generateSourcesWithAI } from '../../services/gemini';
-import { defaultAdvisor, defaultLibrarian, defaultTutor, defaultEditor, defaultRoommate } from '../../types/alter';
+import {
+  Sparkles,
+  X,
+  Target,
+  Compass,
+  Clock,
+  Layers,
+  ArrowRight,
+  Loader2
+} from 'lucide-react';
 
 export const CreateJourneyModal: React.FC = () => {
-  const { isCreateModalOpen, setIsCreateModalOpen, addJourney } = useJourney();
+  const { isCreateModalOpen, setIsCreateModalOpen, createJourney, updateActiveJourney } = useJourney();
 
   const [topic, setTopic] = useState('');
   const [destination, setDestination] = useState('');
   const [baseline, setBaseline] = useState('');
-  const [hoursPerWeek, setHoursPerWeek] = useState(10);
-  const [depth, setDepth] = useState<'survey' | 'applied' | 'expert' | 'researcher'>('applied');
+  const [hoursPerWeek, setHoursPerWeek] = useState(8);
+  const [depth, setDepth] = useState<'foundational' | 'practitioner' | 'expert' | 'researcher'>('practitioner');
   const [isGenerating, setIsGenerating] = useState(false);
 
   if (!isCreateModalOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic.trim() || !destination.trim() || isGenerating) return;
+    if (!topic.trim() || !destination.trim()) return;
 
     setIsGenerating(true);
 
     try {
-      // 1. Generate curriculum & cut list from Advisor
-      const generatedAdvisor = await generateCurriculumWithAI(
-        topic,
-        destination,
-        baseline || 'Beginner with basic intuition',
+      // 1. Create the Journey locally
+      const journey = createJourney({
+        title: topic.trim(),
+        topic: topic.trim(),
+        destination: destination.trim(),
+        baseline: baseline.trim() || 'General curiosity and beginner fundamentals.',
+        hoursPerWeek,
+        depth
+      });
+
+      // 2. Generate custom Curriculum + Cut List via Advisor AI
+      const advisorData = await generateCurriculumWithAI(
+        topic.trim(),
+        destination.trim(),
+        baseline.trim() || 'Beginner fundamentals',
         hoursPerWeek,
         depth
       );
 
-      // 2. Generate curated top 1% sources from Librarian
-      const generatedSources = await generateSourcesWithAI(
-        topic,
-        destination,
-        baseline || 'Beginner'
+      // 3. Generate High-Signal Curated Sources via Librarian AI
+      const initialSources = await generateSourcesWithAI(
+        topic.trim(),
+        destination.trim(),
+        baseline.trim() || 'Beginner fundamentals'
       );
 
-      const newJourney = {
-        id: 'journey_' + Date.now(),
-        title: topic.trim(),
-        topic: topic.trim(),
-        destination: destination.trim(),
-        baseline: baseline.trim() || 'Foundational intuition',
-        hoursPerWeek,
-        depth,
-        createdAt: new Date().toISOString(),
-        lastActive: new Date().toISOString(),
-        streakDays: 1,
-        advisorData: generatedAdvisor,
-        librarianData: {
-          ...defaultLibrarian,
-          sources: generatedSources
+      // 4. Update the newly created journey
+      updateActiveJourney((prev) => ({
+        ...prev,
+        advisorData: {
+          ...advisorData,
+          chatHistory: [
+            {
+              id: `msg-${Date.now()}`,
+              sender: 'assistant',
+              persona: 'advisor',
+              content: `Welcome to **${topic}**! I've engineered your ${advisorData.estimatedWeeks}-week modular curriculum and locked in your **Cut List**. Check out Phase 1 below to begin.`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+          ]
         },
-        tutorData: defaultTutor,
-        editorData: defaultEditor,
-        roommateData: defaultRoommate
-      };
+        librarianData: {
+          ...prev.librarianData,
+          sources: initialSources
+        }
+      }));
 
-      addJourney(newJourney);
       setIsCreateModalOpen(false);
-
-      // Reset
+      // Reset fields
       setTopic('');
       setDestination('');
       setBaseline('');
-    } catch (err: any) {
-      console.error('Failed to create journey', err);
-      alert('Journey created using standard templates. ' + (err.message || ''));
+    } catch (err) {
+      console.error('Failed to generate journey', err);
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-xl bg-[var(--surface-2)] border border-white/[0.13] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.07] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center text-[var(--accent)] font-display font-semibold">
-              A
-            </div>
-            <div>
-              <h3 className="text-lg font-display font-semibold text-white m-0">
-                Design New Learning Journey
-              </h3>
-              <p className="text-xs text-white/50 m-0 mt-0.5">
-                Altor AI will construct your roadmap, cut list &amp; top 1% library
-              </p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-void/85 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-surface-2 border border-hairline shadow-lift p-6 md:p-8 my-8">
+        <button
+          onClick={() => !isGenerating && setIsCreateModalOpen(false)}
+          disabled={isGenerating}
+          className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 p-1.5 rounded-lg hover:bg-white/[0.05] transition disabled:opacity-50"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-surface-3 to-surface-1 border border-hairline-strong flex items-center justify-center text-advisor shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <Sparkles className="w-5 h-5" />
           </div>
-          <button
-            onClick={() => setIsCreateModalOpen(false)}
-            className="p-1.5 text-white/40 hover:text-white rounded-lg hover:bg-white/[0.05] transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div>
+            <h2 className="font-display text-xl font-semibold text-slate-100">Create a new learning journey</h2>
+            <p className="text-xs text-slate-500">
+              Your AI Advisor will generate a tailored curriculum, milestones, and a strict <span className="text-advisor font-semibold">Cut List</span>.
+            </p>
+          </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Topic */}
           <div>
-            <label className="block text-xs font-semibold text-white/80 mb-1.5 flex items-center gap-1.5">
-              <Compass className="w-3.5 h-3.5 text-[var(--advisor)]" />
-              <span>What do you want to master? (Topic)</span>
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+              <Compass className="w-3.5 h-3.5 text-advisor" />
+              What discipline or skill do you want to master?
             </label>
             <input
               type="text"
-              placeholder="e.g. Distributed Systems Architecture, Quantum Computing, Neuroscience..."
+              required
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-3 outline-none"
-              required
+              placeholder="e.g. Distributed Systems Architecture, Classical Stoicism, Fullstack React & AI..."
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
             />
           </div>
 
+          {/* Destination */}
           <div>
-            <label className="block text-xs font-semibold text-white/80 mb-1.5 flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-[var(--tutor)]" />
-              <span>Target Destination (Proof of Work / Concrete Goal)</span>
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+              <Target className="w-3.5 h-3.5 text-tutor" />
+              What is your target destination? (proof of mastery)
             </label>
-            <input
-              type="text"
-              placeholder="e.g. Build an autonomous agent framework from scratch and deploy to AWS"
+            <textarea
+              required
+              rows={2}
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-3 outline-none"
-              required
+              placeholder="e.g. Build and deploy a multi-node Raft consensus cluster, write an authoritative essay series, or launch a SaaS..."
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
             />
           </div>
 
+          {/* Baseline */}
           <div>
-            <label className="block text-xs font-semibold text-white/80 mb-1.5 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-[var(--editor)]" />
-              <span>Current Knowledge Baseline</span>
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+              <Layers className="w-3.5 h-3.5 text-editor" />
+              Current baseline knowledge
             </label>
             <input
               type="text"
-              placeholder="e.g. Intermediate Python programmer, but zero experience with multi-agent orchestration"
               value={baseline}
               onChange={(e) => setBaseline(e.target.value)}
-              className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-3 outline-none"
+              placeholder="e.g. Comfortable with basic Python and networking fundamentals, but zero distributed state experience..."
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Hours & Depth Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             <div>
-              <label className="block text-xs font-semibold text-white/80 mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[var(--librarian)]" />
-                <span>Time Budget: {hoursPerWeek} hrs/week</span>
+              <label className="flex items-center justify-between text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-advisor" />
+                  Time commitment
+                </span>
+                <span className="text-advisor font-semibold">{hoursPerWeek} hrs/week</span>
               </label>
               <input
                 type="range"
                 min="2"
-                max="40"
-                step="2"
+                max="30"
+                step="1"
                 value={hoursPerWeek}
                 onChange={(e) => setHoursPerWeek(Number(e.target.value))}
-                className="w-full accent-[var(--accent)] cursor-pointer"
+                className="w-full accent-advisor bg-surface-1 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-mono text-white/30 mt-1">
-                <span>2 hrs (Casual)</span>
-                <span>20 hrs (Deep)</span>
-                <span>40 hrs (Full-time)</span>
+              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                <span>Light (2h)</span>
+                <span>Standard (8h)</span>
+                <span>Intensive (20h+)</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-white/80 mb-1.5">
-                Target Depth Level
+              <label className="block text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+                Target depth level
               </label>
-              <select
-                value={depth}
-                onChange={(e) => setDepth(e.target.value as any)}
-                className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-3 outline-none capitalize cursor-pointer"
-              >
-                <option value="survey">Survey (Broad Mental Models)</option>
-                <option value="applied">Applied (Production / Builder)</option>
-                <option value="expert">Expert (First-Principles Mastery)</option>
-                <option value="researcher">Researcher (State-of-the-Art)</option>
-              </select>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(['foundational', 'practitioner', 'expert', 'researcher'] as const).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDepth(d)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize border transition ${
+                      depth === d
+                        ? 'bg-advisor/16 border-advisor/40 text-advisor'
+                        : 'bg-surface-1 border-hairline text-slate-400 hover:border-hairline-strong'
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/[0.07] flex justify-end gap-3">
+          {/* Footer Actions */}
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-hairline">
             <button
               type="button"
+              disabled={isGenerating}
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 text-xs text-white/50 hover:text-white transition"
+              className="px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition disabled:opacity-50 w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isGenerating || !topic.trim() || !destination.trim()}
-              className="accent-btn py-2.5 px-6"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold bg-advisor hover:brightness-110 text-slate-950 transition disabled:opacity-50 cursor-pointer w-full sm:w-auto"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Synthesizing University Blueprint...</span>
+                  <span>Synthesizing university in a box...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Generate Curriculum &amp; Faculty</span>
+                  <span>Launch journey</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>

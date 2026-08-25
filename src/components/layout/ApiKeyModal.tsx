@@ -1,113 +1,120 @@
 import React, { useState } from 'react';
 import { useJourney } from '../../context/JourneyContext';
-import { X, Key, ShieldCheck, ExternalLink, Sparkles } from 'lucide-react';
+import { Key, Check, ShieldCheck, Sparkles, X, ExternalLink } from 'lucide-react';
 
 export const ApiKeyModal: React.FC = () => {
-  const { isApiKeyModalOpen, setIsApiKeyModalOpen, apiKey, setApiKey } = useJourney();
-  const [inputKey, setInputKey] = useState(apiKey || '');
-  const [showKey, setShowKey] = useState(false);
+  const { apiKey, setApiKey, isApiKeyModalOpen, setIsApiKeyModalOpen } = useJourney();
+  const [inputKey, setInputKey] = useState(apiKey);
+  const [saved, setSaved] = useState(false);
 
   if (!isApiKeyModalOpen) return null;
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiKey(inputKey.trim() || null);
-    setIsApiKeyModalOpen(false);
+  const handleSave = () => {
+    setApiKey(inputKey.trim());
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+      setIsApiKeyModalOpen(false);
+    }, 600);
   };
 
-  const handleRemove = () => {
-    setApiKey(null);
+  const handleClear = () => {
     setInputKey('');
-    setIsApiKeyModalOpen(false);
+    setApiKey('');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-[var(--surface-2)] border border-white/[0.13] rounded-2xl p-6 sm:p-7 shadow-2xl space-y-5">
-        <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[rgba(95,219,158,0.1)] border border-[rgba(95,219,158,0.25)] flex items-center justify-center text-[var(--tutor)]">
-              <Key className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-base text-white m-0">Gemini AI Settings</h3>
-              <p className="text-[11px] text-white/50 m-0">Unlock live generative intelligence</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 md:p-8">
+        <button
+          onClick={() => setIsApiKeyModalOpen(false)}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+            <Key className="w-5 h-5" />
           </div>
-          <button
-            onClick={() => setIsApiKeyModalOpen(false)}
-            className="p-1 text-white/40 hover:text-white rounded-lg hover:bg-white/[0.05] transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-100">Google Gemini API Setup</h2>
+            <p className="text-xs text-slate-400">Connect your free Gemini API key to power all 5 A.L.T.E.R. personas</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-white/80 mb-1.5">
-              Google Gemini API Key
-            </label>
-            <div className="relative">
-              <input
-                type={showKey ? 'text' : 'password'}
-                value={inputKey}
-                onChange={(e) => setInputKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-2.5 pr-16 outline-none font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-white/40 hover:text-white font-mono"
-              >
-                {showKey ? 'HIDE' : 'SHOW'}
-              </button>
+        <div className="space-y-4">
+          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 text-xs text-slate-300 space-y-2">
+            <div className="flex items-center gap-2 text-sky-400 font-semibold">
+              <ShieldCheck className="w-4 h-4" />
+              <span>100% Client-Side & Private</span>
             </div>
-          </div>
-
-          <div className="rounded-xl bg-[var(--surface-1)] border border-white/[0.07] p-3 text-xs text-white/60 space-y-2">
-            <div className="flex items-center gap-1.5 text-[var(--tutor)] font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>100% Client-Side Privacy</span>
-            </div>
-            <p className="text-[11.5px] leading-relaxed m-0">
-              Your API key is stored strictly in your browser's local storage and is sent directly to Google Gemini APIs. It never touches our servers.
+            <p>
+              Your API key is saved directly in your browser's <code className="text-sky-300">localStorage</code>. It is never sent to any intermediary server.
             </p>
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-[var(--accent)] hover:underline pt-1"
-            >
-              <span>Get a free API key at Google AI Studio</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            <div className="pt-2 flex items-center justify-between border-t border-slate-800/60">
+              <span className="text-slate-400">Don't have a key?</span>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-medium underline"
+              >
+                Get a free key from Google AI Studio
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           </div>
 
-          <div className="pt-2 flex justify-between items-center">
-            {apiKey && (
+          <div>
+            <label className="block text-[11px] font-mono text-slate-500 mb-1.5 uppercase tracking-wider">
+              Gemini API key
+            </label>
+            <input
+              type="password"
+              value={inputKey}
+              onChange={(e) => setInputKey(e.target.value)}
+              placeholder="AIzaSy..."
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-mono transition"
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <button
+              onClick={handleClear}
+              type="button"
+              className="text-xs text-slate-400 hover:text-rose-400 transition"
+            >
+              Clear & Use Demo Mode
+            </button>
+            <div className="flex items-center gap-2">
               <button
-                type="button"
-                onClick={handleRemove}
-                className="text-xs text-rose-400 hover:text-rose-300 transition"
-              >
-                Disconnect Key
-              </button>
-            )}
-            <div className="flex gap-2 ml-auto">
-              <button
-                type="button"
                 onClick={() => setIsApiKeyModalOpen(false)}
-                className="px-3 py-1.5 text-xs text-white/50 hover:text-white transition"
+                type="button"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
               >
                 Cancel
               </button>
-              <button type="submit" className="accent-btn text-xs py-1.5 px-4">
-                Save &amp; Connect
+              <button
+                onClick={handleSave}
+                type="button"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-lg shadow-sky-500/20 transition"
+              >
+                {saved ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Saved!
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Save & Activate
+                  </>
+                )}
               </button>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
