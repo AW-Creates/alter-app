@@ -66,8 +66,8 @@ export interface VaultNote {
 
 export interface ConceptCard {
   id: string;
-  front: string;
-  back: string;
+  front?: string;
+  back?: string;
   term?: string;
   definition?: string;
   mentalModel?: string;

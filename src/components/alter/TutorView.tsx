@@ -91,8 +91,8 @@ export const TutorView: React.FC = () => {
     setUserAnswers({});
     setShowResults(false);
     try {
-      const questions = await generateQuizWithAI(activeJourney.topic, 'Core First Principles & Invariants');
-      setQuizQuestions(questions);
+      const quiz = await generateQuizWithAI(activeJourney.topic, 'Core First Principles & Invariants');
+      setQuizQuestions(quiz.questions || []);
     } catch (err) {
       console.error('Quiz generation failed', err);
     } finally {

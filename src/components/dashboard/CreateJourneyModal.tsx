@@ -48,6 +48,7 @@ export const CreateJourneyModal: React.FC = () => {
         hoursPerWeek,
         depth,
         createdAt: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
         streakDays: 1,
         advisorData: generatedAdvisor,
         librarianData: {
