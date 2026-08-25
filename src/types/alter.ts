@@ -41,6 +41,8 @@ export interface AdvisorData {
   chatHistory: ChatMessage[];
 }
 
+export type ReadingStatus = 'unread' | 'reading' | 'mastered' | 'in_progress';
+
 export interface CuratedSource {
   id: string;
   type: 'book' | 'paper' | 'lecture' | 'doc' | 'case_study' | 'podcast';
@@ -50,7 +52,7 @@ export interface CuratedSource {
   signalScore: number; // 1-10
   whyEssential: string;
   keyTakeaway: string;
-  status: 'unread' | 'in_progress' | 'mastered';
+  status: ReadingStatus;
 }
 
 export interface VaultNote {
@@ -58,39 +60,47 @@ export interface VaultNote {
   title: string;
   content: string;
   tags: string[];
+  sourceReferences?: string[];
   createdAt: string;
 }
 
 export interface ConceptCard {
   id: string;
-  term: string;
-  definition: string;
-  mentalModel: string;
-  pitfall: string;
+  front?: string;
+  back?: string;
+  term?: string;
+  definition?: string;
+  mentalModel?: string;
+  pitfall?: string;
 }
 
 export interface LibrarianData {
   sources: CuratedSource[];
-  vaultNotes: VaultNote[];
-  conceptCards: ConceptCard[];
+  groundedNotes?: VaultNote[];
+  vaultNotes?: VaultNote[];
+  flashcards?: ConceptCard[];
+  conceptCards?: ConceptCard[];
   chatHistory: ChatMessage[];
 }
 
-export interface FeynmanSession {
-  id: string;
-  concept: string;
-  userExplanation: string;
-  clarityScore: number; // 0-100
-  accuracyScore: number; // 0-100
+export interface FeynmanEvaluation {
+  clarityScore: number;
+  accuracyScore: number;
   strengths: string[];
   blindSpots: string[];
   simplifiedAnalogy: string;
   tutorFeedback: string;
+}
+
+export interface FeynmanSession extends FeynmanEvaluation {
+  id: string;
+  concept: string;
+  userExplanation: string;
   date: string;
 }
 
 export interface QuizQuestion {
-  id: string;
+  id?: string;
   question: string;
   options: string[];
   correctIndex: number;
@@ -113,17 +123,13 @@ export interface TutorData {
 }
 
 export interface RedlineEdit {
-  id: string;
+  id?: string;
   originalText: string;
   improvedText: string;
   critiqueReason: string;
 }
 
-export interface EditorReview {
-  id: string;
-  title: string;
-  submittedDraft: string;
-  mode: 'logic' | 'clarity' | 'steelman' | 'first_principles';
+export interface TextCritique {
   overallScore: number; // 0-100
   verdict: string;
   strengths: string[];
@@ -131,6 +137,13 @@ export interface EditorReview {
   counterarguments: string[];
   redlines: RedlineEdit[];
   revisedVersion: string;
+}
+
+export interface EditorReview extends TextCritique {
+  id: string;
+  title: string;
+  submittedDraft: string;
+  mode: 'logic' | 'clarity' | 'steelman' | 'first_principles';
   date: string;
 }
 
@@ -160,7 +173,7 @@ export interface LearningJourney {
   destination: string; // Target outcome / mastery goal
   baseline: string; // Current knowledge level
   hoursPerWeek: number;
-  depth: 'foundational' | 'practitioner' | 'expert' | 'researcher';
+  depth: 'survey' | 'applied' | 'expert' | 'researcher' | 'foundational' | 'practitioner';
   createdAt: string;
   lastActive: string;
   streakDays: number;
