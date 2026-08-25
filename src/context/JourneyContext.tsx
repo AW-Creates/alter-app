@@ -17,9 +17,10 @@ interface JourneyContextType {
   isCreateModalOpen: boolean;
   setActiveJourneyId: (id: string) => void;
   setActivePersona: (persona: AlterPersona) => void;
-  setApiKey: (key: string) => void;
+  setApiKey: (key: string | null) => void;
   setIsApiKeyModalOpen: (open: boolean) => void;
   setIsCreateModalOpen: (open: boolean) => void;
+  addJourney: (journey: LearningJourney) => void;
   createJourney: (journey: Omit<LearningJourney, 'id' | 'createdAt' | 'lastActive' | 'streakDays' | 'advisorData' | 'librarianData' | 'tutorData' | 'editorData' | 'roommateData'>) => LearningJourney;
   updateActiveJourney: (updater: (prev: LearningJourney) => LearningJourney) => void;
   deleteJourney: (id: string) => void;
@@ -56,9 +57,18 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setStoredActiveJourneyId(id);
   };
 
-  const setApiKey = (key: string) => {
-    setApiKeyState(key);
-    setStoredApiKey(key);
+  const setApiKey = (key: string | null) => {
+    const finalKey = key || '';
+    setApiKeyState(finalKey);
+    setStoredApiKey(finalKey);
+  };
+
+  const addJourney = (journey: LearningJourney) => {
+    const updated = [journey, ...journeys];
+    setJourneys(updated);
+    setActiveJourneyIdState(journey.id);
+    setStoredActiveJourneyId(journey.id);
+    saveJourneys(updated);
   };
 
   const updateActiveJourney = (updater: (prev: LearningJourney) => LearningJourney) => {
@@ -88,15 +98,15 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
             id: `msg-${Date.now()}`,
             sender: 'assistant',
             persona: 'advisor',
-            content: `Welcome to your learning journey for **${data.topic}**! I am your Academic Advisor. Click "Generate Custom Curriculum" to formulate your study plan, milestones, and crucial **Cut List**.`,
+            content: `Welcome to your learning journey for **${data.topic}**! I am your Academic Advisor.`,
             timestamp: new Date().toLocaleTimeString()
           }
         ]
       },
       librarianData: {
         sources: [],
-        vaultNotes: [],
-        conceptCards: [],
+        groundedNotes: [],
+        flashcards: [],
         chatHistory: []
       },
       tutorData: {
@@ -115,51 +125,42 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     };
 
-    const nextJourneys = [newJourney, ...journeys];
-    setJourneys(nextJourneys);
-    saveJourneys(nextJourneys);
-    setActiveJourneyId(newId);
+    addJourney(newJourney);
     return newJourney;
   };
 
   const deleteJourney = (id: string) => {
-    const remaining = journeys.filter((j) => j.id !== id);
-    setJourneys(remaining);
-    saveJourneys(remaining);
+    const filtered = journeys.filter((j) => j.id !== id);
+    setJourneys(filtered);
+    saveJourneys(filtered);
     if (activeJourneyId === id) {
-      const nextId = remaining.length > 0 ? remaining[0].id : null;
+      const nextId = filtered[0]?.id || null;
       setActiveJourneyIdState(nextId);
       if (nextId) setStoredActiveJourneyId(nextId);
     }
   };
 
   const addChatMessage = (persona: AlterPersona, message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-    updateActiveJourney((prev) => {
-      const newMessage: ChatMessage = {
-        ...message,
-        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+    const newMsg: ChatMessage = {
+      ...message,
+      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
 
-      const clone = { ...prev };
-      switch (persona) {
-        case 'advisor':
-          clone.advisorData.chatHistory = [...clone.advisorData.chatHistory, newMessage];
-          break;
-        case 'librarian':
-          clone.librarianData.chatHistory = [...clone.librarianData.chatHistory, newMessage];
-          break;
-        case 'tutor':
-          clone.tutorData.chatHistory = [...clone.tutorData.chatHistory, newMessage];
-          break;
-        case 'editor':
-          clone.editorData.chatHistory = [...clone.editorData.chatHistory, newMessage];
-          break;
-        case 'roommate':
-          clone.roommateData.chatHistory = [...clone.roommateData.chatHistory, newMessage];
-          break;
+    updateActiveJourney((prev) => {
+      const updated = { ...prev };
+      if (persona === 'advisor') {
+        updated.advisorData.chatHistory = [...updated.advisorData.chatHistory, newMsg];
+      } else if (persona === 'librarian') {
+        updated.librarianData.chatHistory = [...updated.librarianData.chatHistory, newMsg];
+      } else if (persona === 'tutor') {
+        updated.tutorData.chatHistory = [...updated.tutorData.chatHistory, newMsg];
+      } else if (persona === 'editor') {
+        updated.editorData.chatHistory = [...updated.editorData.chatHistory, newMsg];
+      } else if (persona === 'roommate') {
+        updated.roommateData.chatHistory = [...updated.roommateData.chatHistory, newMsg];
       }
-      return clone;
+      return updated;
     });
   };
 
@@ -177,6 +178,7 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setApiKey,
         setIsApiKeyModalOpen,
         setIsCreateModalOpen,
+        addJourney,
         createJourney,
         updateActiveJourney,
         deleteJourney,
