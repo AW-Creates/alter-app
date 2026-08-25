@@ -8,28 +8,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
-        },
-        advisor: '#6366f1',   // Indigo
-        librarian: '#0ea5e9', // Sky/Cyan
-        tutor: '#10b981',     // Emerald
-        editor: '#f59e0b',    // Amber
-        roommate: '#ec4899',  // Pink/Rose
+        void: '#04050a',
+        'surface-1': '#0a0d16',
+        'surface-2': '#0e131f',
+        'surface-3': '#131a29',
+        advisor: '#5eb8f5',
+        librarian: '#2dd4bf',
+        tutor: '#5fdb9e',
+        editor: '#eab054',
+        roommate: '#ee7fb8',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(0,0,0,0.4), 0 12px 32px -12px rgba(0,0,0,0.55)',
+        lift: '0 1px 1px rgba(0,0,0,0.5), 0 24px 48px -20px rgba(0,0,0,0.65)',
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

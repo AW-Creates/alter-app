@@ -3,74 +3,56 @@ import { useJourney } from '../../context/JourneyContext';
 import {
   FileEdit,
   Send,
-  Loader2,
   Sparkles,
   ShieldCheck,
-  AlertOctagon,
+  AlertCircle,
   Copy,
   Check,
-  Flame,
-  ArrowRight,
-  Split,
-  MessageSquare
+  Loader2
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { chatWithPersona, critiqueTextWithAI } from '../../services/gemini';
-import { EditorReview } from '../../types/alter';
+import { TextCritique } from '../../types/alter';
 
 export const EditorView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage } = useJourney();
   const [draftText, setDraftText] = useState('');
   const [critiqueMode, setCritiqueMode] = useState<'logic' | 'clarity' | 'steelman' | 'first_principles'>('logic');
   const [isCritiquing, setIsCritiquing] = useState(false);
-  const [currentReview, setCurrentReview] = useState<EditorReview | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [critiqueResult, setCritiqueResult] = useState<TextCritique | null>(null);
 
   // Chat state
-  const [inputText, setInputText] = useState('');
-  const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   if (!activeJourney) return null;
 
   const { editorData } = activeJourney;
 
-  const handleCritique = async (e: React.FormEvent) => {
+  const handleRunCritique = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draftText.trim()) return;
+    if (!draftText.trim() || isCritiquing) return;
 
     setIsCritiquing(true);
     try {
-      const review = await critiqueTextWithAI(draftText.trim(), critiqueMode);
-      setCurrentReview(review);
-      updateActiveJourney((prev) => ({
-        ...prev,
-        editorData: {
-          ...prev.editorData,
-          reviews: [review, ...prev.editorData.reviews]
-        }
-      }));
+      const result = await critiqueTextWithAI(draftText, critiqueMode);
+      setCritiqueResult(result);
     } catch (err) {
-      console.error('Failed to critique draft', err);
+      console.error('Critique failed', err);
     } finally {
       setIsCritiquing(false);
     }
   };
 
-  const handleCopyRevised = () => {
-    if (!currentReview) return;
-    navigator.clipboard.writeText(currentReview.revisedVersion);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || isLoadingChat) return;
+    if (!chatInput.trim() || isChatLoading) return;
 
-    const userMsg = inputText.trim();
-    setInputText('');
+    const userMsg = chatInput.trim();
+    setChatInput('');
     addChatMessage('editor', { sender: 'user', content: userMsg, persona: 'editor' });
-    setIsLoadingChat(true);
+    setIsChatLoading(true);
 
     try {
       const history = editorData.chatHistory.map((m) => ({
@@ -83,265 +65,246 @@ export const EditorView: React.FC = () => {
     } catch (err: any) {
       addChatMessage('editor', {
         sender: 'assistant',
-        content: `⚠️ Error: ${err.message}`,
+        content: `⚠️ Editor error: ${err.message || 'Check connection.'}`,
         persona: 'editor'
       });
     } finally {
-      setIsLoadingChat(false);
+      setIsChatLoading(false);
     }
   };
 
-  return (
-    <div className="space-y-8 animate-fade-in max-w-6xl mx-auto pb-12">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/80 via-slate-900 to-slate-900 border border-amber-500/20 p-6 md:p-8 shadow-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2 max-w-3xl">
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-wider">
-              E — Analytical Editor & Pressure-Tester
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Rigorous Intellectual Pressure-Testing
-            </h1>
-            <p className="text-slate-300 text-xs sm:text-sm">
-              Zero sycophancy. The Editor stress-tests your writing, logic, architecture proposals, and mental models through unsparing redlines and steelmanned counterarguments.
-            </p>
-          </div>
-        </div>
-      </div>
+  const handleCopyRevised = () => {
+    if (!critiqueResult?.revisedVersion) return;
+    navigator.clipboard.writeText(critiqueResult.revisedVersion);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left Column: Draft Input & Review Results */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* Draft Input Form */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <FileEdit className="w-4 h-4 text-amber-400" />
-                <span>Submit Draft for Editorial Pressure-Test</span>
-              </h3>
+  const quickPrompts = [
+    "Where's the weakest logical link in my thesis?",
+    'Steelman the strongest counterargument',
+    'Rewrite this paragraph without any fluff'
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[460px_1fr] gap-[22px] items-start animate-fade-in">
+      {/* Left Column: Draft Submission & Critique */}
+      <div className="space-y-4">
+        <form onSubmit={handleRunCritique} className="altor-card">
+          <p className="card-label flex items-center gap-2 text-white">
+            <FileEdit className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>SUBMIT DRAFT FOR EDITORIAL PRESSURE-TEST</span>
+          </p>
+
+          <div className="segmented mb-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setCritiqueMode('logic')}
+              className={critiqueMode === 'logic' ? 'active' : ''}
+            >
+              Logic audit
+            </button>
+            <button
+              type="button"
+              onClick={() => setCritiqueMode('clarity')}
+              className={critiqueMode === 'clarity' ? 'active' : ''}
+            >
+              Clarity &amp; fluff
+            </button>
+            <button
+              type="button"
+              onClick={() => setCritiqueMode('steelman')}
+              className={critiqueMode === 'steelman' ? 'active' : ''}
+            >
+              Steelman counter
+            </button>
+            <button
+              type="button"
+              onClick={() => setCritiqueMode('first_principles')}
+              className={critiqueMode === 'first_principles' ? 'active' : ''}
+            >
+              1st principles
+            </button>
+          </div>
+
+          <textarea
+            value={draftText}
+            onChange={(e) => setDraftText(e.target.value)}
+            placeholder="Paste your essay paragraph, technical design proposal, architectural justification, or synthesis..."
+            rows={7}
+            className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-3.5 outline-none font-sans leading-relaxed my-3"
+            required
+          />
+
+          <button
+            type="submit"
+            disabled={isCritiquing || !draftText.trim()}
+            className="accent-btn w-full justify-center py-3"
+          >
+            {isCritiquing ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Running analytical audit...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Run editorial pressure-test</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Critique Output Card */}
+        {critiqueResult && (
+          <div className="altor-card space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
+              <span className="font-display font-semibold text-white text-base">Editorial Verdict</span>
+              <span className="font-mono text-xs px-2.5 py-1 rounded bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-[var(--accent)] font-semibold">
+                Score: {critiqueResult.overallScore}/100
+              </span>
             </div>
 
-            <form onSubmit={handleCritique} className="space-y-4">
-              {/* Critique Mode Selector */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { id: 'logic', label: 'Logic Audit' },
-                  { id: 'clarity', label: 'Clarity & Fluff' },
-                  { id: 'steelman', label: 'Steelman Counter' },
-                  { id: 'first_principles', label: '1st Principles' }
-                ].map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setCritiqueMode(m.id as any)}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-semibold border transition ${
-                      critiqueMode === m.id
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
+            <p className="text-xs text-white/80 italic m-0">"{critiqueResult.verdict}"</p>
+
+            {/* Logic Flaws */}
+            {critiqueResult.logicFlaws && critiqueResult.logicFlaws.length > 0 && (
+              <div className="space-y-1.5 text-xs">
+                <span className="font-semibold text-rose-400 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  Identified Logic Gaps &amp; Assumptions:
+                </span>
+                <ul className="list-disc list-inside space-y-1 text-white/60">
+                  {critiqueResult.logicFlaws.map((flaw, i) => (
+                    <li key={i}><span className="text-white/80">{flaw}</span></li>
+                  ))}
+                </ul>
               </div>
+            )}
 
-              <textarea
-                rows={7}
-                required
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                placeholder="Paste your essay paragraph, technical design proposal, architectural justification, or synthesis..."
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500 font-sans leading-relaxed"
-              />
+            {/* Steelmanned Counterarguments */}
+            {critiqueResult.counterarguments && critiqueResult.counterarguments.length > 0 && (
+              <div className="space-y-1.5 text-xs">
+                <span className="font-semibold text-[var(--editor)] flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Steelmanned Counterargument:
+                </span>
+                <ul className="list-disc list-inside space-y-1 text-white/60">
+                  {critiqueResult.counterarguments.map((ca, i) => (
+                    <li key={i}><span className="text-white/80">{ca}</span></li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-              <button
-                type="submit"
-                disabled={isCritiquing || !draftText.trim()}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition disabled:opacity-50"
-              >
-                {isCritiquing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Pressure-Testing Logic & Phrasing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Run Editorial Pressure-Test</span>
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* Review Results */}
-          {currentReview && (
-            <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-6 space-y-6 animate-fade-in">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-                    Editorial Verdict
-                  </span>
-                  <h3 className="text-base font-bold text-slate-100 mt-0.5">{currentReview.verdict}</h3>
-                </div>
-                <div className="text-center bg-slate-950 border border-amber-500/20 px-3.5 py-1.5 rounded-xl">
-                  <div className="text-xl font-black text-amber-400">{currentReview.overallScore}%</div>
-                  <div className="text-[10px] text-slate-400 font-semibold uppercase">Rigor Score</div>
+            {/* Redlines */}
+            {critiqueResult.redlines && critiqueResult.redlines.length > 0 && (
+              <div className="space-y-2 text-xs pt-2 border-t border-white/[0.07]">
+                <span className="font-semibold text-white">Surgical Redline Edits:</span>
+                <div className="space-y-2">
+                  {critiqueResult.redlines.map((rl, i) => (
+                    <div key={i} className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-white/[0.07] space-y-1 font-mono text-[11.5px]">
+                      <div className="text-rose-400/80 line-through">- {rl.originalText}</div>
+                      <div className="text-[var(--tutor)]">+ {rl.improvedText}</div>
+                      <div className="text-white/40 text-[10.5px] font-sans pt-1">Why: {rl.critiqueReason}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Logic Flaws & Counterarguments */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2">
-                  <h4 className="font-bold text-rose-400 flex items-center gap-1.5">
-                    <AlertOctagon className="w-4 h-4" />
-                    <span>Logic Vulnerabilities</span>
-                  </h4>
-                  <ul className="space-y-1.5 text-slate-300">
-                    {currentReview.logicFlaws.map((flaw, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5 leading-relaxed">
-                        <span className="text-rose-400">•</span>
-                        <span>{flaw}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2">
-                  <h4 className="font-bold text-amber-400 flex items-center gap-1.5">
-                    <Flame className="w-4 h-4" />
-                    <span>Steelmanned Counterarguments</span>
-                  </h4>
-                  <ul className="space-y-1.5 text-slate-300">
-                    {currentReview.counterarguments.map((ca, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5 leading-relaxed">
-                        <span className="text-amber-400">•</span>
-                        <span>{ca}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Surgical Redlines */}
-              {currentReview.redlines.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Surgical Redline Edits
-                  </h4>
-                  <div className="space-y-2.5">
-                    {currentReview.redlines.map((r) => (
-                      <div key={r.id} className="rounded-xl bg-slate-950 border border-slate-800 p-3.5 space-y-1.5 text-xs">
-                        <div className="text-rose-400/90 line-through font-mono text-[11px]">
-                          - {r.originalText}
-                        </div>
-                        <div className="text-emerald-400 font-mono text-[11px] font-medium">
-                          + {r.improvedText}
-                        </div>
-                        <div className="text-[11px] text-slate-400 italic pt-1 border-t border-slate-900">
-                          Rationale: {r.critiqueReason}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Revised Version */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
+            {/* Revised Version */}
+            {critiqueResult.revisedVersion && (
+              <div className="space-y-2 pt-2 border-t border-white/[0.07]">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                    Editor's Polished Revision
-                  </h4>
+                  <span className="font-semibold text-xs text-white">Polished Revision:</span>
                   <button
                     onClick={handleCopyRevised}
-                    className="flex items-center gap-1 text-[11px] text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition"
+                    className="text-[11px] text-[var(--accent)] hover:underline flex items-center gap-1"
                   >
-                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                    {isCopied ? <Check className="w-3 h-3 text-[var(--tutor)]" /> : <Copy className="w-3 h-3" />}
+                    <span>{isCopied ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/20 text-xs text-slate-200 leading-relaxed font-sans">
-                  {currentReview.revisedVersion}
+                <div className="p-3 rounded-lg bg-[var(--surface-1)] border border-white/[0.07] text-xs text-white/80 leading-relaxed font-sans">
+                  {critiqueResult.revisedVersion}
                 </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* Right Column: Editor Sparring Chat */}
-        <div className="lg:col-span-5 flex flex-col h-[780px] bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-          <div className="p-4 border-b border-slate-800 bg-slate-950/40 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <FileEdit className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-100">Editor's Desk Sparring</h3>
-                <p className="text-[11px] text-slate-400">Debate revisions, thesis statements & arguments</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {editorData.chatHistory.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.sender === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0 text-xs font-bold">
-                    E
-                  </div>
-                )}
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.sender === 'user'
-                      ? 'bg-amber-600 text-slate-950 font-medium rounded-tr-none'
-                      : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-tl-none'
-                  }`}
-                >
-                  <MarkdownRenderer content={msg.content} />
-                  <div className="text-[10px] text-slate-400 text-right mt-1.5 opacity-70">
-                    {msg.timestamp}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {isLoadingChat && (
-              <div className="flex gap-3 items-center text-amber-400 text-xs">
-                <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                </div>
-                <span>Editor is pressure-testing your logic...</span>
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center gap-2">
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Challenge the editor or defend your thesis..."
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition"
-            />
-            <button
-              type="submit"
-              disabled={isLoadingChat || !inputText.trim()}
-              className="p-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition disabled:opacity-50 cursor-pointer"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+      {/* Right Column: Editor Desk Sparring */}
+      <div className="sidebar-card" style={{ position: 'static', height: '640px' }}>
+        <div className="chat-head">
+          <div className="chat-avatar">
+            <FileEdit className="w-4 h-4" />
+          </div>
+          <div>
+            <h4 className="text-[14.5px] font-semibold text-white m-0">Editor's desk sparring</h4>
+            <p className="text-xs text-white/40 m-0">Debate revisions, thesis statements &amp; arguments</p>
+          </div>
         </div>
 
+        <div className="chat-body space-y-3">
+          {editorData.chatHistory.length === 0 ? (
+            <div className="text-xs text-white/40 text-center py-16 px-4">
+              Submit a draft on the left, or challenge the Editor directly below.
+            </div>
+          ) : (
+            editorData.chatHistory.map((msg) => (
+              <div
+                key={msg.id}
+                className={`msg ${
+                  msg.sender === 'user'
+                    ? 'bg-[var(--surface-3)] border-white/[0.13] text-white'
+                    : ''
+                }`}
+              >
+                <MarkdownRenderer content={msg.content} />
+                <div className="msg-time">{msg.timestamp}</div>
+              </div>
+            ))
+          )}
+
+          {isChatLoading && (
+            <div className="flex gap-2 items-center text-[var(--accent)] text-xs font-mono">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Editor is pressure-testing arguments...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Suggestions */}
+        <div className="flex flex-wrap gap-2 px-5 pb-3">
+          {quickPrompts.map((qp, i) => (
+            <button
+              key={i}
+              onClick={() => setChatInput(qp)}
+              className="sugg text-[11.5px]"
+            >
+              {qp}
+            </button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <form onSubmit={handleSendMessage} className="chat-input">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Challenge the editor or defend your thesis..."
+          />
+          <button
+            type="submit"
+            disabled={isChatLoading || !chatInput.trim()}
+            className="send-btn"
+          >
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </form>
       </div>
     </div>
   );
