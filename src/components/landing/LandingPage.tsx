@@ -37,7 +37,13 @@ import {
   DollarSign,
   PenTool,
   Mic,
-  Briefcase
+  Briefcase,
+  Search,
+  Clock,
+  MessageSquare,
+  Award,
+  Coffee,
+  CheckCircle
 } from 'lucide-react';
 import { AlterPersona } from '../../types/alter';
 
@@ -52,26 +58,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   const { user, setIsAuthModalOpen } = useAuth();
 
   const [activeFacultyTab, setActiveFacultyTab] = useState<AlterPersona>('advisor');
-  const [activeWalkthroughStep, setActiveWalkthroughStep] = useState<number>(1);
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
-  const [activeCaseStudy, setActiveCaseStudy] = useState<string>('ebook');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
 
-  // Interactive Hero Simulator state
-  const [simTopic, setSimTopic] = useState('E-Book Publishing Business');
+  // Custom User Input Goal in Hero
+  const [customGoalInput, setCustomGoalInput] = useState('');
+  const [simTopic, setSimTopic] = useState('Publishing & Selling My First E-Book');
   const [isSimulating, setIsSimulating] = useState(false);
 
-  const heroPresetTopics = [
-    { label: '📚 E-Book Publishing Empire', value: 'E-Book Publishing Business' },
+  const heroSuggestions = [
+    { label: '📚 E-Book Empire', value: 'Publishing & Selling My First E-Book' },
     { label: '🌿 Indoor Herb Gardening', value: 'Organic Culinary Herb & Urban Gardening' },
-    { label: '💰 Personal Finance & Investing', value: 'Personal Finance & Cash-Flow Investing' },
-    { label: '🤖 Autonomous AI Agents', value: 'Autonomous AI Agents' },
-    { label: '⚡ DIY Electronics & ESP32', value: 'DIY Electronics & Embedded Systems' },
-    { label: '🗣️ Public Speaking & Keynotes', value: 'Executive Persuasion & Public Speaking' }
+    { label: '💰 Real Estate & Finance', value: 'Personal Wealth, Real Estate & Cash-Flow Investing' },
+    { label: '🍞 Sourdough Micro-Bakery', value: 'Artisan Sourdough Baking & Micro-Bakery Business' },
+    { label: '🗣️ Public Speaking & Pitching', value: 'Executive Persuasion & High-Stakes Public Speaking' },
+    { label: '🤖 Autonomous AI Agents', value: 'Autonomous AI Agents & Systems Architecture' },
+    { label: '⚡ DIY Electronics & ESP32', value: 'DIY Electronics & ESP32 IoT Sensors' }
   ];
 
   const simulatedOutputs: Record<string, { brief: string; cutList: string[]; phase1: string; checkpoint: string }> = {
-    'E-Book Publishing Business': {
+    'Publishing & Selling My First E-Book': {
       brief: 'Master niche topic validation, first-principles outline structuring, high-conversion copy, direct-to-consumer digital distribution, and automated launch funnels.',
       cutList: [
         'Skip 3-month traditional publisher query letter rituals.',
@@ -91,7 +97,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       phase1: 'Phase 1: Seed Germination, Soil Aeration & Spectrum Lighting (Weeks 1–2)',
       checkpoint: 'Set up a 4-pot indoor nursery with custom organic potting mix, full-spectrum LED light schedule, and germinate basil, rosemary, and thyme seedlings.'
     },
-    'Personal Finance & Cash-Flow Investing': {
+    'Personal Wealth, Real Estate & Cash-Flow Investing': {
       brief: 'Deconstruct cash-flow allocation, high-yield debt elimination, index fund portfolio rebalancing, tax-advantaged accounts, and real estate cash-on-cash underwriting.',
       cutList: [
         'Skip speculative day-trading Discord channels and meme coin pumps.',
@@ -101,7 +107,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       phase1: 'Phase 1: Cash Flow Audit, Emergency Reserves & Index Foundations (Weeks 1–2)',
       checkpoint: 'Build an automated monthly cash-flow spreadsheet modeling a 3-fund Boglehead portfolio, tax deductions, and a 10-year retirement projection.'
     },
-    'Autonomous AI Agents': {
+    'Artisan Sourdough Baking & Micro-Bakery Business': {
+      brief: 'Master wild yeast fermentation kinetics, hydration baker percentages, gluten matrix development, Dutch oven steam baking, and local cottage food regulations.',
+      cutList: [
+        'Skip industrial commercial yeast mass-production manuals.',
+        'Skip buying $3,000 professional deck ovens before mastering Dutch oven heat retention.',
+        'Avoid complex sourdough decorative scoring before mastering core fermentation timing.'
+      ],
+      phase1: 'Phase 1: Starter Culturing, Hydration Ratios & Bulk Fermentation (Weeks 1–2)',
+      checkpoint: 'Bake 2 blistered, open-crumb sourdough boules with a custom flour blend and calculate cottage food profit margins per loaf.'
+    },
+    'Executive Persuasion & High-Stakes Public Speaking': {
+      brief: 'Master narrative story architecture, rhetorical contrast framing, vocal modulation, impromptu rebuttal sparring, and keynote presentation delivery.',
+      cutList: [
+        'Skip superficial slide transition animations and visual clutter.',
+        'Skip memorizing scripted speeches word-for-word without understanding core beat markers.',
+        'Avoid reading bullet points directly from slides.'
+      ],
+      phase1: 'Phase 1: Core Thesis Framing & 3-Act Narrative Arc (Weeks 1–2)',
+      checkpoint: 'Deliver and record a 5-minute impromptu persuasive pitch on video, evaluated for thesis clarity, pacing, and zero filler words.'
+    },
+    'Autonomous AI Agents & Systems Architecture': {
       brief: 'Master first-principles agentic cognitive loops, hierarchical memory architectures, deterministic planning, and self-correcting swarm coordination.',
       cutList: [
         'Skip superficial LangChain "hello world" wrapper tutorials.',
@@ -111,7 +137,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       phase1: 'Phase 1: Agentic Cognitive Loops & State Machines (Weeks 1–2)',
       checkpoint: 'Ship an autonomous ReAct loop with deterministic state transitions, memory recall, and tool execution verification in Python/TypeScript.'
     },
-    'DIY Electronics & Embedded Systems': {
+    'DIY Electronics & ESP32 IoT Sensors': {
       brief: 'Master microcontroller architectures, GPIO registers, breadboard prototyping, I2C/SPI bus protocols, and power-efficient C/C++ firmware.',
       cutList: [
         'Skip 30 hours of dry semiconductor chemistry theory.',
@@ -120,25 +146,51 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       ],
       phase1: 'Phase 1: Microcontroller Registers, Power & Breadboarding (Weeks 1–2)',
       checkpoint: 'Wire an ESP32 with a BME280 sensor over I2C on a breadboard, read raw telemetry registers in C++, and put the chip into deep sleep (<15µA).'
-    },
-    'Executive Persuasion & Public Speaking': {
-      brief: 'Master narrative story architecture, rhetorical contrast framing, vocal modulation, impromptu rebuttal sparring, and keynote presentation delivery.',
-      cutList: [
-        'Skip superficial slide transition animations and visual clutter.',
-        'Skip memorizing scripted speeches word-for-word without understanding core beat markers.',
-        'Avoid reading bullet points directly from slides.'
-      ],
-      phase1: 'Phase 1: Core Thesis Framing & 3-Act Narrative Arc (Weeks 1–2)',
-      checkpoint: 'Deliver and record a 5-minute impromptu persuasive pitch on video, evaluated for thesis clarity, pacing, and zero filler words.'
     }
   };
 
-  const currentSim = simulatedOutputs[simTopic] || simulatedOutputs['E-Book Publishing Business'];
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customGoalInput.trim()) return;
+    setIsSimulating(true);
+    const entered = customGoalInput.trim();
+    setSimTopic(entered);
 
-  const handleSelectSim = (topic: string) => {
+    // If not in canned list, generate dynamic custom preview
+    if (!simulatedOutputs[entered]) {
+      simulatedOutputs[entered] = {
+        brief: `Master ${entered} from first principles with structured milestone phases, curated core insights, and hands-on practice.`,
+        cutList: [
+          `Skip introductory fluff and passive video bingeing on ${entered}.`,
+          `Avoid memorizing isolated trivia without hands-on application.`,
+          `Cut outdated manuals and non-essential edge-case distractions.`
+        ],
+        phase1: `Phase 1: Core Foundations & First Principles of ${entered} (Weeks 1–2)`,
+        checkpoint: `Complete and showcase your first tangible milestone project in ${entered}.`
+      };
+    }
+
+    setTimeout(() => {
+      setIsSimulating(false);
+    }, 250);
+  };
+
+  const currentSim = simulatedOutputs[simTopic] || {
+    brief: `Master ${simTopic} from first principles with structured milestone phases, curated core insights, and hands-on practice.`,
+    cutList: [
+      `Skip introductory fluff and passive video bingeing on ${simTopic}.`,
+      `Avoid memorizing isolated trivia without hands-on application.`,
+      `Cut outdated manuals and non-essential edge-case distractions.`
+    ],
+    phase1: `Phase 1: Core Foundations & First Principles of ${simTopic} (Weeks 1–2)`,
+    checkpoint: `Complete and showcase your first tangible milestone project in ${simTopic}.`
+  };
+
+  const handleSelectSuggestion = (topic: string) => {
     setIsSimulating(true);
     setSimTopic(topic);
-    setTimeout(() => setIsSimulating(false), 250);
+    setCustomGoalInput(topic);
+    setTimeout(() => setIsSimulating(false), 200);
   };
 
   const handleLaunchWithTopic = () => {
@@ -155,7 +207,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       icon: BookMarked,
       color: 'text-[var(--advisor)]',
       border: 'border-[var(--advisor)]',
-      advisorCut: 'Skip traditional 6-month agent query loops; focus on pain validation & Gumroad distribution.',
+      advisorCut: 'Skip traditional 6-month agent query loops; focus on reader pain validation & Gumroad distribution.',
       tutorDrill: '"Why would someone pay $25 for this book instead of a 5-minute Google search? What is the non-obvious thesis?"',
       editorAudit: 'Audits chapter 1 for passive voice, fluff filler, and vague advice.',
       roommateSpark: 'Book Marketing × Viral Referral Growth Loops',
@@ -187,35 +239,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       tutorDrill: '"What is the exact mathematical difference between effective gross income and net operating income (NOI)?"',
       editorAudit: 'Audits real estate underwriting models, exposing optimistic vacancy assumptions.',
       roommateSpark: 'Portfolio Asset Allocation × Ecosystem Resilience Biology',
-      proofOfWork: 'Automated 10-Year Wealth Spreadsheet & Stress-Tested Real Estate Underwriting Model'
+      proofOfWork: 'Automated 10-Year Wealth Model & Stress-Tested Real Estate Underwriting Model'
     },
     {
-      id: 'hardware',
-      category: 'tech',
-      title: 'DIY Electronics & ESP32 IoT Sensor Engineering',
-      tag: 'Hardware & Embedded',
-      icon: Cpu,
+      id: 'bakery',
+      category: 'business',
+      title: 'Artisan Sourdough Baking & Micro-Bakery Business',
+      tag: 'Food Craft & Commerce',
+      icon: Coffee,
       color: 'text-[var(--editor)]',
       border: 'border-[var(--editor)]',
-      advisorCut: 'Skip 40 hours of dry semiconductor chemistry; focus on GPIO registers & I2C protocols.',
-      tutorDrill: '"Explain how an ADC converts analog voltage to a 12-bit binary number without technical jargon."',
-      editorAudit: 'Audits PCB schematics and detects interrupt service routine race conditions.',
-      roommateSpark: 'Sensor Sampling × Mammalian Respiration Rates',
-      proofOfWork: 'Custom Soldered ESP32 Weather Node with I2C Telemetry & Deep Sleep (<15µA)'
-    },
-    {
-      id: 'ai',
-      category: 'tech',
-      title: 'Autonomous AI Agents & Systems Architecture',
-      tag: 'AI Engineering',
-      icon: Terminal,
-      color: 'text-[var(--advisor)]',
-      border: 'border-[var(--advisor)]',
-      advisorCut: 'Skip superficial LangChain wrappers; master state machines & MCP tool evaluation.',
-      tutorDrill: '"Why do cyclic graph loops require deterministic state persistence during tool failure?"',
-      editorAudit: 'Exposes lack of idempotent retry execution in payment agent workflows.',
-      roommateSpark: 'Agent Swarms × Roman Legionary Tactical Command',
-      proofOfWork: 'Production Python ReAct Agent Engine with Vector Recall & MCP Tools'
+      advisorCut: 'Skip $3,000 professional deck ovens; master Dutch oven heat retention and cottage food laws.',
+      tutorDrill: '"Explain fermentation kinetics and why room temperature changes bulk proofing by hours."',
+      editorAudit: 'Audits bakery unit economics and ingredient cost per loaf breakdown.',
+      roommateSpark: 'Sourdough Fermentation × Beer Brewing Yeast Culturing',
+      proofOfWork: 'Two Blistered Sourdough Boules Baked & Cottage Food Micro-Bakery Sales Page Launched'
     },
     {
       id: 'speech',
@@ -230,14 +268,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       editorAudit: 'Strikes out filler words and redundant slide bullet points.',
       roommateSpark: 'Keynote Delivery × Stand-up Comedy Timing',
       proofOfWork: 'Recorded 10-Minute Executive Keynote Video Pitch with Objection Matrix'
+    },
+    {
+      id: 'hardware',
+      category: 'tech',
+      title: 'DIY Electronics & ESP32 IoT Sensor Engineering',
+      tag: 'Hardware & Embedded',
+      icon: Cpu,
+      color: 'text-[var(--advisor)]',
+      border: 'border-[var(--advisor)]',
+      advisorCut: 'Skip 40 hours of dry semiconductor chemistry; focus on GPIO registers & I2C protocols.',
+      tutorDrill: '"Explain how an ADC converts analog voltage to a 12-bit binary number without technical jargon."',
+      editorAudit: 'Audits PCB schematics and detects interrupt service routine race conditions.',
+      roommateSpark: 'Sensor Sampling × Mammalian Respiration Rates',
+      proofOfWork: 'Custom Soldered ESP32 Weather Node with I2C Telemetry & Deep Sleep (<15µA)'
     }
   ];
 
   const filteredCaseStudies = activeCategory === 'all'
     ? caseStudies
     : caseStudies.filter(cs => cs.category === activeCategory);
-
-  const selectedStudy = caseStudies.find(cs => cs.id === activeCaseStudy) || caseStudies[0];
 
   return (
     <div className="min-h-screen bg-[var(--void)] text-[var(--ink)] font-sans selection:bg-[var(--accent)] selection:text-[#04050a] overflow-x-hidden">
@@ -258,9 +308,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </div>
 
           <nav className="hidden md:flex items-center gap-7 text-sm text-white/60 font-medium">
-            <a href="#how-it-works" className="hover:text-white transition">How It Works</a>
-            <a href="#examples" className="hover:text-white transition">What You Can Master</a>
-            <a href="#faculty" className="hover:text-white transition">The 5 Faculty</a>
+            <a href="#how-it-works" className="hover:text-white transition">How It Teaches You</a>
+            <a href="#examples" className="hover:text-white transition">What You Can Learn</a>
+            <a href="#faculty" className="hover:text-white transition">Your 5 Mentors</a>
             <a href="#matrix" className="hover:text-white transition">University vs. Altor</a>
             <a href="#pricing" className="hover:text-white transition">Tiers</a>
           </nav>
@@ -286,83 +336,97 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
       </header>
 
-      {/* 2. Hero Section */}
+      {/* 2. Hero Section with Interactive Custom Goal Bar */}
       <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[radial-gradient(circle,rgba(94,184,245,0.12),transparent_70%)]" />
         
         <div className="text-center space-y-6 max-w-4xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[rgba(94,184,245,0.08)] border border-[rgba(94,184,245,0.25)] text-xs font-mono text-[var(--advisor)] tracking-wide">
             <Sparkles size={13} className="text-[var(--advisor)]" />
-            <span>THE AUTONOMOUS UNIVERSITY FOR AMBITIOUS MINDS</span>
+            <span>YOUR PERSONAL 5-PROFESSOR AI UNIVERSITY FOR ANYTHING YOU WANT TO LEARN</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
-            Master Any Discipline. <br />
+            Type Any Goal. <br />
             <span className="bg-gradient-to-r from-white via-slate-200 to-[var(--advisor)] bg-clip-text text-transparent">
-              Build Your University in a Box.
+              Five AI Mentors Teach You Step-by-Step.
             </span>
           </h1>
 
           <p className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed font-sans">
-            From writing a profitable book to indoor gardening, financial investing, hardware hacking, or AI systems.
-            Five specialized AI faculty members cut the noise, drill your intuition, and guide you to real proof-of-work.
+            Whether you want to launch an e-book business, learn real estate investing, bake artisan sourdough, or code your first app —
+            Altor creates your custom curriculum, cuts the fluff, explains concepts in plain English, and guides you to real, tangible proof.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
-            <button
-              onClick={handleLaunchWithTopic}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-sm shadow-[0_0_30px_rgba(94,184,245,0.3)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-            >
-              <Zap size={16} />
-              <span>Start Learning Free — No Credit Card</span>
-            </button>
-            <a
-              href="#how-it-works"
-              className="w-full sm:w-auto px-6 py-4 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-white/[0.1] text-white/80 hover:text-white font-medium text-sm transition flex items-center justify-center gap-2"
-            >
-              <span>See 4-Step Interactive Guide</span>
-              <ChevronRight size={15} />
-            </a>
+          {/* Interactive Custom Topic Search/Creation Bar (Star of Hero) */}
+          <div className="pt-2 max-w-2xl mx-auto">
+            <form onSubmit={handleCustomSubmit} className="relative flex items-center">
+              <div className="relative w-full flex items-center bg-[var(--surface-2)] border-2 border-[var(--advisor)] rounded-2xl shadow-[0_0_35px_rgba(94,184,245,0.2)] focus-within:shadow-[0_0_45px_rgba(94,184,245,0.35)] transition">
+                <Search size={18} className="absolute left-4 text-[var(--advisor)] pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder='Type anything you want to master (e.g. "Sourdough Bakery", "Speak Italian", "Real Estate")...'
+                  value={customGoalInput}
+                  onChange={(e) => setCustomGoalInput(e.target.value)}
+                  className="w-full bg-transparent border-none text-white text-xs sm:text-sm pl-11 pr-36 py-4 outline-none placeholder-white/40 font-sans"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 px-4 py-2.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5"
+                >
+                  <span>Build Syllabus</span>
+                  <Zap size={13} />
+                </button>
+              </div>
+            </form>
+
+            {/* Suggestions Chips */}
+            <div className="flex items-center flex-wrap justify-center gap-2 mt-3 text-xs">
+              <span className="text-white/40 font-mono text-[11px]">Or try:</span>
+              {heroSuggestions.map((sug) => (
+                <button
+                  key={sug.value}
+                  onClick={() => handleSelectSuggestion(sug.value)}
+                  className={`px-2.5 py-1 rounded-lg text-[11.5px] transition ${
+                    simTopic === sug.value
+                      ? 'bg-[var(--advisor)] text-[#04050a] font-semibold'
+                      : 'bg-[var(--surface-2)] text-white/60 hover:text-white border border-white/[0.08]'
+                  }`}
+                >
+                  {sug.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center justify-center gap-6 pt-1 text-xs font-mono text-white/40">
-            <span>✓ 100% Free Forever Tier</span>
+          <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-white/40">
+            <span>✓ 100% Free Forever</span>
             <span>•</span>
-            <span>✓ Bring-Your-Own API Key</span>
+            <span>✓ Any Topic on Earth</span>
             <span>•</span>
-            <span>✓ Local &amp; Cloud Vault</span>
+            <span>✓ No Prior Experience Needed</span>
           </div>
         </div>
 
-        {/* 2.5 Hero Interactive Sandbox / Journey Simulator */}
-        <div className="mt-14 relative z-10 max-w-5xl mx-auto rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border border-white/[0.12] p-6 sm:p-8 shadow-2xl">
+        {/* 2.5 Live Custom Curriculum Simulator Output */}
+        <div className="mt-12 relative z-10 max-w-5xl mx-auto rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border border-white/[0.12] p-6 sm:p-8 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
             <div>
               <div className="flex items-center gap-2 text-xs font-mono text-[var(--advisor)] uppercase tracking-wider mb-1">
                 <Radio size={14} className="animate-pulse text-[var(--advisor)]" />
-                Live Curriculum Simulator
+                Live Generated Curriculum Preview
               </div>
               <h3 className="font-display text-xl font-bold text-white m-0">
-                Test the Academic Advisor Engine Right Now
+                Curriculum for: <span className="text-[var(--advisor)]">"{simTopic}"</span>
               </h3>
             </div>
 
-            {/* Presets */}
-            <div className="flex flex-wrap gap-2">
-              {heroPresetTopics.map((topic) => (
-                <button
-                  key={topic.value}
-                  onClick={() => handleSelectSim(topic.value)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                    simTopic === topic.value
-                      ? 'bg-[var(--advisor)] text-[#04050a] font-semibold shadow-sm'
-                      : 'bg-[var(--surface-3)] text-white/60 hover:text-white border border-white/[0.07]'
-                  }`}
-                >
-                  {topic.label}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={handleLaunchWithTopic}
+              className="px-4 py-2 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto"
+            >
+              <span>Launch Full University for "{simTopic}" →</span>
+            </button>
           </div>
 
           {/* Simulator Content Display */}
@@ -370,7 +434,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             <div className="lg:col-span-7 space-y-4">
               <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-white/[0.07]">
                 <div className="text-[11px] font-mono uppercase text-white/40 tracking-wider mb-1">
-                  Strategic Advisor Brief
+                  1. Strategic Advisor Brief (Your Big Picture)
                 </div>
                 <p className="text-sm text-white/90 leading-relaxed m-0 font-sans">
                   {currentSim.brief}
@@ -379,13 +443,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
               <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-l-2 border-white/[0.07] border-l-[var(--advisor)]">
                 <div className="text-[11px] font-mono uppercase text-[var(--advisor)] tracking-wider mb-1">
-                  Active Milestone
+                  2. Step-by-Step Chronological Phase
                 </div>
                 <h4 className="text-sm font-semibold text-white m-0 mb-1.5">
                   {currentSim.phase1}
                 </h4>
-                <p className="text-xs text-white/60 m-0 leading-relaxed">
-                  <strong className="text-white">Proof of Work:</strong> {currentSim.checkpoint}
+                <p className="text-xs text-white/70 m-0 leading-relaxed">
+                  <strong className="text-white">What You Build (Proof of Work):</strong> {currentSim.checkpoint}
                 </p>
               </div>
             </div>
@@ -394,9 +458,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[rgba(234,176,84,0.25)] space-y-2">
                 <div className="flex items-center gap-1.5 text-[var(--editor)] text-xs font-semibold">
                   <ShieldAlert size={14} />
-                  <span>The Sandeep Swadia "Cut List" (What to Skip)</span>
+                  <span>3. The Sandeep Swadia "Cut List" (What to Skip)</span>
                 </div>
-                <div className="space-y-1.5 text-[11.5px] text-white/60 pl-2">
+                <p className="text-[11px] text-white/50 m-0">
+                  Save 40+ hours by ignoring generic tutorials and non-essential fluff:
+                </p>
+                <div className="space-y-1.5 text-[11.5px] text-white/70 pl-2">
                   {currentSim.cutList.map((cut, idx) => (
                     <div key={idx} className="flex items-start gap-1.5">
                       <span className="text-rose-400 font-mono">✕</span>
@@ -410,192 +477,141 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 onClick={handleLaunchWithTopic}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-[var(--surface-3)] to-[color-mix(in_srgb,var(--advisor)_20%,var(--surface-3))] hover:border-[var(--advisor)] border border-white/[0.15] text-xs font-semibold text-white flex items-center justify-center gap-2 transition"
               >
-                <span>Launch Full University for "{simTopic}" →</span>
+                <span>Enter Altor Academy with this Syllabus →</span>
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Interactive 4-Step Walkthrough Guide */}
+      {/* 3. "How Altor Actually Teaches You" (Demystifying the 5 Faculty) */}
       <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
           <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)]">
-            HOW ALTOR WORKS
+            HOW IT ACTUALLY WORKS
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            The 4-Step Cognitive Mastery Loop
+            How Altor Teaches You (No Experience Needed)
           </h2>
           <p className="text-white/60 text-sm sm:text-base leading-relaxed">
-            How five AI mentors transform your ambition into structured, verifiable mastery without the fluff.
+            You don't need to search the internet alone or guess what to study next. Five AI mentors guide you through a complete, friendly learning cycle.
           </p>
         </div>
 
-        {/* 4 Interactive Step Tabs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-5xl mx-auto mb-8">
-          {[
-            { step: 1, title: '1. Declare Destination', desc: 'Define precise outcome & hours/week' },
-            { step: 2, title: '2. Lock in The Cut List', desc: 'Skip the 90% commodity noise' },
-            { step: 3, title: '3. Socratic Sparring', desc: 'Feynman drills & logic audits' },
-            { step: 4, title: '4. Ship Proof of Work', desc: 'Verifiable portfolio artifacts' }
-          ].map((s) => (
-            <button
-              key={s.step}
-              onClick={() => setActiveWalkthroughStep(s.step)}
-              className={`p-4 rounded-xl border text-left transition ${
-                activeWalkthroughStep === s.step
-                  ? 'bg-[var(--surface-3)] border-[var(--advisor)] shadow-lg shadow-black/40'
-                  : 'bg-[var(--surface-2)] border-white/[0.07] text-white/50 hover:text-white hover:border-white/[0.15]'
-              }`}
-            >
-              <div className="text-xs font-bold text-white mb-1 font-display">{s.title}</div>
-              <div className="text-[11px] text-white/50 leading-relaxed font-sans">{s.desc}</div>
-            </button>
-          ))}
+        {/* 4 Clear Step Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {/* Step 1 */}
+          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--advisor)]/10 border border-[var(--advisor)]/25 flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
+                1
+              </div>
+              <h3 className="font-display text-base font-bold text-white m-0">
+                1. Ordered Roadmap &amp; Cut List
+              </h3>
+              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+                Your <strong>Academic Advisor</strong> organizes your goal into clear, chronological phases (Phase 1 → Phase 2 → Phase 3) and tells you exactly what confusing fluff to skip.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-[var(--advisor)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+              ✓ Step-by-step ordered timeline<br />
+              ✓ Zero tutorial overload
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--librarian)]/10 border border-[var(--librarian)]/25 flex items-center justify-center text-[var(--librarian)] font-bold text-sm">
+                2
+              </div>
+              <h3 className="font-display text-base font-bold text-white m-0">
+                2. Curated Notes &amp; Mental Models
+              </h3>
+              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+                No need to read 500-page dry textbooks alone. Your <strong>Librarian</strong> summarizes the key mental models and notes directly into your private notebook.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-[var(--librarian)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+              ✓ Top 1% seminal resources<br />
+              ✓ Pre-digested flashcards
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--tutor)]/10 border border-[var(--tutor)]/25 flex items-center justify-center text-[var(--tutor)] font-bold text-sm">
+                3
+              </div>
+              <h3 className="font-display text-base font-bold text-white m-0">
+                3. Friendly 24/7 Socratic Lessons
+              </h3>
+              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+                Your <strong>Socratic Tutor</strong> explains tricky concepts in plain English ("explain like I'm 10"), answers questions in Office Hours, and checks your understanding with gentle quizzes.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-[var(--tutor)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+              ✓ "Explain like I'm 10" drills<br />
+              ✓ 24/7 Office Hours homework help
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--roommate)]/10 border border-[var(--roommate)]/25 flex items-center justify-center text-[var(--roommate)] font-bold text-sm">
+                4
+              </div>
+              <h3 className="font-display text-base font-bold text-white m-0">
+                4. Build &amp; Polish Real Projects
+              </h3>
+              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+                You build real things (a published e-book, a garden harvest, an investment sheet, or a coded app). Your <strong>Editor</strong> polishes your work and your <strong>Roommate</strong> keeps it creative.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-[var(--roommate)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+              ✓ Real tangible deliverables<br />
+              ✓ Public portfolio proof card
+            </div>
+          </div>
         </div>
 
-        {/* Walkthrough Interactive Sandbox State Card */}
-        <div className="max-w-5xl mx-auto rounded-2xl bg-[var(--surface-2)] border border-white/[0.1] p-6 sm:p-8 shadow-card">
-          {activeWalkthroughStep === 1 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate-fade-in">
-              <div className="space-y-4">
-                <span className="px-2.5 py-1 rounded-full bg-[var(--advisor)]/10 text-[var(--advisor)] border border-[var(--advisor)]/25 text-[10px] font-mono uppercase">
-                  Step 1: The Starting Line
-                </span>
-                <h3 className="font-display text-2xl font-bold text-white">
-                  Declare Any Destination (Coding, Cooking, Books, or Finance)
-                </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  Instead of generic goals like "learn finance" or "learn to code", you define a sharp outcome:
-                  <em> "Underwrite my first multi-family property"</em> or <em>"Publish my first non-fiction e-book"</em>.
-                </p>
-                <div className="text-xs font-mono text-white/50 space-y-1.5">
-                  <div>✓ Calibrated to your baseline knowledge</div>
-                  <div>✓ Tailored to your weekly schedule (5 to 20 hrs/week)</div>
-                  <div>✓ Instant customized 5-Faculty Board generation</div>
-                </div>
+        {/* A 15-Minute Day in the Life Storyboard */}
+        <div className="mt-14 max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[var(--surface-3)] to-[var(--surface-2)] border border-white/[0.1] shadow-xl space-y-4">
+          <div className="flex items-center gap-2 text-xs font-mono text-[var(--tutor)] uppercase tracking-wider">
+            <Clock size={15} />
+            <span>A 15-Minute Daily Session in Altor</span>
+          </div>
+          <h3 className="font-display text-xl sm:text-2xl font-bold text-white m-0">
+            How You Make Fast Daily Progress Without Burnout
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs text-white/80">
+            <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-1.5">
+              <div className="font-semibold text-white flex items-center gap-2">
+                <span className="text-[var(--advisor)] font-mono">01</span>
+                <span>Minutes 1–3</span>
               </div>
-
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3 font-mono text-xs">
-                <div className="text-white/40 text-[11px]">User Input Prompt:</div>
-                <div className="p-3 rounded-lg bg-[var(--surface-2)] text-[var(--advisor)]">
-                  Topic: "Indoor Urban Gardening"<br />
-                  Destination: "Continuous weekly culinary herb harvest in a small apartment"<br />
-                  Pacing: 6 hrs/week · Depth: Practical Builder
-                </div>
-              </div>
+              <p className="text-white/60 m-0">Check today's phase task &amp; review 2 bite-sized mental model notes.</p>
             </div>
-          )}
 
-          {activeWalkthroughStep === 2 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate-fade-in">
-              <div className="space-y-4">
-                <span className="px-2.5 py-1 rounded-full bg-[var(--editor)]/10 text-[var(--editor)] border border-[var(--editor)]/25 text-[10px] font-mono uppercase">
-                  Step 2: Sandeep Swadia Cut List
-                </span>
-                <h3 className="font-display text-2xl font-bold text-white">
-                  The Advisor Cuts the 90% Commodity Fluff
-                </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  The #1 reason learners burn out is cognitive overload. Your Academic Advisor explicitly tells you
-                  what <strong>NOT</strong> to waste your time on, keeping your velocity high.
-                </p>
-                <div className="text-xs font-mono text-white/50 space-y-1.5">
-                  <div>✓ Prevents tutorial hell and video bingeing</div>
-                  <div>✓ Identifies high-signal 1% foundational books and papers</div>
-                  <div>✓ Organizes milestones with clear checkpoints</div>
-                </div>
+            <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-1.5">
+              <div className="font-semibold text-white flex items-center gap-2">
+                <span className="text-[var(--tutor)] font-mono">02</span>
+                <span>Minutes 4–10</span>
               </div>
-
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-2.5 font-mono text-xs">
-                <div className="text-[var(--editor)] font-semibold flex items-center gap-1.5">
-                  <ShieldAlert size={14} />
-                  <span>The Cut List Strategy:</span>
-                </div>
-                <div className="space-y-1.5 text-[11.5px] text-white/70 font-sans">
-                  <div className="p-2 rounded bg-rose-500/10 text-rose-300">✕ SKIP: 30 hours of commercial farming soil chemistry</div>
-                  <div className="p-2 rounded bg-[var(--tutor)]/10 text-[var(--tutor)]">✓ FOCUS: Potting soil aeration, PAR light spectrum, and vegetative node pruning</div>
-                </div>
-              </div>
+              <p className="text-white/60 m-0">Chat 1-on-1 with your Tutor, practice a Feynman explanation, and take a quick 2-question quiz.</p>
             </div>
-          )}
 
-          {activeWalkthroughStep === 3 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate-fade-in">
-              <div className="space-y-4">
-                <span className="px-2.5 py-1 rounded-full bg-[var(--tutor)]/10 text-[var(--tutor)] border border-[var(--tutor)]/25 text-[10px] font-mono uppercase">
-                  Step 3: Active Sparring
-                </span>
-                <h3 className="font-display text-2xl font-bold text-white">
-                  Socratic Sparring, Feynman Drills &amp; Logic Audits
-                </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  No passive multiple-choice tests. The Socratic Tutor forces you to explain concepts in plain language,
-                  grades your clarity, while the Analytical Editor audits your draft essays or project schematics.
-                </p>
-                <div className="text-xs font-mono text-white/50 space-y-1.5">
-                  <div>✓ Instant clarity &amp; accuracy grading (0–100)</div>
-                  <div>✓ Unproven assumption and blind spot detection</div>
-                  <div>✓ Cross-domain collisions with distant fields</div>
-                </div>
+            <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-1.5">
+              <div className="font-semibold text-white flex items-center gap-2">
+                <span className="text-[var(--editor)] font-mono">03</span>
+                <span>Minutes 11–15</span>
               </div>
-
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                  <div className="p-2.5 rounded-lg bg-[var(--surface-2)]">
-                    <span className="text-[10px] font-mono text-white/40 uppercase">Clarity Score</span>
-                    <div className="text-lg font-bold font-display text-[var(--tutor)]">96/100</div>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[var(--surface-2)]">
-                    <span className="text-[10px] font-mono text-white/40 uppercase">Blind Spots</span>
-                    <div className="text-lg font-bold font-display text-[var(--advisor)]">0 Detected</div>
-                  </div>
-                </div>
-                <p className="text-xs text-white/80 italic m-0 p-2.5 rounded-lg bg-[var(--surface-2)]">
-                  "Mastery Verified: You explained node pinching auxin hormones cleanly without hiding behind botanical jargon."
-                </p>
-              </div>
+              <p className="text-white/60 m-0">Draft your milestone homework (writing, plan, recipe, or code) and get instant critique from your Editor.</p>
             </div>
-          )}
-
-          {activeWalkthroughStep === 4 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate-fade-in">
-              <div className="space-y-4">
-                <span className="px-2.5 py-1 rounded-full bg-[var(--roommate)]/10 text-[var(--roommate)] border border-[var(--roommate)]/25 text-[10px] font-mono uppercase">
-                  Step 4: Real Proof of Work
-                </span>
-                <h3 className="font-display text-2xl font-bold text-white">
-                  Ship Verifiable Deliverables &amp; Build Your Portfolio
-                </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  You graduate each phase by completing a tangible project: a published book, a live web application,
-                  a functioning indoor garden, a financial model, or a recorded speech.
-                </p>
-                <div className="text-xs font-mono text-white/50 space-y-1.5">
-                  <div>✓ Verifiable public URL (altor.app/@yourname)</div>
-                  <div>✓ Share on LinkedIn, GitHub, or client proposals</div>
-                  <div>✓ Concrete evidence of real-world competence</div>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3">
-                <div className="flex items-center justify-between border-b border-white/[0.07] pb-2 text-xs">
-                  <span className="font-semibold text-white">Verified Deliverable</span>
-                  <span className="text-[var(--tutor)] font-mono text-[11px]">100% Passed</span>
-                </div>
-                <div className="p-3 rounded-lg bg-[var(--surface-2)] text-xs text-white/80 leading-relaxed">
-                  Artifact: 4-Tier Vertical Indoor Micro-Herb Setup (Basil, Rosemary, Thyme)<br />
-                  Status: 100% Germinated &amp; Continuous Vegetative Yield Logged
-                </div>
-                <button
-                  onClick={handleLaunchWithTopic}
-                  className="w-full py-2.5 rounded-lg bg-[var(--advisor)] text-[#04050a] font-bold text-xs"
-                >
-                  Start Your First Journey →
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </section>
 
@@ -603,13 +619,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       <section id="examples" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
           <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)]">
-            REAL-WORLD CASE STUDIES
+            EXPLORE REAL EXAMPLES
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            Learn Anything. From Books to Botany to Code.
+            Learn Anything on Earth. From Books to Botany to Code.
           </h2>
           <p className="text-white/60 text-sm sm:text-base leading-relaxed">
-            See how the 5 Faculty members guide everyday creators, writers, investors, gardeners, and developers from Day 0 to Shipped Proof-of-Work.
+            See how everyday learners, creators, writers, investors, gardeners, and builders use Altor to achieve real outcomes.
           </p>
         </div>
 
@@ -659,17 +675,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
                   <div className="space-y-2 text-xs text-white/70 border-t border-white/[0.07] pt-3 font-sans">
                     <div>
-                      <strong className="text-white/90">Cut List:</strong> {cs.advisorCut}
+                      <strong className="text-white/90">What to Skip:</strong> {cs.advisorCut}
                     </div>
                     <div>
-                      <strong className="text-white/90">Socratic Drill:</strong> <em>{cs.tutorDrill}</em>
+                      <strong className="text-white/90">Socratic Lesson:</strong> <em>{cs.tutorDrill}</em>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-white/[0.07]">
                   <div className="text-[10px] font-mono text-[var(--tutor)] uppercase mb-1 font-semibold">
-                    ✓ Final Checkpoint Deliverable:
+                    ✓ What You Actually Build (Proof of Work):
                   </div>
                   <div className="text-xs text-white/90 font-medium leading-snug">
                     {cs.proofOfWork}
@@ -677,11 +693,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <button
                     onClick={() => {
                       setSimTopic(cs.title);
+                      setCustomGoalInput(cs.title);
                       setIsCreateModalOpen(true);
                     }}
                     className="mt-3 w-full py-2 rounded-lg bg-[var(--surface-3)] hover:bg-[var(--surface-1)] border border-white/[0.1] text-xs font-semibold text-white/90 transition flex items-center justify-center gap-1.5"
                   >
-                    <span>Start This Track</span>
+                    <span>Start Learning "{cs.title}"</span>
                     <ArrowRight size={12} />
                   </button>
                 </div>
@@ -691,17 +708,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
       </section>
 
-      {/* 5. The 5 Faculty Framework */}
+      {/* 5. Meet Your 5 AI Faculty Mentors */}
       <section id="faculty" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
           <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)]">
-            THE A.L.T.E.R. FRAMEWORK
+            YOUR 5-PERSON MENTOR BOARD
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            Meet Your 5-Member AI Faculty Board
+            Meet Your 5 Specialized AI Mentors
           </h2>
           <p className="text-white/60 text-sm sm:text-base leading-relaxed">
-            Each persona is hyper-calibrated for a specific phase of the cognitive mastery loop.
+            Each mentor specializes in one critical phase of your learning journey.
           </p>
         </div>
 
@@ -712,7 +729,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             { id: 'librarian' as AlterPersona, letter: 'L', name: 'Knowledge Librarian', color: 'text-[var(--librarian)]', border: 'border-[var(--librarian)]' },
             { id: 'tutor' as AlterPersona, letter: 'T', name: 'Socratic Tutor', color: 'text-[var(--tutor)]', border: 'border-[var(--tutor)]' },
             { id: 'editor' as AlterPersona, letter: 'E', name: 'Analytical Editor', color: 'text-[var(--editor)]', border: 'border-[var(--editor)]' },
-            { id: 'roommate' as AlterPersona, letter: 'R', name: 'Lateral Roommate', color: 'text-[var(--roommate)]', border: 'border-[var(--roommate)]' }
+            { id: 'roommate' as AlterPersona, letter: 'R', name: 'Creative Roommate', color: 'text-[var(--roommate)]', border: 'border-[var(--roommate)]' }
           ].map((fac) => (
             <button
               key={fac.id}
@@ -741,16 +758,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   A — ACADEMIC ADVISOR
                 </div>
                 <h3 className="font-display text-2xl font-bold text-white">
-                  Ruthless Roadmaps &amp; The Sandeep Swadia Cut List
+                  Step-by-Step Roadmaps &amp; The "What to Skip" Cut List
                 </h3>
                 <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  The Advisor breaks your destination into rigorous, milestone-driven phases. Most importantly, it locks in your
-                  <strong> Cut List</strong>: the exact frameworks, tutorials, and noise to explicitly ignore so you never waste weeks on commodity fluff.
+                  The Advisor breaks your destination into manageable weekly phases. Most importantly, it gives you your
+                  <strong> Cut List</strong>: the exact confusing theories, outdated books, and noise to ignore so you never waste weeks.
                 </p>
                 <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
-                  <div className="flex items-center gap-2">✓ Milestone-based Proof-of-Work Checkpoints</div>
-                  <div className="flex items-center gap-2">✓ Pacing &amp; Depth Customization (10 hrs/week)</div>
-                  <div className="flex items-center gap-2">✓ Swadia "What to Skip" Rule</div>
+                  <div className="flex items-center gap-2">✓ Ordered milestones with real checkpoints</div>
+                  <div className="flex items-center gap-2">✓ Tailored to your weekly schedule (5–15 hrs/week)</div>
+                  <div className="flex items-center gap-2">✓ Sandeep Swadia "Cut List" rule</div>
                 </div>
               </div>
 
@@ -823,8 +840,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </p>
                 <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
                   <div className="flex items-center gap-2">✓ Clarity &amp; Accuracy Scoring (0–100)</div>
-                  <div className="flex items-center gap-2">✓ Jargon Detection &amp; Child Analogy Generation</div>
-                  <div className="flex items-center gap-2">✓ Edge-Case Diagnostic Quizzes</div>
+                  <div className="flex items-center gap-2">✓ "Explain like I'm 10" plain language drills</div>
+                  <div className="flex items-center gap-2">✓ Quick diagnostic check-in quizzes</div>
                 </div>
               </div>
 
@@ -854,16 +871,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   E — ANALYTICAL EDITOR
                 </div>
                 <h3 className="font-display text-2xl font-bold text-white">
-                  Logic Pressure-Testing &amp; Steelmanning
+                  Logic Pressure-Testing &amp; Work Redlines
                 </h3>
                 <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  Submit design documents, essays, or architectural proposals. The Editor audits your logic, extracts unproven assumptions,
-                  steelmans the strongest counterargument, and delivers surgical redlines.
+                  Submit drafts of your book chapters, business plans, recipes, or investment sheets. The Editor audits your logic, extracts unproven assumptions,
+                  steelmans counterarguments, and provides helpful line edits.
                 </p>
                 <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
                   <div className="flex items-center gap-2">✓ Unproven assumption detection</div>
                   <div className="flex items-center gap-2">✓ Steelmanned counterargument synthesis</div>
-                  <div className="flex items-center gap-2">✓ Surgical side-by-side redline diffs</div>
+                  <div className="flex items-center gap-2">✓ Helpful side-by-side redline diffs</div>
                 </div>
               </div>
 
@@ -884,18 +901,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               <div className="space-y-4">
                 <div className="role-chip" style={{ color: 'var(--roommate)' }}>
                   <span className="dot" style={{ background: 'var(--roommate)' }}></span>
-                  R — LATERAL-THINKING ROOMMATE
+                  R — CREATIVE ROOMMATE
                 </div>
                 <h3 className="font-display text-2xl font-bold text-white">
-                  Cross-Disciplinary Domain Collisions
+                  Cross-Disciplinary Ideas &amp; Late-Night Sparks
                 </h3>
                 <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
-                  Break out of local intellectual maximums. Collide your core topic with Evolutionary Biology, Roman Military Strategy,
-                  Jazz Improvisation, or Cybernetics to uncover non-obvious breakthroughs.
+                  Break out of creative blocks. Collide your core topic with biology, history, music, or business to discover fun, non-obvious breakthroughs.
                 </p>
                 <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
-                  <div className="flex items-center gap-2">✓ Domain Collision Engine (Topic × Distant Field)</div>
-                  <div className="flex items-center gap-2">✓ Unfiltered late-night dorm lounge debates</div>
+                  <div className="flex items-center gap-2">✓ Creative Idea Collision Engine</div>
+                  <div className="flex items-center gap-2">✓ Fun brainstorming partner</div>
                   <div className="flex items-center gap-2">✓ Creative analogical problem solving</div>
                 </div>
               </div>
@@ -924,7 +940,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 VERIFIABLE CREDENTIALS
               </span>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                Your Public Autodidact Proof-of-Work Portfolio
+                Your Public Proof-of-Work Portfolio
               </h2>
               <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
                 Every milestone checkpoint you complete generates a permanent, verifiable proof card. Share your live portfolio on Twitter, LinkedIn, or client proposals.
@@ -1050,7 +1066,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
             Generous Free Forever. <br />
-            Upgrade for Cognitive Superpowers.
+            Upgrade for Supercharged Velocity.
           </h2>
           <p className="text-white/60 text-sm sm:text-base leading-relaxed">
             You will never be forced to pay to learn. Our Free tier gives you full access to all 5 faculty members.
