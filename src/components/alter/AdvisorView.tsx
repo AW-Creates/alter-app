@@ -15,20 +15,31 @@ import {
   Compass,
   ArrowRight,
   Loader2,
-  Globe
+  Globe,
+  BookOpen,
+  Lightbulb,
+  FileEdit,
+  Play,
+  Flame,
+  Check
 } from 'lucide-react';
 import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini';
 import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona } = useJourney();
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
 
   if (!activeJourney) return null;
 
   const { advisorData } = activeJourney;
+
+  // Identify active phase: first incomplete phase, or the first phase
+  const activePhase = advisorData.phases.find((p) => !p.completed) || advisorData.phases[0];
+  const currentFocusedPhaseId = selectedPhaseId || activePhase?.id || advisorData.phases[0]?.id;
 
   // Toggle completion of a milestone checkpoint
   const toggleCheckpoint = (phaseId: string) => {
@@ -56,8 +67,8 @@ export const AdvisorView: React.FC = () => {
         dispatchWebhookEvent('checkpoint_completed', prev.topic, {
           phaseNumber: newlyCompletedPhase.phaseNumber,
           phaseTitle: newlyCompletedPhase.title,
-          checkpointTitle: newlyCompletedPhase.checkpoint.title,
-          checkpointDescription: newlyCompletedPhase.checkpoint.description,
+          checkpointTitle: newlyCompletedPhase.checkpoint?.title || 'Checkpoint',
+          checkpointDescription: newlyCompletedPhase.checkpoint?.description || '',
           streakDays: prev.streakDays
         });
       }
@@ -133,23 +144,29 @@ export const AdvisorView: React.FC = () => {
     }
   };
 
+  const handleStartPhaseBriefing = (phase: any) => {
+    const briefingPrompt = `Advisor, I am ready to begin Phase ${phase.phaseNumber}: "${phase.title}". Give me my Day 1 kickoff briefing: What should I study first, what common mistakes should I avoid, and how do I build the "${phase.checkpoint?.title || 'proof of work'}" deliverable?`;
+    handleSendMessage(briefingPrompt);
+  };
+
   const quickPrompts = [
-    'What should I prioritize this week?',
-    'Should I skip framework X?',
-    'How do I test if I have mastered Phase 1?'
+    `🚀 "Give me my Day-1 kickoff briefing for Phase ${activePhase?.phaseNumber || 1}"`,
+    `💡 "Explain "${activePhase?.coreConcepts?.[0] || 'core foundations'}" in plain English"`,
+    `🔨 "How should I structure my Phase ${activePhase?.phaseNumber || 1} Proof of Work?"`,
+    `⚠️ "What are the common beginner traps in this phase?"`
   ];
 
   return (
     <div className="layout animate-fade-in">
       {/* Left Column: Hero, Strategic Brief, Phases, Cut List */}
-      <div>
+      <div className="space-y-5">
         {/* Hero Card */}
         <div className="hero-card">
           <div className="hero-top">
             <div>
               <div className="role-chip">
                 <span className="dot"></span>
-                A — ACADEMIC ADVISOR
+                A — ACADEMIC ADVISOR &amp; DEAN
               </div>
               <h1>{activeJourney.topic}</h1>
             </div>
@@ -172,6 +189,40 @@ export const AdvisorView: React.FC = () => {
           </p>
         </div>
 
+        {/* Current Active Mission Banner */}
+        {activePhase && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[color-mix(in_srgb,var(--advisor)_12%,var(--surface-1))] to-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-1))] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase bg-[var(--advisor)] text-[#04050a] px-2 py-0.5 rounded font-bold">
+                  <Play size={10} fill="currentColor" /> Active Mission
+                </span>
+                <span className="text-xs font-mono text-[var(--ink-3)] font-semibold">
+                  Phase {activePhase.phaseNumber} of {advisorData.phases.length}
+                </span>
+              </div>
+              <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
+                Phase {activePhase.phaseNumber}: {activePhase.title}
+              </h3>
+              <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed max-w-xl font-sans">
+                Next goal: Master <strong>{activePhase.coreConcepts?.[0] || 'core foundations'}</strong> &amp; build the <em>{activePhase.checkpoint?.title || 'Proof-of-Work deliverable'}</em>.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
+              <button
+                onClick={() => handleStartPhaseBriefing(activePhase)}
+                className="accent-btn"
+                style={{ padding: '8px 14px', borderRadius: '10px' }}
+                title="Get custom step-by-step briefing from your Advisor"
+              >
+                <Sparkles size={13} />
+                <span>Advisor Briefing</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Strategic Overview Brief */}
         {advisorData.overview && (
           <div className="card">
@@ -182,81 +233,199 @@ export const AdvisorView: React.FC = () => {
           </div>
         )}
 
-        {/* Phases List */}
-        <div className="space-y-4 mb-4">
-          {advisorData.phases.map((phase) => (
-            <div
-              key={phase.id}
-              className="card"
-              style={{
-                borderLeft: phase.completed ? '2px solid var(--tutor)' : '2px solid var(--accent)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <h4 style={{ margin: 0, color: 'var(--ink)' }}>
-                  Phase {phase.phaseNumber} — {phase.title}
-                </h4>
-                <button
-                  onClick={() => toggleCheckpoint(phase.id)}
-                  className="p-1 text-[var(--ink-3)] hover:text-[var(--tutor)] transition cursor-pointer bg-transparent border-none"
-                  title={phase.completed ? 'Mark incomplete' : 'Mark complete'}
-                >
-                  {phase.completed ? (
-                    <CheckCircle2 size={18} className="text-[var(--tutor)]" />
-                  ) : (
-                    <Circle size={18} className="text-[var(--ink-3)] hover:text-[var(--ink-2)]" />
-                  )}
-                </button>
-              </div>
+        {/* Chronological Curriculum Phases */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Layers size={16} className="text-[var(--advisor)]" />
+              <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">
+                Curriculum Phases &amp; Action Playbooks
+              </h3>
+            </div>
+            <span className="text-xs font-mono text-[var(--ink-3)]">
+              {advisorData.phases.filter((p) => p.completed).length} / {advisorData.phases.length} Phases Mastered
+            </span>
+          </div>
 
-              <p className="source-row" style={{ marginTop: '2px' }}>
-                {phase.duration} · {phase.objective}
-              </p>
+          {advisorData.phases.map((phase) => {
+            const isActive = phase.id === activePhase?.id;
+            const isCompleted = phase.completed;
+            const isSelected = phase.id === currentFocusedPhaseId;
 
-              {/* Core Concept Tags */}
-              <div className="flex flex-wrap gap-1.5 my-3">
-                {phase.coreConcepts.map((concept, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-0.5 bg-[var(--surface-1)] border border-[var(--hairline)] text-[var(--ink-2)] rounded text-[11px] font-mono"
-                  >
-                    {concept}
-                  </span>
-                ))}
-              </div>
+            return (
+              <div
+                key={phase.id}
+                className={`card transition-all ${
+                  isActive
+                    ? 'border-[var(--advisor)] shadow-md bg-[var(--surface-1)]'
+                    : isCompleted
+                    ? 'border-[var(--tutor)]/50 bg-[var(--surface-1)]/70'
+                    : 'border-[var(--hairline)] bg-[var(--surface-1)]'
+                }`}
+                style={{
+                  borderLeft: isCompleted
+                    ? '4px solid var(--tutor)'
+                    : isActive
+                    ? '4px solid var(--advisor)'
+                    : '4px solid var(--hairline-strong)'
+                }}
+              >
+                {/* Phase Header */}
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[var(--surface-2)] text-[var(--ink)] border border-[var(--hairline)]">
+                      Phase {phase.phaseNumber}
+                    </span>
+                    <h4 className="m-0 font-display font-bold text-base text-[var(--ink)]">
+                      {phase.title}
+                    </h4>
 
-              {/* Checkpoint Deliverable */}
-              {phase.checkpoint && (
-                <div
-                  onClick={() => toggleCheckpoint(phase.id)}
-                  className={`cursor-pointer rounded-xl p-3 border text-xs transition flex items-start gap-2.5 mt-2 ${
-                    phase.checkpoint.completed
-                      ? 'bg-[color-mix(in_srgb,var(--tutor)_8%,var(--surface-1))] border-[color-mix(in_srgb,var(--tutor)_35%,transparent)] text-[var(--ink)]'
-                      : 'bg-[var(--surface-1)] border-[var(--hairline)] text-[var(--ink-2)] hover:border-[var(--hairline-strong)]'
-                  }`}
-                >
-                  <div className="mt-0.5 flex-shrink-0">
-                    {phase.checkpoint.completed ? (
-                      <CheckCircle2 size={15} className="text-[var(--tutor)]" />
-                    ) : (
-                      <Circle size={15} className="text-[var(--ink-3)]" />
+                    {isActive && (
+                      <span className="text-[10.5px] font-mono uppercase bg-[color-mix(in_srgb,var(--advisor)_14%,transparent)] text-[var(--advisor)] border border-[color-mix(in_srgb,var(--advisor)_30%,transparent)] px-2 py-0.5 rounded-full font-bold">
+                        ● Current Focus
+                      </span>
+                    )}
+
+                    {isCompleted && (
+                      <span className="text-[10.5px] font-mono uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                        <Check size={11} strokeWidth={3} /> Verified Mastered
+                      </span>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
-                      <span>Checkpoint: {phase.checkpoint.title}</span>
-                      <span className="text-[10px] font-mono uppercase text-[var(--accent)] font-semibold">
-                        Proof of Work
-                      </span>
+
+                  <button
+                    onClick={() => toggleCheckpoint(phase.id)}
+                    className="p-1.5 text-[var(--ink-3)] hover:text-[var(--tutor)] transition cursor-pointer bg-transparent border-none"
+                    title={isCompleted ? 'Mark phase incomplete' : 'Mark phase complete'}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 size={20} className="text-[var(--tutor)]" />
+                    ) : (
+                      <Circle size={20} className="text-[var(--ink-3)] hover:text-[var(--ink-2)]" />
+                    )}
+                  </button>
+                </div>
+
+                <p className="source-row" style={{ marginTop: '2px', marginBottom: '10px' }}>
+                  ⏱️ {phase.duration} · {phase.objective}
+                </p>
+
+                {/* 4-Step Action Playbook */}
+                <div className="mt-4 pt-4 border-t border-[var(--hairline)] space-y-3">
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-3)] font-bold">
+                    Phase {phase.phaseNumber} Learning Action Playbook:
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                    {/* Action 1: Read Sources */}
+                    <button
+                      onClick={() => setActivePersona('librarian')}
+                      className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--librarian)] text-left transition flex items-start gap-2.5 group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--librarian)_12%,transparent)] border border-[color-mix(in_srgb,var(--librarian)_25%,transparent)] text-[var(--librarian)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <BookOpen size={14} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
+                          <span>1. Study Grounded Sources</span>
+                          <ArrowRight size={12} className="text-[var(--librarian)] group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                        <p className="text-[11px] text-[var(--ink-2)] m-0 mt-0.5">
+                          Open curated top 1% books &amp; papers in Librarian
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Action 2: Practice Concepts */}
+                    <button
+                      onClick={() => setActivePersona('tutor')}
+                      className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)] text-left transition flex items-start gap-2.5 group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--tutor)_12%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_25%,transparent)] text-[var(--tutor)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Lightbulb size={14} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
+                          <span>2. Socratic Concept Drills</span>
+                          <ArrowRight size={12} className="text-[var(--tutor)] group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                        <p className="text-[11px] text-[var(--ink-2)] m-0 mt-0.5 truncate max-w-[200px]">
+                          Drill: {phase.coreConcepts?.[0] || 'Core concepts'} in Tutor
+                        </p>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Core Concept Tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[11px] font-mono text-[var(--ink-3)] mr-1">Core Concepts:</span>
+                    {(phase.coreConcepts || []).map((concept, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setActivePersona('tutor');
+                        }}
+                        className="px-2 py-0.5 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] hover:border-[var(--tutor)] border border-[var(--hairline)] text-[var(--ink-2)] hover:text-[var(--ink)] rounded text-[11px] font-mono transition flex items-center gap-1"
+                        title={`Click to practice "${concept}" with Socratic Tutor`}
+                      >
+                        <span>{concept}</span>
+                        <ArrowRight size={9} className="opacity-60" />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Checkpoint Deliverable Box */}
+                  {phase.checkpoint && (
+                    <div
+                      onClick={() => toggleCheckpoint(phase.id)}
+                      className={`cursor-pointer rounded-xl p-3.5 border text-xs transition flex items-start gap-3 mt-2 ${
+                        phase.checkpoint.completed
+                          ? 'bg-[color-mix(in_srgb,var(--tutor)_10%,var(--surface-1))] border-[color-mix(in_srgb,var(--tutor)_35%,transparent)] text-[var(--ink)]'
+                          : 'bg-[var(--surface-2)] border-[var(--hairline-strong)] text-[var(--ink)] hover:border-[var(--advisor)]'
+                      }`}
+                    >
+                      <div className="mt-0.5 flex-shrink-0">
+                        {phase.checkpoint.completed ? (
+                          <CheckCircle2 size={18} className="text-[var(--tutor)]" />
+                        ) : (
+                          <Circle size={18} className="text-[var(--ink-3)]" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
+                          <span>3. Phase Checkpoint: {phase.checkpoint.title}</span>
+                          <span className="text-[10px] font-mono uppercase bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-[var(--accent)] border border-[color-mix(in_srgb,var(--accent)_30%,transparent)] px-2 py-0.5 rounded font-bold">
+                            {phase.checkpoint.completed ? '✓ Mastered' : 'Proof of Work'}
+                          </span>
+                        </div>
+                        <p className="text-[var(--ink-2)] text-[12px] mt-1 leading-relaxed m-0 font-sans">
+                          {phase.checkpoint.description}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[11px] font-mono text-[var(--advisor)] font-medium">
+                            {phase.checkpoint.completed
+                              ? 'Deliverable verified! Click to uncheck if revising.'
+                              : '👉 Click here to verify proof of work when finished.'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-[var(--ink-2)] text-[11.5px] mt-0.5 leading-normal m-0">
-                      {phase.checkpoint.description}
-                    </p>
+                  )}
+
+                  {/* Action 4: Editor Audit */}
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      onClick={() => setActivePersona('editor')}
+                      className="text-xs font-semibold text-[var(--editor)] hover:underline flex items-center gap-1.5"
+                    >
+                      <FileEdit size={13} />
+                      <span>4. Pressure-test your Phase {phase.phaseNumber} thesis with the Analytical Editor →</span>
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* The Cut List */}
@@ -307,11 +476,31 @@ export const AdvisorView: React.FC = () => {
             </div>
             <div>
               <h4>Academic advisor office hours</h4>
-              <p>Strategy, pacing &amp; prioritization</p>
+              <p>Strategy, pacing &amp; day-1 kickoff</p>
             </div>
           </div>
 
           <div className="chat-body">
+            {/* Proactive Advisor Kickoff Card */}
+            {activePhase && advisorData.chatHistory.length <= 1 && (
+              <div className="mb-3 p-3.5 rounded-xl bg-gradient-to-br from-[color-mix(in_srgb,var(--advisor)_14%,var(--surface-1))] to-[var(--surface-2)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-xs text-[var(--ink)] space-y-2">
+                <div className="flex items-center gap-2 font-bold text-[var(--advisor)]">
+                  <Sparkles size={14} />
+                  <span>Phase {activePhase.phaseNumber} Ready to Begin</span>
+                </div>
+                <p className="text-[11.5px] text-[var(--ink-2)] leading-relaxed m-0">
+                  Click below to ask your Advisor for your exact Day 1 study sequence, recommended books, and checkpoint blueprint.
+                </p>
+                <button
+                  onClick={() => handleStartPhaseBriefing(activePhase)}
+                  className="w-full py-2 rounded-lg bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5"
+                >
+                  <Play size={11} fill="currentColor" />
+                  <span>Start Phase {activePhase.phaseNumber} Kickoff Briefing →</span>
+                </button>
+              </div>
+            )}
+
             {advisorData.chatHistory.map((msg) => (
               <div
                 key={msg.id}
@@ -329,7 +518,7 @@ export const AdvisorView: React.FC = () => {
             {isSending && (
               <div className="msg flex items-center gap-2 text-xs text-[var(--ink-2)] italic">
                 <Loader2 size={13} className="animate-spin text-[var(--accent)]" />
-                <span>Advisor is reviewing your pacing &amp; strategy...</span>
+                <span>Advisor is preparing your personalized study sequence...</span>
               </div>
             )}
           </div>
@@ -339,8 +528,8 @@ export const AdvisorView: React.FC = () => {
             {quickPrompts.map((p, idx) => (
               <button
                 key={idx}
-                onClick={() => handleSendMessage(p)}
-                className="sugg"
+                onClick={() => handleSendMessage(p.replace(/^[^\"]*\"([^\"]+)\".*$/, '$1'))}
+                className="sugg text-left"
               >
                 {p}
               </button>
@@ -351,7 +540,7 @@ export const AdvisorView: React.FC = () => {
           <div className="chat-input">
             <input
               type="text"
-              placeholder="Ask your Advisor about syllabus, pacing, or cuts..."
+              placeholder="Ask your Advisor about starting Phase 1, pacing, or cuts..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
