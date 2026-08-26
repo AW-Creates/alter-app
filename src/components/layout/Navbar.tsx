@@ -13,9 +13,12 @@ import {
   Zap,
   HelpCircle,
   CreditCard,
-  User
+  User,
+  Share2,
+  FileText
 } from 'lucide-react';
 import { exportAllData, importAllData } from '../../services/storage';
+import { downloadObsidianMarkdown, downloadNotionCSV } from '../../services/exporter';
 
 import { ThemeToggle } from '../common/ThemeToggle';
 
@@ -182,6 +185,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
         {/* Theme Toggle (Light / Dark) */}
         <ThemeToggle />
 
+        {/* Obsidian & Notion Knowledge Graph Exports */}
+        {activeJourney && (
+          <>
+            <button
+              onClick={() => downloadObsidianMarkdown(activeJourney)}
+              className="icon-btn hover:text-[var(--advisor)]"
+              title="Export Knowledge Graph to Obsidian (.md with [[Wikilinks]])"
+            >
+              <FileText size={14} strokeWidth={2} />
+            </button>
+            <button
+              onClick={() => downloadNotionCSV(activeJourney)}
+              className="icon-btn hover:text-[var(--librarian)]"
+              title="Export Syllabus to Notion (.csv Database)"
+            >
+              <Share2 size={14} strokeWidth={2} />
+            </button>
+          </>
+        )}
+
         {/* Overview Button */}
         <button
           onClick={onOpenLanding}
@@ -192,7 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
         </button>
 
         {/* Export / Import */}
-        <button onClick={handleExport} className="icon-btn" title="Export Backup (JSON)">
+        <button onClick={handleExport} className="icon-btn" title="Export Full Backup (JSON)">
           <Download size={14} strokeWidth={2} />
         </button>
 

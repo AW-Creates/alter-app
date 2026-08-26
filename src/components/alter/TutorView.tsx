@@ -17,6 +17,8 @@ import {
   evaluateFeynmanWithAI,
   generateQuizWithAI
 } from '../../services/gemini';
+import { VoiceInputButton } from '../common/VoiceInputButton';
+import { dispatchWebhookEvent } from '../../services/webhooks';
 import { FeynmanEvaluation, QuizQuestion } from '../../types/alter';
 
 export const TutorView: React.FC = () => {
@@ -79,6 +81,15 @@ export const TutorView: React.FC = () => {
     try {
       const evalResult = await evaluateFeynmanWithAI(feynmanConcept, feynmanExplanation);
       setFeynmanResult(evalResult);
+
+      if (evalResult.clarityScore >= 80) {
+        dispatchWebhookEvent('feynman_mastered', activeJourney.topic, {
+          concept: feynmanConcept,
+          clarityScore: evalResult.clarityScore,
+          accuracyScore: evalResult.accuracyScore,
+          strengths: evalResult.strengths
+        });
+      }
     } catch (err) {
       console.error('Feynman evaluation failed', err);
     } finally {
@@ -225,6 +236,11 @@ export const TutorView: React.FC = () => {
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Explain your reasoning or ask a conceptual question..."
               />
+              <VoiceInputButton
+                onTranscript={(transcript) =>
+                  setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript))
+                }
+              />
               <button
                 type="submit"
                 disabled={isLoading || !inputText.trim()}
@@ -260,9 +276,16 @@ export const TutorView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1">Your Plain-Language Explanation</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-[var(--ink-2)]">Your Plain-Language Explanation</label>
+                <VoiceInputButton
+                  onTranscript={(transcript) =>
+                    setFeynmanExplanation((prev) => (prev ? `${prev} ${transcript}` : transcript))
+                  }
+                />
+              </div>
               <textarea
-                placeholder="Break it down simply without hiding behind technical jargon..."
+                placeholder="Break it down simply without hiding behind technical jargon (or click the microphone to speak)..."
                 value={feynmanExplanation}
                 onChange={(e) => setFeynmanExplanation(e.target.value)}
                 rows={6}

@@ -11,6 +11,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
+import { VoiceInputButton } from '../common/VoiceInputButton';
 import { chatWithPersona, critiqueTextWithAI } from '../../services/gemini';
 import { TextCritique } from '../../types/alter';
 
@@ -127,10 +128,19 @@ export const EditorView: React.FC = () => {
             </button>
           </div>
 
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-mono text-[var(--ink-3)]">DRAFT / PROPOSAL TEXT</span>
+            <VoiceInputButton
+              onTranscript={(transcript) =>
+                setDraftText((prev) => (prev ? `${prev} ${transcript}` : transcript))
+              }
+            />
+          </div>
+
           <textarea
             value={draftText}
             onChange={(e) => setDraftText(e.target.value)}
-            placeholder="Paste your essay paragraph, technical design proposal, architectural justification, or synthesis..."
+            placeholder="Paste your essay paragraph, technical design proposal, architectural justification, or click the mic to speak..."
             className="draft-area"
             required
           />
@@ -298,6 +308,11 @@ export const EditorView: React.FC = () => {
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Challenge the editor or defend your thesis..."
+          />
+          <VoiceInputButton
+            onTranscript={(transcript) =>
+              setChatInput((prev) => (prev ? `${prev} ${transcript}` : transcript))
+            }
           />
           <button
             type="submit"

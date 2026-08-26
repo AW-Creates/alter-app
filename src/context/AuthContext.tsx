@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getSupabase, isSupabaseConfigured, syncJourneysToCloud, fetchJourneysFromCloud } from '../services/supabase';
 
 export interface UserProfile {
   id: string;
@@ -15,11 +16,12 @@ export interface UserProfile {
 interface AuthContextType {
   user: UserProfile;
   isAuthModalOpen: boolean;
+  isSupabaseActive: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
   loginWithGoogle: () => Promise<void>;
   loginWithGithub: () => Promise<void>;
   loginWithEmail: (email: string, name: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => void;
 }
 
@@ -50,6 +52,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSupabaseActive, setIsSupabaseActive] = useState(isSupabaseConfigured());
+
+  // Listen for Supabase Auth state changes if configured
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+
+    setIsSupabaseActive(true);
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const supaUser = session.user;
+        const profile: UserProfile = {
+          id: supaUser.id,
+          name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'Scholar',
+          email: supaUser.email || '',
+          username: (supaUser.user_metadata?.user_name || supaUser.email?.split('@')[0] || 'scholar')
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, ''),
+          avatarUrl: supaUser.user_metadata?.avatar_url,
+          tier: 'pro',
+          isGuest: false,
+          createdAt: supaUser.created_at,
+          syncEnabled: true
+        };
+        setUser(profile);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(defaultGuestUser);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -60,7 +97,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   const loginWithGoogle = async () => {
-    // Simulated frictionless OAuth integration
+    const supabase = getSupabase();
+    if (supabase) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (!error) return;
+    }
+
+    // Seamless offline/demo fallback
     const updatedUser: UserProfile = {
       ...user,
       id: 'google_' + Date.now(),
@@ -76,7 +124,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithGithub = async () => {
-    // Simulated frictionless GitHub OAuth
+    const supabase = getSupabase();
+    if (supabase) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (!error) return;
+    }
+
+    // Seamless offline/demo fallback
     const updatedUser: UserProfile = {
       ...user,
       id: 'github_' + Date.now(),
@@ -92,6 +151,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithEmail = async (email: string, name: string) => {
+    const supabase = getSupabase();
+    if (supabase) {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { full_name: name }
+        }
+      });
+      if (!error) {
+        alert(`Magic sign-in link sent to ${email}! Check your inbox.`);
+        setIsAuthModalOpen(false);
+        return;
+      }
+    }
+
     const updatedUser: UserProfile = {
       ...user,
       id: 'email_' + Date.now(),
@@ -105,7 +180,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthModalOpen(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const supabase = getSupabase();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(defaultGuestUser);
   };
 
@@ -118,6 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isAuthModalOpen,
+        isSupabaseActive,
         setIsAuthModalOpen,
         loginWithGoogle,
         loginWithGithub,
