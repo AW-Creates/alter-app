@@ -33,6 +33,52 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/* Light Theme Tokens (Ivory Parchment & Modern Editorial) */
+[data-theme="light"],
+html.light,
+body.light {
+  --void: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --hairline: rgba(15, 23, 42, 0.08);
+  --hairline-strong: rgba(15, 23, 42, 0.15);
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --ink-3: #64748b;
+
+  --advisor: #0284c7;    /* Deep Celestial Cerulean */
+  --librarian: #0d9488;  /* Deep Teal */
+  --tutor: #059669;      /* Deep Scholar Emerald */
+  --editor: #d97706;      /* Rich Amber / Ochre */
+  --roommate: #db2777;    /* Deep Vibrant Berry */
+
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.05), 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+  --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 20px 30px -10px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .topnav {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  color: var(--ink);
+}
+
 body[data-screen="advisor"], [data-screen="advisor"] { --accent: var(--advisor); }
 body[data-screen="librarian"], [data-screen="librarian"] { --accent: var(--librarian); }
 body[data-screen="tutor"], [data-screen="tutor"] { --accent: var(--tutor); }

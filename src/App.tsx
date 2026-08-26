@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useJourney } from './context/JourneyContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/layout/Navbar';
 import { ApiKeyModal } from './components/layout/ApiKeyModal';
 import { CreateJourneyModal } from './components/dashboard/CreateJourneyModal';
@@ -144,8 +145,10 @@ export const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

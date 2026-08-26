@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { exportAllData, importAllData } from '../../services/storage';
 
+import { ThemeToggle } from '../common/ThemeToggle';
+
 interface NavbarProps {
   onOpenLanding?: () => void;
   onOpenPricing?: () => void;
@@ -176,6 +178,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
           <User size={13} />
           <span className="truncate max-w-[80px]">{user.isGuest ? 'Sync' : user.username}</span>
         </button>
+
+        {/* Theme Toggle (Light / Dark) */}
+        <ThemeToggle />
 
         {/* Overview Button */}
         <button

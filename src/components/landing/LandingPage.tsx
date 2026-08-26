@@ -46,6 +46,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { AlterPersona } from '../../types/alter';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -316,6 +317,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Theme Toggle (Light / Dark) */}
+            <ThemeToggle />
+
             {/* Sign In / Profile Button */}
             <button
               onClick={() => setIsAuthModalOpen(true)}
