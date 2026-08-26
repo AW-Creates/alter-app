@@ -116,10 +116,37 @@ export interface DiagnosticQuiz {
   date: string;
 }
 
+export interface InteractiveLesson {
+  id: string;
+  concept: string;
+  lessonTitle: string;
+  estimatedReadTime: string;
+  plainEnglishAnalogy: string;
+  coreExplanation: string;
+  keyTakeaways: string[];
+  socraticChallenge: string;
+  practiceTask: string;
+  mastered?: boolean;
+  studentResponse?: string;
+  tutorEvaluation?: string;
+  createdAt: string;
+}
+
+export interface SourceDeepDive {
+  id: string;
+  sourceTitle: string;
+  author: string;
+  bigIdea: string;
+  topMentalModels: { model: string; explanation: string }[];
+  practicalApplication: string;
+  cutListFluff: string;
+}
+
 export interface TutorData {
   chatHistory: ChatMessage[];
   feynmanSessions: FeynmanSession[];
   quizzes: DiagnosticQuiz[];
+  lessons?: InteractiveLesson[];
 }
 
 export interface RedlineEdit {

@@ -342,15 +342,15 @@ export const AdvisorView: React.FC = () => {
                       className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)] text-left transition flex items-start gap-2.5 group"
                     >
                       <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--tutor)_12%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_25%,transparent)] text-[var(--tutor)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Lightbulb size={14} />
+                        <GraduationCap size={14} />
                       </div>
                       <div className="flex-1">
                         <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
-                          <span>2. Socratic Concept Drills</span>
+                          <span>2. Interactive Masterclass Lessons</span>
                           <ArrowRight size={12} className="text-[var(--tutor)] group-hover:translate-x-0.5 transition-transform" />
                         </div>
                         <p className="text-[11px] text-[var(--ink-2)] m-0 mt-0.5 truncate max-w-[200px]">
-                          Drill: {phase.coreConcepts?.[0] || 'Core concepts'} in Tutor
+                          Let Professor teach: {phase.coreConcepts?.[0] || 'Core concepts'}
                         </p>
                       </div>
                     </button>
@@ -358,18 +358,19 @@ export const AdvisorView: React.FC = () => {
 
                   {/* Core Concept Tags */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[11px] font-mono text-[var(--ink-3)] mr-1">Core Concepts:</span>
+                    <span className="text-[11px] font-mono text-[var(--ink-3)] mr-1">Core Lessons:</span>
                     {(phase.coreConcepts || []).map((concept, idx) => (
                       <button
                         key={idx}
                         onClick={() => {
                           setActivePersona('tutor');
                         }}
-                        className="px-2 py-0.5 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] hover:border-[var(--tutor)] border border-[var(--hairline)] text-[var(--ink-2)] hover:text-[var(--ink)] rounded text-[11px] font-mono transition flex items-center gap-1"
-                        title={`Click to practice "${concept}" with Socratic Tutor`}
+                        className="px-2.5 py-1 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] hover:border-[var(--tutor)] border border-[var(--hairline)] text-[var(--ink)] rounded-lg text-[11px] font-mono transition flex items-center gap-1.5 font-medium shadow-2xs"
+                        title={`Click to have Professor teach you "${concept}" from first principles`}
                       >
-                        <span>{concept}</span>
-                        <ArrowRight size={9} className="opacity-60" />
+                        <GraduationCap size={11} className="text-[var(--tutor)]" />
+                        <span>Teach Me: {concept}</span>
+                        <ArrowRight size={10} className="opacity-60" />
                       </button>
                     ))}
                   </div>

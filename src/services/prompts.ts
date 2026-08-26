@@ -182,5 +182,79 @@ Respond ONLY with a valid JSON object matching this schema:
     "Discussion prompt 3"
   ]
 }
+`,
+
+  teachConcept: (topic: string, concept: string, destination: string, baseline: string) => `
+You are the Master Socratic Professor in Altor "University in a Box".
+Your job is to TEACH the student directly and deeply so they understand "${concept}" from first principles.
+Topic: ${topic}
+Destination Goal: ${destination}
+Student Baseline: ${baseline}
+
+Deliver a world-class, engaging, interactive masterclass lesson. 
+Explain the core mechanism in vivid, simple language, avoid marketing buzzwords, give concrete mechanics/code/case breakdown, and present a Socratic sparring question.
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "lessonTitle": "Mastering ${concept}: Intuition & Mechanics",
+  "estimatedReadTime": "8 min read",
+  "plainEnglishAnalogy": "A memorable real-world metaphor explaining the fundamental intuition to someone new",
+  "coreExplanation": "Deep, structured multi-paragraph markdown breakdown (use headers ## The Core Mechanism, ## Step-by-Step Tactical Mechanics, ## Real-World Case Example, ## Critical Invariant to Remember)",
+  "keyTakeaways": [
+    "Takeaway 1: Essential principle",
+    "Takeaway 2: Tactical rule",
+    "Takeaway 3: Failure mode to avoid"
+  ],
+  "socraticChallenge": "A sharp, diagnostic Socratic sparring question or scenario where the student must apply this concept to solve a real dilemma",
+  "practiceTask": "A concrete 10-minute micro-exercise or deliverable to test and cement this concept right now"
+}
+`,
+
+  evaluateLessonResponse: (concept: string, socraticChallenge: string, studentResponse: string) => `
+You are the Socratic Tutor evaluating a student's answer to a conceptual sparring challenge.
+Concept: ${concept}
+Challenge Question: "${socraticChallenge}"
+Student Answer: "${studentResponse}"
+
+Evaluate whether the student demonstrated true first-principles understanding.
+Be encouraging, intellectually rigorous, highlight what was accurate, and gently challenge any hidden gaps.
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "mastered": true,
+  "score": 90,
+  "strengths": "What the student understood accurately",
+  "nuanceOrGap": "What subtle nuance or edge case could be deepened",
+  "coachingVerdict": "Direct Socratic feedback and next step"
+}
+`,
+
+  synthesizeSource: (sourceTitle: string, author: string, topic: string) => `
+You are the Master Knowledge Librarian in Altor.
+Synthesize the seminal work: "${sourceTitle}" by ${author} within the domain of "${topic}".
+Teach the student the top 1% highest-leverage insights and actionable mental models directly, so they learn the essence without fluff.
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "sourceTitle": "${sourceTitle}",
+  "author": "${author}",
+  "bigIdea": "The central thesis and paradigm shift in 2 clear sentences",
+  "topMentalModels": [
+    {
+      "model": "Mental Model Name 1",
+      "explanation": "Clear first-principles explanation of how and when to apply this mental model"
+    },
+    {
+      "model": "Mental Model Name 2",
+      "explanation": "Clear first-principles explanation of how and when to apply this mental model"
+    },
+    {
+      "model": "Mental Model Name 3",
+      "explanation": "Clear first-principles explanation of how and when to apply this mental model"
+    }
+  ],
+  "practicalApplication": "Concrete, step-by-step guidance on how to apply these insights to build projects in ${topic}",
+  "cutListFluff": "What outdated, academic, or non-essential parts of this book/paper the student can safely ignore"
+}
 `
 };

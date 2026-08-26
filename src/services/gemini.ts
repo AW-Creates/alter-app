@@ -7,7 +7,9 @@ import {
   EditorReview,
   FeynmanSession,
   LearningJourney,
-  AlterPersona
+  AlterPersona,
+  InteractiveLesson,
+  SourceDeepDive
 } from '../types/alter';
 import { queryGroundedAI, getStoredPerplexityKey } from './grounding';
 import { getStoredOpenRouterKey, callOpenRouter, getRecommendedModelForPersona } from './openrouter';
@@ -425,6 +427,95 @@ export async function generateCollisionWithAI(
   };
 }
 
+export async function teachConceptWithAI(
+  topic: string,
+  concept: string,
+  destination: string,
+  baseline: string
+): Promise<InteractiveLesson> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 1000));
+    return getSimulatedLesson(topic, concept);
+  }
+
+  const prompt = GENERATOR_PROMPTS.teachConcept(topic, concept, destination, baseline);
+  const raw = await callGemini(prompt, 'You are a master professor delivering a high-impact interactive masterclass.');
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    id: `lesson-${Date.now()}`,
+    concept,
+    lessonTitle: parsed.lessonTitle || `Mastering ${concept}`,
+    estimatedReadTime: parsed.estimatedReadTime || '7 min read',
+    plainEnglishAnalogy: parsed.plainEnglishAnalogy || 'Think of it like building with modular blocks...',
+    coreExplanation: parsed.coreExplanation || 'Core mechanics breakdown...',
+    keyTakeaways: parsed.keyTakeaways || ['Foundational principle 1', 'Tactical application 2'],
+    socraticChallenge: parsed.socraticChallenge || 'How would you apply this in a resource-constrained scenario?',
+    practiceTask: parsed.practiceTask || 'Draft a 1-page action plan applying this concept.',
+    mastered: false,
+    createdAt: new Date().toLocaleDateString()
+  };
+}
+
+export async function evaluateLessonResponseWithAI(
+  concept: string,
+  challenge: string,
+  studentResponse: string
+): Promise<{ mastered: boolean; score: number; strengths: string; nuanceOrGap: string; coachingVerdict: string }> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 900));
+    return {
+      mastered: true,
+      score: 92,
+      strengths: 'Excellent first-principles intuition! You correctly identified the core bottleneck and applied the concept accurately.',
+      nuanceOrGap: 'To reach absolute mastery, consider what happens when load scales 10x or during unexpected failure conditions.',
+      coachingVerdict: 'Concept Verified & Mastered. You are ready to advance to the next milestone deliverable!'
+    };
+  }
+
+  const prompt = GENERATOR_PROMPTS.evaluateLessonResponse(concept, challenge, studentResponse);
+  const raw = await callGemini(prompt, 'You are a Socratic tutor evaluating conceptual mastery.');
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    mastered: parsed.mastered ?? true,
+    score: parsed.score || 88,
+    strengths: parsed.strengths || 'Strong grasp of core concepts.',
+    nuanceOrGap: parsed.nuanceOrGap || 'Consider edge-case behavior.',
+    coachingVerdict: parsed.coachingVerdict || 'Verified understanding.'
+  };
+}
+
+export async function synthesizeSourceWithAI(
+  sourceTitle: string,
+  author: string,
+  topic: string
+): Promise<SourceDeepDive> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 900));
+    return getSimulatedSourceDeepDive(sourceTitle, author, topic);
+  }
+
+  const prompt = GENERATOR_PROMPTS.synthesizeSource(sourceTitle, author, topic);
+  const raw = await callGemini(prompt, 'You are an executive research librarian extracting high-signal knowledge.');
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    id: `dive-${Date.now()}`,
+    sourceTitle: parsed.sourceTitle || sourceTitle,
+    author: parsed.author || author,
+    bigIdea: parsed.bigIdea || 'Central thesis and paradigm shift.',
+    topMentalModels: parsed.topMentalModels || [
+      { model: 'Core Axiom', explanation: 'First-principles baseline.' }
+    ],
+    practicalApplication: parsed.practicalApplication || 'How to apply this in your project.',
+    cutListFluff: parsed.cutListFluff || 'Historical background chapters can be skipped.'
+  };
+}
+
 // ----------------------------------------------------
 // Simulation Engines (for offline / instant demo mode)
 // ----------------------------------------------------
@@ -664,4 +755,62 @@ function getSimulatedPersonaResponse(
     case 'roommate':
       return `🛋️ **Roommate**: Dude, you know what that reminds me of? That is EXACTLY like how slime molds optimize Tokyo's railway network! If we treat "${userMessage}" not as a static problem, but as an emergent network, how does that completely flip the solution on its head?`;
   }
+}
+
+function getSimulatedLesson(topic: string, concept: string): any {
+  return {
+    id: `lesson-${Date.now()}`,
+    concept,
+    lessonTitle: `Masterclass: ${concept}`,
+    estimatedReadTime: '6 min read',
+    plainEnglishAnalogy: `Think of ${concept} like the load-bearing foundation of a skyscraper. If you focus only on interior decoration (surface tricks) before the foundation is poured, the entire structure collapses under real-world weight.`,
+    coreExplanation: `### The Core Mechanism of ${concept}
+
+To master **${concept}** in the context of **${topic}**, you must decouple the immutable principles from transient tools.
+
+#### 1. Why Most Beginners Fail
+Most people jump straight into advanced execution without understanding the baseline constraint. In ${concept}, the fundamental invariant is that every action must generate immediate feedback or reduce systemic risk.
+
+#### 2. Tactical Step-by-Step Execution
+1. **Isolate the Core Axiom**: Define the single metric or condition that makes your implementation true.
+2. **Eliminate Non-Essential Friction**: Remove unnecessary layers and avoid premature optimization.
+3. **Test the Failure Boundary**: Force the system or concept to its extreme limits to see where it breaks.
+
+#### 3. Real-World Case Example
+In top-tier practice, masters of ${concept} don't rely on guesswork. They systematically validate their assumptions through small, rapid iterations before scaling up investment.`,
+    keyTakeaways: [
+      `1. Focus on the core invariant before touching complex tools.`,
+      `2. Test failure modes early: observe where the concept breaks under stress.`,
+      `3. Simplicity and direct feedback always outperform bloated complexity.`
+    ],
+    socraticChallenge: `Imagine you are executing a real project in ${topic} and hit a bottleneck where resources are limited and time is cut in half. How would you apply ${concept} to decide what 80% of work to strip away while keeping the core result intact?`,
+    practiceTask: `Draft a 3-bullet action plan applying ${concept} to your current project and submit it below for Socratic verification.`,
+    mastered: false,
+    createdAt: new Date().toLocaleDateString()
+  };
+}
+
+function getSimulatedSourceDeepDive(sourceTitle: string, author: string, topic: string): any {
+  return {
+    id: `dive-${Date.now()}`,
+    sourceTitle,
+    author,
+    bigIdea: `The central premise of "${sourceTitle}" is that mastery in ${topic} comes from understanding foundational system dynamics rather than memorizing transient rules.`,
+    topMentalModels: [
+      {
+        model: 'First-Principles Deconstruction',
+        explanation: 'Break down complex problems into basic truths that cannot be deduced any further, then build reasoned solutions upward.'
+      },
+      {
+        model: 'Signal vs. Noise Filtering',
+        explanation: 'Ignore 90% of surface chatter and focus exclusively on the 10% of variables that determine 90% of outcomes.'
+      },
+      {
+        model: 'Antifragile Feedback Loops',
+        explanation: 'Design your learning and execution so that unexpected errors make your understanding stronger rather than shattering your progress.'
+      }
+    ],
+    practicalApplication: `Apply these insights by building minimal testable prototypes in ${topic} every week, ruthlessly cutting low-signal tutorials.`,
+    cutListFluff: `You can safely skip the introductory historical anecdotes in Chapters 1-2 and the outdated appendix case studies.`
+  };
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useJourney } from '../../context/JourneyContext';
 import {
   Lightbulb,
@@ -9,21 +9,37 @@ import {
   Sparkles,
   ArrowRight,
   Loader2,
-  Award
+  Award,
+  GraduationCap,
+  BookOpen,
+  Check,
+  Play,
+  RotateCcw,
+  Zap
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import {
   chatWithPersona,
   evaluateFeynmanWithAI,
-  generateQuizWithAI
+  generateQuizWithAI,
+  teachConceptWithAI,
+  evaluateLessonResponseWithAI
 } from '../../services/gemini';
 import { VoiceInputButton } from '../common/VoiceInputButton';
 import { dispatchWebhookEvent } from '../../services/webhooks';
-import { FeynmanEvaluation, QuizQuestion } from '../../types/alter';
+import { FeynmanEvaluation, QuizQuestion, InteractiveLesson } from '../../types/alter';
 
 export const TutorView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage } = useJourney();
-  const [tutorMode, setTutorMode] = useState<'socratic' | 'feynman' | 'quiz'>('socratic');
+  const [tutorMode, setTutorMode] = useState<'masterclass' | 'socratic' | 'feynman' | 'quiz'>('masterclass');
+
+  // Masterclass lesson state
+  const [selectedConcept, setSelectedConcept] = useState<string>('');
+  const [isGeneratingLesson, setIsGeneratingLesson] = useState(false);
+  const [activeLesson, setActiveLesson] = useState<InteractiveLesson | null>(null);
+  const [sparringResponse, setSparringResponse] = useState('');
+  const [isEvaluatingSparring, setIsEvaluatingSparring] = useState(false);
+  const [sparringResult, setSparringResult] = useState<any>(null);
 
   // Socratic chat state
   const [inputText, setInputText] = useState('');
@@ -43,7 +59,126 @@ export const TutorView: React.FC = () => {
 
   if (!activeJourney) return null;
 
-  const { tutorData } = activeJourney;
+  const { tutorData, advisorData } = activeJourney;
+  const allConcepts = advisorData.phases.flatMap((p) => p.coreConcepts || []);
+
+  // Initialize selected concept on first load if none selected
+  useEffect(() => {
+    if (!selectedConcept && allConcepts.length > 0) {
+      setSelectedConcept(allConcepts[0]);
+    }
+  }, [allConcepts, selectedConcept]);
+
+  // Load existing lesson for selected concept if already cached
+  useEffect(() => {
+    if (selectedConcept) {
+      const cached = (tutorData.lessons || []).find((l) => l.concept === selectedConcept);
+      if (cached) {
+        setActiveLesson(cached);
+        setSparringResult(
+          cached.tutorEvaluation
+            ? {
+                mastered: cached.mastered,
+                coachingVerdict: cached.tutorEvaluation,
+                strengths: 'Previously evaluated',
+                nuanceOrGap: ''
+              }
+            : null
+        );
+      } else {
+        setActiveLesson(null);
+        setSparringResult(null);
+      }
+    }
+  }, [selectedConcept, tutorData.lessons]);
+
+  const handleGenerateLesson = async (conceptToTeach?: string) => {
+    const concept = conceptToTeach || selectedConcept || allConcepts[0];
+    if (!concept || isGeneratingLesson) return;
+
+    setIsGeneratingLesson(true);
+    setSparringResult(null);
+    setSparringResponse('');
+
+    try {
+      const lesson = await teachConceptWithAI(
+        activeJourney.topic,
+        concept,
+        activeJourney.destination,
+        activeJourney.baseline
+      );
+
+      setActiveLesson(lesson);
+
+      // Save to journey context
+      updateActiveJourney((prev) => {
+        const existing = prev.tutorData.lessons || [];
+        const filtered = existing.filter((l) => l.concept !== concept);
+        return {
+          ...prev,
+          tutorData: {
+            ...prev.tutorData,
+            lessons: [...filtered, lesson]
+          }
+        };
+      });
+    } catch (err) {
+      console.error('Failed to generate masterclass lesson', err);
+    } finally {
+      setIsGeneratingLesson(false);
+    }
+  };
+
+  const handleEvaluateSparring = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeLesson || !sparringResponse.trim() || isEvaluatingSparring) return;
+
+    setIsEvaluatingSparring(true);
+    try {
+      const evalResult = await evaluateLessonResponseWithAI(
+        activeLesson.concept,
+        activeLesson.socraticChallenge,
+        sparringResponse.trim()
+      );
+
+      setSparringResult(evalResult);
+
+      // Update lesson in state & context
+      const updatedLesson: InteractiveLesson = {
+        ...activeLesson,
+        mastered: evalResult.mastered,
+        studentResponse: sparringResponse.trim(),
+        tutorEvaluation: evalResult.coachingVerdict
+      };
+
+      setActiveLesson(updatedLesson);
+
+      updateActiveJourney((prev) => {
+        const existing = prev.tutorData.lessons || [];
+        const filtered = existing.filter((l) => l.concept !== activeLesson.concept);
+        return {
+          ...prev,
+          tutorData: {
+            ...prev.tutorData,
+            lessons: [...filtered, updatedLesson]
+          }
+        };
+      });
+
+      if (evalResult.mastered) {
+        dispatchWebhookEvent('feynman_mastered', activeJourney.topic, {
+          concept: activeLesson.concept,
+          clarityScore: evalResult.score,
+          accuracyScore: evalResult.score,
+          strengths: [evalResult.strengths]
+        });
+      }
+    } catch (err) {
+      console.error('Sparring evaluation failed', err);
+    } finally {
+      setIsEvaluatingSparring(false);
+    }
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,7 +255,7 @@ export const TutorView: React.FC = () => {
     'Quiz me on the core invariant of Phase 1',
     'Give me a real-world edge case scenario to solve',
     'What is the fundamental flaw in naive implementations?',
-    'Walk me through the mathematical proof or derivation'
+    'Walk me through the derivation from first principles'
   ];
 
   return (
@@ -131,22 +266,28 @@ export const TutorView: React.FC = () => {
           <div>
             <div className="role-chip">
               <span className="dot"></span>
-              T — SOCRATIC MIDNIGHT TUTOR
+              T — SOCRATIC MASTER TUTOR
             </div>
-            <h1>Active Recall &amp; Diagnostic Gap Finder</h1>
+            <h1>Interactive Masterclass &amp; Concept Sparring</h1>
           </div>
           <div className="segmented">
+            <button
+              onClick={() => setTutorMode('masterclass')}
+              className={tutorMode === 'masterclass' ? 'active font-bold text-[var(--tutor)]' : ''}
+            >
+              🎓 Masterclass Lessons
+            </button>
             <button
               onClick={() => setTutorMode('socratic')}
               className={tutorMode === 'socratic' ? 'active' : ''}
             >
-              Socratic dialogue
+              💬 Socratic Dialogue
             </button>
             <button
               onClick={() => setTutorMode('feynman')}
               className={tutorMode === 'feynman' ? 'active' : ''}
             >
-              Feynman drill
+              🧠 Feynman Studio
             </button>
             <button
               onClick={() => {
@@ -155,17 +296,247 @@ export const TutorView: React.FC = () => {
               }}
               className={tutorMode === 'quiz' ? 'active' : ''}
             >
-              Diagnostic quiz
+              🎯 Diagnostic Quiz
             </button>
           </div>
         </div>
         <p className="hero-sub">
-          True mastery comes from active deduction. Test your understanding through Socratic sparring,
-          the Feynman Technique, and edge-case quizzes.
+          True mastery comes from being taught from first principles and applying active deduction.
+          Choose a concept below to start your personal AI masterclass lesson.
         </p>
       </div>
 
-      {/* Mode 1: Socratic Dialogue Grid */}
+      {/* Mode 1: Interactive Masterclass Lessons (The Core Teaching Engine) */}
+      {tutorMode === 'masterclass' && (
+        <div className="space-y-6">
+          {/* Concept Selector Pills */}
+          <div className="card space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <GraduationCap size={16} className="text-[var(--tutor)]" />
+                <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">
+                  Select a Concept to Learn:
+                </h3>
+              </div>
+              <span className="text-xs font-mono text-[var(--ink-3)]">
+                {(tutorData.lessons || []).filter((l) => l.mastered).length} / {allConcepts.length} Concepts Mastered
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {allConcepts.map((concept, idx) => {
+                const isMastered = (tutorData.lessons || []).some(
+                  (l) => l.concept === concept && l.mastered
+                );
+                const isSelected = selectedConcept === concept;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSelectedConcept(concept);
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-2 border ${
+                      isSelected
+                        ? 'bg-[var(--surface-3)] text-[var(--tutor)] border-[var(--tutor)] shadow-sm font-bold'
+                        : isMastered
+                        ? 'bg-[var(--surface-1)] text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-[var(--surface-1)] text-[var(--ink-2)] border-[var(--hairline)] hover:border-[var(--hairline-strong)] hover:text-[var(--ink)]'
+                    }`}
+                  >
+                    <span>{concept}</span>
+                    {isMastered && (
+                      <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active Lesson View / Generation Area */}
+          {activeLesson ? (
+            <div className="card space-y-6 border-[var(--tutor)]/40 bg-[var(--surface-1)] shadow-card">
+              {/* Lesson Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--hairline)] pb-4">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-mono text-[var(--tutor)] uppercase tracking-wider mb-1 font-semibold">
+                    <Sparkles size={14} className="text-[var(--tutor)]" />
+                    <span>Interactive Masterclass · {activeLesson.estimatedReadTime}</span>
+                    {activeLesson.mastered && (
+                      <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded font-bold ml-2">
+                        ✓ Mastered
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="font-display text-2xl font-bold text-[var(--ink)] m-0">
+                    {activeLesson.lessonTitle}
+                  </h2>
+                </div>
+
+                <button
+                  onClick={() => handleGenerateLesson(selectedConcept)}
+                  disabled={isGeneratingLesson}
+                  className="ghost-btn self-start sm:self-auto"
+                  title="Regenerate this lesson"
+                >
+                  <RotateCcw size={13} />
+                  <span>Refresh Lesson</span>
+                </button>
+              </div>
+
+              {/* Intuition Box */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-1))] to-[var(--surface-2)] border border-[color-mix(in_srgb,var(--tutor)_30%,transparent)]">
+                <div className="text-[11px] font-mono uppercase text-[var(--tutor)] tracking-wider font-bold mb-1 flex items-center gap-1.5">
+                  <Lightbulb size={14} />
+                  <span>The Plain-English Intuition (Metaphor)</span>
+                </div>
+                <p className="text-sm text-[var(--ink)] leading-relaxed m-0 italic font-sans">
+                  "{activeLesson.plainEnglishAnalogy}"
+                </p>
+              </div>
+
+              {/* Core First-Principles Lecture */}
+              <div className="prose prose-invert max-w-none text-sm leading-relaxed text-[var(--ink)]">
+                <MarkdownRenderer content={activeLesson.coreExplanation} />
+              </div>
+
+              {/* Key Takeaways Checklist */}
+              {activeLesson.keyTakeaways && activeLesson.keyTakeaways.length > 0 && (
+                <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
+                  <div className="text-[11px] font-mono uppercase text-[var(--ink-3)] tracking-wider font-bold">
+                    🔑 Key First-Principles Takeaways:
+                  </div>
+                  <div className="space-y-1.5 text-xs text-[var(--ink)]">
+                    {activeLesson.keyTakeaways.map((takeaway, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <Check size={14} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                        <span>{takeaway}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Socratic Sparring Checkpoint */}
+              <div className="p-5 rounded-2xl bg-[var(--surface-2)] border-2 border-[var(--tutor)] space-y-4">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase text-[var(--tutor)] font-bold">
+                  <Zap size={15} />
+                  <span>Socratic Sparring Check: Prove Your Understanding</span>
+                </div>
+
+                <p className="text-sm font-semibold text-[var(--ink)] leading-relaxed m-0">
+                  {activeLesson.socraticChallenge}
+                </p>
+
+                {sparringResult && (
+                  <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-[var(--tutor)]/40 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-emerald-500 flex items-center gap-1">
+                        <CheckCircle2 size={15} /> Score: {sparringResult.score || 90}/100 — {sparringResult.mastered ? 'Verified Mastered' : 'Needs Polish'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--ink)] m-0 leading-relaxed font-sans">
+                      <strong>Tutor Evaluation:</strong> {sparringResult.coachingVerdict}
+                    </p>
+                    {sparringResult.strengths && (
+                      <p className="text-[11.5px] text-[var(--ink-2)] m-0">
+                        <strong className="text-emerald-500">Strengths:</strong> {sparringResult.strengths}
+                      </p>
+                    )}
+                    {sparringResult.nuanceOrGap && (
+                      <p className="text-[11.5px] text-[var(--ink-2)] m-0">
+                        <strong className="text-amber-500">Nuance to Keep in Mind:</strong> {sparringResult.nuanceOrGap}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <form onSubmit={handleEvaluateSparring} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-[var(--ink-2)]">
+                      Your Answer (Explain how you would resolve this challenge):
+                    </label>
+                    <VoiceInputButton
+                      onTranscript={(transcript) =>
+                        setSparringResponse((prev) => (prev ? `${prev} ${transcript}` : transcript))
+                      }
+                    />
+                  </div>
+
+                  <textarea
+                    placeholder="Type your explanation or click the microphone to speak your answer to the Tutor..."
+                    value={sparringResponse}
+                    onChange={(e) => setSparringResponse(e.target.value)}
+                    rows={3}
+                    className="draft-area"
+                    style={{ minHeight: '90px', margin: 0 }}
+                  />
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!sparringResponse.trim() || isEvaluatingSparring}
+                      className="accent-btn"
+                    >
+                      {isEvaluatingSparring ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Tutor is Evaluating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={14} />
+                          <span>Verify Understanding &amp; Spar with Tutor →</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          ) : (
+            /* Prompt to generate Masterclass lesson */
+            <div className="card text-center py-12 px-4 space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-2))] border border-[var(--tutor)]/30 text-[var(--tutor)] flex items-center justify-center mx-auto shadow-sm">
+                <GraduationCap size={28} />
+              </div>
+
+              <div className="max-w-md mx-auto space-y-2">
+                <h3 className="font-display text-xl font-bold text-[var(--ink)] m-0">
+                  Ready to Master "{selectedConcept || 'this concept'}"?
+                </h3>
+                <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0">
+                  Your Socratic Professor will teach you this concept from first principles with vivid analogies, tactical mechanics, and an interactive sparring check.
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleGenerateLesson()}
+                disabled={isGeneratingLesson}
+                className="accent-btn mx-auto"
+                style={{ padding: '12px 24px', borderRadius: '12px' }}
+              >
+                {isGeneratingLesson ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Professor is preparing your masterclass...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play size={15} fill="currentColor" />
+                    <span>Start Masterclass on "{selectedConcept || 'Concept'}" →</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mode 2: Socratic Dialogue Grid */}
       {tutorMode === 'socratic' && (
         <div className="layout tutor-grid">
           {/* Left Cards */}
@@ -254,7 +625,7 @@ export const TutorView: React.FC = () => {
         </div>
       )}
 
-      {/* Mode 2: Feynman Drill */}
+      {/* Mode 3: Feynman Drill */}
       {tutorMode === 'feynman' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[22px] items-start">
           <form onSubmit={handleEvaluateFeynman} className="card space-y-4">
@@ -298,161 +669,186 @@ export const TutorView: React.FC = () => {
             <button
               type="submit"
               disabled={isEvaluatingFeynman}
-              className="accent-btn"
-              style={{ width: '100%', justifyContent: 'center' }}
+              className="accent-btn w-full"
             >
               {isEvaluatingFeynman ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  <span>Evaluating Feynman clarity...</span>
+                  <span>Evaluating clarity &amp; spotting blind spots...</span>
                 </>
               ) : (
                 <>
                   <Sparkles size={14} />
-                  <span>Grade Feynman Explanation</span>
+                  <span>Evaluate Feynman explanation</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Results */}
-          <div className="space-y-4">
-            {feynmanResult ? (
-              <div className="card space-y-4">
-                <p className="card-label">Socratic Evaluation &amp; Diagnostics</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-center">
-                    <span className="card-label" style={{ margin: 0 }}>Clarity</span>
-                    <div className="text-2xl font-display font-bold text-[var(--accent)] mt-1">
-                      {feynmanResult.clarityScore}/100
-                    </div>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-center">
-                    <span className="card-label" style={{ margin: 0 }}>Accuracy</span>
-                    <div className="text-2xl font-display font-bold text-[var(--tutor)] mt-1">
-                      {feynmanResult.accuracyScore}/100
-                    </div>
-                  </div>
-                </div>
-
-                {feynmanResult.simplifiedAnalogy && (
-                  <div className="p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-1))] border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] text-xs space-y-1">
-                    <span className="font-semibold text-[var(--ink)]">Intuitive Master Analogy:</span>
-                    <p className="text-[var(--ink-2)] italic leading-relaxed m-0">"{feynmanResult.simplifiedAnalogy}"</p>
-                  </div>
-                )}
-
-                <div className="space-y-2 text-xs">
-                  <span className="font-semibold text-[var(--ink)]">Identified Blind Spots:</span>
-                  <ul className="list-disc list-inside space-y-1 text-[var(--ink-2)]">
-                    {feynmanResult.blindSpots?.map((bs, i) => (
-                      <li key={i}><span className="text-[var(--ink)]">{bs}</span></li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="pt-2 border-t border-[var(--hairline)] text-xs text-[var(--ink-2)] leading-relaxed">
-                  <span className="font-semibold text-[var(--ink)]">Tutor Coaching: </span>
-                  {feynmanResult.tutorFeedback}
+          {/* Evaluation Result */}
+          {feynmanResult ? (
+            <div className="card space-y-4 border-[var(--tutor)]/40 bg-[var(--surface-1)] animate-fade-in">
+              <div className="flex items-center justify-between">
+                <p className="card-label">Tutor evaluation report</p>
+                <div className="flex gap-2 text-xs font-mono font-semibold">
+                  <span className="px-2 py-0.5 rounded bg-[var(--surface-2)] text-[var(--tutor)]">
+                    Clarity: {feynmanResult.clarityScore}/100
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[var(--surface-2)] text-[var(--accent)]">
+                    Accuracy: {feynmanResult.accuracyScore}/100
+                  </span>
                 </div>
               </div>
-            ) : (
-              <div className="card flex flex-col items-center justify-center text-center py-20 text-[var(--ink-3)] space-y-2">
-                <Award size={32} className="opacity-30" />
-                <p className="text-xs">Submit your Feynman explanation to receive instant clarity and gap analysis.</p>
+
+              <div>
+                <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wide mb-1">Strengths</h4>
+                <ul className="text-xs text-[var(--ink)] space-y-1 list-disc pl-4">
+                  {feynmanResult.strengths.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
               </div>
-            )}
-          </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-amber-500 uppercase tracking-wide mb-1">Subtle Blind Spots</h4>
+                <ul className="text-xs text-[var(--ink-2)] space-y-1 list-disc pl-4">
+                  {feynmanResult.blindSpots.map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--hairline)]">
+                <h4 className="text-xs font-bold text-[var(--tutor)] uppercase tracking-wide mb-1">Simplified Metaphor</h4>
+                <p className="text-xs text-[var(--ink)] leading-relaxed italic m-0 font-sans">
+                  "{feynmanResult.simplifiedAnalogy}"
+                </p>
+              </div>
+
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0 border-t border-[var(--hairline)] pt-3">
+                <strong>Tutor Advice:</strong> {feynmanResult.tutorFeedback}
+              </p>
+            </div>
+          ) : (
+            <div className="card flex flex-col items-center justify-center text-center p-8 text-[var(--ink-3)] min-h-[280px]">
+              <Award size={32} className="mb-2 opacity-40 text-[var(--tutor)]" />
+              <p className="text-xs max-w-xs m-0">
+                Submit an explanation to receive diagnostic grading on clarity, conceptual blind spots, and vivid analogies.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Mode 3: Diagnostic Quiz */}
+      {/* Mode 4: Diagnostic Quiz */}
       {tutorMode === 'quiz' && (
-        <div className="card space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--hairline)] pb-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-display font-semibold text-lg text-[var(--ink)] m-0">Edge-Case Knowledge Diagnostic</h3>
-              <p className="text-xs text-[var(--ink-3)] m-0 mt-0.5">3-Question First-Principles Challenge</p>
+              <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">Diagnostic First-Principles Quiz</h3>
+              <p className="text-xs text-[var(--ink-2)] m-0 mt-0.5">3 edge-case scenarios testing invariant principles.</p>
             </div>
             <button
               onClick={handleGenerateDiagnosticQuiz}
               disabled={isGeneratingQuiz}
               className="ghost-btn"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
             >
-              {isGeneratingQuiz ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-              <span>New Diagnostic Quiz</span>
+              {isGeneratingQuiz ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Sparkles size={13} />
+              )}
+              <span>Regenerate quiz</span>
             </button>
           </div>
 
           {isGeneratingQuiz ? (
-            <div className="py-20 text-center text-xs font-mono text-[var(--accent)] flex flex-col items-center gap-2">
-              <Loader2 size={20} className="animate-spin" />
-              <span>Generating diagnostic questions...</span>
+            <div className="card flex items-center justify-center p-12 text-xs text-[var(--ink-2)] font-mono gap-2">
+              <Loader2 size={16} className="animate-spin text-[var(--accent)]" />
+              <span>Generating diagnostic scenarios...</span>
             </div>
-          ) : quizQuestions.length > 0 ? (
-            <div className="space-y-6">
+          ) : (
+            <div className="space-y-4">
               {quizQuestions.map((q, qIdx) => (
-                <div key={q.id || qIdx} className="space-y-3 p-4 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)]">
-                  <p className="text-sm font-semibold text-[var(--ink)]">
-                    <span className="text-[var(--accent)] font-mono mr-2">Q{qIdx + 1}.</span>
-                    {q.question}
-                  </p>
+                <div key={qIdx} className="card space-y-3">
+                  <div className="flex items-start gap-2">
+                    <span className="font-mono text-xs font-bold text-[var(--tutor)] bg-[var(--surface-2)] px-2 py-0.5 rounded">
+                      Q{qIdx + 1}
+                    </span>
+                    <h4 className="text-xs font-semibold text-[var(--ink)] leading-relaxed m-0 flex-1">
+                      {q.question}
+                    </h4>
+                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-2 pt-1">
                     {q.options.map((opt, optIdx) => {
                       const isSelected = userAnswers[qIdx] === optIdx;
                       const isCorrect = q.correctIndex === optIdx;
-                      let btnStyle = 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--ink-2)] hover:border-[var(--hairline-strong)]';
+                      let optionClass = 'bg-[var(--surface-1)] border-[var(--hairline)] hover:border-[var(--hairline-strong)] text-[var(--ink-2)]';
 
                       if (showResults) {
-                        if (isCorrect) btnStyle = 'bg-[rgba(95,219,158,0.1)] border-[var(--tutor)] text-[var(--tutor)] font-semibold';
-                        else if (isSelected && !isCorrect) btnStyle = 'bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-300';
+                        if (isCorrect) {
+                          optionClass = 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-semibold';
+                        } else if (isSelected && !isCorrect) {
+                          optionClass = 'bg-rose-500/10 border-rose-500 text-rose-500';
+                        }
                       } else if (isSelected) {
-                        btnStyle = 'bg-[color-mix(in_srgb,var(--accent)_16%,var(--surface-3))] border-[var(--accent)] text-[var(--ink)] font-medium';
+                        optionClass = 'bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface-1))] border-[var(--accent)] text-[var(--ink)] font-semibold';
                       }
 
                       return (
-                        <button
+                        <div
                           key={optIdx}
                           onClick={() => selectAnswer(qIdx, optIdx)}
-                          className={`text-left p-3 rounded-lg border text-xs transition flex items-start gap-2 ${btnStyle}`}
+                          className={`p-3 rounded-lg border text-xs cursor-pointer transition flex items-center justify-between ${optionClass}`}
                         >
-                          <span className="font-mono text-[10px] opacity-50 mt-0.5">
-                            {String.fromCharCode(65 + optIdx)}.
-                          </span>
                           <span>{opt}</span>
-                        </button>
+                          {showResults && isCorrect && (
+                            <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" />
+                          )}
+                          {showResults && isSelected && !isCorrect && (
+                            <XCircle size={15} className="text-rose-500 flex-shrink-0" />
+                          )}
+                        </div>
                       );
                     })}
                   </div>
 
                   {showResults && (
-                    <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] leading-relaxed mt-2">
-                      <span className="font-semibold text-[var(--ink)]">First-Principles Explanation: </span>
-                      {q.explanation}
+                    <div className="p-3 bg-[var(--surface-2)] rounded-lg text-xs border border-[var(--hairline)] space-y-1">
+                      <div className="font-semibold text-[var(--accent)] text-[11px] uppercase tracking-wider font-mono">
+                        Explanation &amp; Invariant:
+                      </div>
+                      <p className="text-[var(--ink)] leading-relaxed m-0 font-sans">
+                        {q.explanation}
+                      </p>
                     </div>
                   )}
                 </div>
               ))}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div className="flex justify-end pt-2">
                 {!showResults ? (
                   <button
                     onClick={() => setShowResults(true)}
-                    disabled={Object.keys(userAnswers).length < quizQuestions.length}
+                    disabled={Object.keys(userAnswers).length === 0}
                     className="accent-btn"
                   >
-                    Check Answers
+                    <span>Check Answers</span>
+                    <ArrowRight size={14} />
                   </button>
                 ) : (
-                  <button onClick={handleGenerateDiagnosticQuiz} className="accent-btn">
-                    Next Diagnostic Challenge
+                  <button
+                    onClick={handleGenerateDiagnosticQuiz}
+                    className="accent-btn"
+                  >
+                    <span>Try Another Diagnostic Quiz</span>
+                    <Sparkles size={14} />
                   </button>
                 )}
               </div>
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </div>
