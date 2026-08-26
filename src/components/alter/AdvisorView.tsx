@@ -18,6 +18,7 @@ import {
   Globe
 } from 'lucide-react';
 import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini';
+import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage } = useJourney();
@@ -32,9 +33,13 @@ export const AdvisorView: React.FC = () => {
   // Toggle completion of a milestone checkpoint
   const toggleCheckpoint = (phaseId: string) => {
     updateActiveJourney((prev) => {
+      let newlyCompletedPhase: any = null;
       const updatedPhases = prev.advisorData.phases.map((p) => {
         if (p.id === phaseId) {
           const completed = !p.completed;
+          if (completed) {
+            newlyCompletedPhase = p;
+          }
           return {
             ...p,
             completed,
@@ -46,6 +51,16 @@ export const AdvisorView: React.FC = () => {
         }
         return p;
       });
+
+      if (newlyCompletedPhase) {
+        dispatchWebhookEvent('checkpoint_completed', prev.topic, {
+          phaseNumber: newlyCompletedPhase.phaseNumber,
+          phaseTitle: newlyCompletedPhase.title,
+          checkpointTitle: newlyCompletedPhase.checkpoint.title,
+          checkpointDescription: newlyCompletedPhase.checkpoint.description,
+          streakDays: prev.streakDays
+        });
+      }
 
       return {
         ...prev,

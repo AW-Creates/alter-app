@@ -10,7 +10,11 @@ import {
   Globe,
   Zap,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  Cpu,
+  Webhook,
+  Send,
+  AlertCircle
 } from 'lucide-react';
 import {
   getStoredPerplexityKey,
@@ -19,23 +23,43 @@ import {
   setStoredGroundingProvider,
   GroundingProvider
 } from '../../services/grounding';
+import {
+  getStoredOpenRouterKey,
+  setStoredOpenRouterKey,
+  getStoredPreferredModel,
+  setStoredPreferredModel,
+  OPENROUTER_PRESETS
+} from '../../services/openrouter';
+import {
+  getStoredZapierWebhook,
+  setStoredZapierWebhook,
+  testWebhookPing
+} from '../../services/webhooks';
 
 export const ApiKeyModal: React.FC = () => {
-  const { apiKey, setApiKey, isApiKeyModalOpen, setIsApiKeyModalOpen } = useJourney();
+  const { apiKey, setApiKey, isApiKeyModalOpen, setIsApiKeyModalOpen, activeJourney } = useJourney();
   
   const [geminiKeyInput, setGeminiKeyInput] = useState(apiKey);
+  const [openRouterKeyInput, setOpenRouterKeyInput] = useState(getStoredOpenRouterKey());
+  const [preferredModel, setPreferredModel] = useState(getStoredPreferredModel());
   const [perplexityKeyInput, setPerplexityKeyInput] = useState(getStoredPerplexityKey());
   const [groundingProvider, setGroundingProvider] = useState<GroundingProvider>(getStoredGroundingProvider());
+  const [zapierWebhookInput, setZapierWebhookInput] = useState(getStoredZapierWebhook());
   
-  const [activeTab, setActiveTab] = useState<'gemini' | 'perplexity' | 'grounding'>('gemini');
+  const [activeTab, setActiveTab] = useState<'gemini' | 'openrouter' | 'webhooks'>('gemini');
   const [saved, setSaved] = useState(false);
+  const [isPinging, setIsPinging] = useState(false);
+  const [pingStatus, setPingStatus] = useState<{ success: boolean; message: string } | null>(null);
 
   if (!isApiKeyModalOpen) return null;
 
   const handleSave = () => {
     setApiKey(geminiKeyInput.trim());
+    setStoredOpenRouterKey(openRouterKeyInput.trim());
+    setStoredPreferredModel(preferredModel);
     setStoredPerplexityKey(perplexityKeyInput.trim());
     setStoredGroundingProvider(groundingProvider);
+    setStoredZapierWebhook(zapierWebhookInput.trim());
     
     setSaved(true);
     setTimeout(() => {
@@ -46,15 +70,28 @@ export const ApiKeyModal: React.FC = () => {
 
   const handleClear = () => {
     setGeminiKeyInput('');
+    setOpenRouterKeyInput('');
     setPerplexityKeyInput('');
+    setZapierWebhookInput('');
     setApiKey('');
+    setStoredOpenRouterKey('');
     setStoredPerplexityKey('');
+    setStoredZapierWebhook('');
     setStoredGroundingProvider('auto');
+  };
+
+  const handleTestWebhook = async () => {
+    if (!zapierWebhookInput.trim()) return;
+    setIsPinging(true);
+    setPingStatus(null);
+    const res = await testWebhookPing(zapierWebhookInput.trim());
+    setIsPinging(false);
+    setPingStatus(res);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-xl rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-2xl p-6 md:p-8 my-6">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-2xl p-6 md:p-8 my-6">
         <button
           onClick={() => setIsApiKeyModalOpen(false)}
           className="absolute top-4 right-4 text-[var(--ink-3)] hover:text-[var(--ink)] p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] transition"
@@ -64,38 +101,50 @@ export const ApiKeyModal: React.FC = () => {
 
         <div className="flex items-center gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_14%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_30%,transparent)] flex items-center justify-center text-[var(--advisor)]">
-            <Globe className="w-5 h-5" />
+            <Cpu className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[var(--ink)]">AI &amp; Real-Time Search Grounding</h2>
-            <p className="text-xs text-[var(--ink-2)]">Configure Gemini, Perplexity, and live Google Search verification</p>
+            <h2 className="text-xl font-bold text-[var(--ink)]">AI Engines &amp; Integrations Hub</h2>
+            <p className="text-xs text-[var(--ink-2)]">Power Altor with Google Gemini, OpenRouter (Claude/DeepSeek), or Zapier Automations</p>
           </div>
         </div>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-[var(--hairline)] gap-4 mb-5 text-xs">
+        <div className="flex border-b border-[var(--hairline)] gap-4 mb-5 text-xs overflow-x-auto">
           <button
             onClick={() => setActiveTab('gemini')}
-            className={`pb-2.5 font-semibold transition border-b-2 flex items-center gap-1.5 ${
+            className={`pb-2.5 font-semibold transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'gemini'
                 ? 'border-[var(--advisor)] text-[var(--advisor)]'
                 : 'border-transparent text-[var(--ink-3)] hover:text-[var(--ink)]'
             }`}
           >
             <Sparkles size={13} />
-            <span>Google Gemini (Core AI)</span>
+            <span>Google Gemini (Free Core)</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('perplexity')}
-            className={`pb-2.5 font-semibold transition border-b-2 flex items-center gap-1.5 ${
-              activeTab === 'perplexity'
-                ? 'border-[var(--librarian)] text-[var(--librarian)]'
+            onClick={() => setActiveTab('openrouter')}
+            className={`pb-2.5 font-semibold transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+              activeTab === 'openrouter'
+                ? 'border-[var(--editor)] text-[var(--editor)]'
                 : 'border-transparent text-[var(--ink-3)] hover:text-[var(--ink)]'
             }`}
           >
-            <Search size={13} />
-            <span>Perplexity / Sonar (Deep Search)</span>
+            <Cpu size={13} />
+            <span>OpenRouter (Claude / DeepSeek / Sonar)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('webhooks')}
+            className={`pb-2.5 font-semibold transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+              activeTab === 'webhooks'
+                ? 'border-[var(--tutor)] text-[var(--tutor)]'
+                : 'border-transparent text-[var(--ink-3)] hover:text-[var(--ink)]'
+            }`}
+          >
+            <Webhook size={13} />
+            <span>Zapier &amp; Webhooks (Sync)</span>
           </button>
         </div>
 
@@ -106,14 +155,14 @@ export const ApiKeyModal: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[var(--advisor)] font-semibold">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Google Search Grounding Enabled</span>
+                  <span>Google Search Grounding Active</span>
                 </div>
                 <span className="text-[10px] font-mono text-[var(--tutor)] bg-[var(--surface-1)] border border-[var(--hairline)] px-2 py-0.5 rounded">
                   Gemini 2.0 Flash
                 </span>
               </div>
               <p className="m-0 leading-relaxed">
-                Connect your Google Gemini API key to activate all 5 personas with native <strong>Google Search Grounding</strong> for up-to-date curricula and verified reading lists.
+                Connect your Google Gemini API key to activate all 5 faculty personas with native <strong>Google Search Grounding</strong> for up-to-date curricula and verified reading lists.
               </p>
               <div className="pt-2 flex items-center justify-between border-t border-[var(--hairline)]">
                 <span className="text-[var(--ink-3)]">Free key at Google AI Studio:</span>
@@ -144,69 +193,136 @@ export const ApiKeyModal: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 2: Perplexity */}
-        {activeTab === 'perplexity' && (
+        {/* Tab 2: OpenRouter */}
+        {activeTab === 'openrouter' && (
           <div className="space-y-4">
             <div className="bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl p-4 text-xs text-[var(--ink-2)] space-y-2">
-              <div className="flex items-center gap-2 text-[var(--librarian)] font-semibold">
-                <Search className="w-4 h-4" />
-                <span>Perplexity Sonar Real-Time Citations</span>
+              <div className="flex items-center gap-2 text-[var(--editor)] font-semibold">
+                <Cpu className="w-4 h-4" />
+                <span>Access 400+ Frontier Models with 1 Key</span>
               </div>
               <p className="m-0 leading-relaxed">
-                Provide a <strong>Perplexity API Key</strong> or an <strong>OpenRouter API Key</strong> (prefixed with <code className="font-mono text-[var(--librarian)]">sk-or-</code>) to empower the Knowledge Librarian with real-time web research, current papers, and live citations.
+                Empower your Analytical Editor with <strong>Claude 3.5 Sonnet</strong>, your Socratic Tutor with <strong>DeepSeek R1</strong> chain-of-thought reasoning, and your Knowledge Librarian with <strong>Perplexity Sonar</strong> web research.
               </p>
               <div className="pt-2 flex items-center justify-between border-t border-[var(--hairline)]">
-                <span className="text-[var(--ink-3)]">Get key from Perplexity or OpenRouter:</span>
+                <span className="text-[var(--ink-3)]">Get an OpenRouter Key:</span>
                 <a
                   href="https://openrouter.ai/keys"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[var(--librarian)] hover:underline font-medium"
+                  className="inline-flex items-center gap-1 text-[var(--editor)] hover:underline font-medium"
                 >
-                  OpenRouter Keys ↗
+                  openrouter.ai/keys
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-mono text-[var(--ink-3)] mb-1.5 uppercase tracking-wider font-semibold">
-                Perplexity / OpenRouter API Key (Optional)
+                OpenRouter API Key
               </label>
               <input
                 type="password"
-                value={perplexityKeyInput}
-                onChange={(e) => setPerplexityKeyInput(e.target.value)}
-                placeholder="pplx-... or sk-or-v1-..."
-                className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--librarian)] font-mono transition"
+                value={openRouterKeyInput}
+                onChange={(e) => setOpenRouterKeyInput(e.target.value)}
+                placeholder="sk-or-v1-..."
+                className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--editor)] font-mono transition"
               />
             </div>
 
-            {/* Provider Preference */}
             <div>
               <label className="block text-[11px] font-mono text-[var(--ink-3)] mb-1.5 uppercase tracking-wider font-semibold">
-                Default Grounding Search Engine
+                Default Persona Model Preset
               </label>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                {[
-                  { id: 'auto' as GroundingProvider, label: 'Auto (Best Match)' },
-                  { id: 'gemini_google' as GroundingProvider, label: 'Google Search' },
-                  { id: 'perplexity' as GroundingProvider, label: 'Perplexity Sonar' }
-                ].map((item) => (
+              <div className="space-y-2">
+                {OPENROUTER_PRESETS.map((preset) => (
                   <button
-                    key={item.id}
+                    key={preset.id}
                     type="button"
-                    onClick={() => setGroundingProvider(item.id)}
-                    className={`py-2 px-2.5 rounded-lg border transition text-center font-medium ${
-                      groundingProvider === item.id
-                        ? 'bg-[var(--surface-3)] border-[var(--advisor)] text-[var(--ink)] font-semibold'
-                        : 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--ink-3)] hover:text-[var(--ink)]'
+                    onClick={() => setPreferredModel(preset.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition text-xs ${
+                      preferredModel === preset.id
+                        ? 'bg-[var(--surface-3)] border-[var(--editor)] text-[var(--ink)] font-semibold'
+                        : 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--ink-2)] hover:text-[var(--ink)]'
                     }`}
                   >
-                    {item.label}
+                    <span>{preset.name}</span>
+                    <span className="text-[10px] font-mono text-[var(--editor)] opacity-80">{preset.tag}</span>
                   </button>
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Tab 3: Zapier & Webhooks */}
+        {activeTab === 'webhooks' && (
+          <div className="space-y-4">
+            <div className="bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl p-4 text-xs text-[var(--ink-2)] space-y-2">
+              <div className="flex items-center gap-2 text-[var(--tutor)] font-semibold">
+                <Webhook className="w-4 h-4" />
+                <span>Automate Notion, Discord, Slack, or Calendar</span>
+              </div>
+              <p className="m-0 leading-relaxed">
+                Paste a <strong>Zapier "Catch Hook"</strong> URL (or Make.com webhook) to automatically trigger automations whenever you check off a curriculum milestone, pass a Feynman drill, or increase your study streak.
+              </p>
+              <div className="pt-2 flex items-center justify-between border-t border-[var(--hairline)]">
+                <span className="text-[var(--ink-3)]">Create Zap at Zapier:</span>
+                <a
+                  href="https://zapier.com/apps/webhook/integrations"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[var(--tutor)] hover:underline font-medium"
+                >
+                  Zapier Webhook Guide
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-mono text-[var(--ink-3)] mb-1.5 uppercase tracking-wider font-semibold">
+                Zapier / Make Catch Hook URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={zapierWebhookInput}
+                  onChange={(e) => setZapierWebhookInput(e.target.value)}
+                  placeholder="https://hooks.zapier.com/hooks/catch/..."
+                  className="flex-1 bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--tutor)] font-mono transition"
+                />
+                <button
+                  type="button"
+                  onClick={handleTestWebhook}
+                  disabled={isPinging || !zapierWebhookInput.trim()}
+                  className="px-4 py-2.5 rounded-xl border border-[var(--tutor)] bg-[color-mix(in_srgb,var(--tutor)_10%,transparent)] text-[var(--tutor)] hover:bg-[var(--tutor)] hover:text-white font-medium text-xs transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  {isPinging ? (
+                    <span>Pinging...</span>
+                  ) : (
+                    <>
+                      <Send size={12} />
+                      <span>Test Ping</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {pingStatus && (
+              <div
+                className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                  pingStatus.success
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400'
+                }`}
+              >
+                {pingStatus.success ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                <span>{pingStatus.message}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -236,12 +352,12 @@ export const ApiKeyModal: React.FC = () => {
               {saved ? (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Saved Keys</span>
+                  <span>Saved</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Save Configuration</span>
+                  <span>Save Integrations</span>
                 </>
               )}
             </button>

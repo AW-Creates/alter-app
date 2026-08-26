@@ -10,6 +10,7 @@ import {
   AlterPersona
 } from '../types/alter';
 import { queryGroundedAI, getStoredPerplexityKey } from './grounding';
+import { getStoredOpenRouterKey, callOpenRouter, getRecommendedModelForPersona } from './openrouter';
 
 const STORAGE_API_KEY = 'alter_gemini_api_key';
 
@@ -117,8 +118,27 @@ export async function chatWithPersona(
 ): Promise<string> {
   const systemPrompt = SYSTEM_PROMPTS[persona](journey);
   const apiKey = getStoredApiKey();
+  const openRouterKey = getStoredOpenRouterKey();
 
-  if (!apiKey) {
+  // 1. If OpenRouter Key is configured, route to best specialized model (Claude 3.5 / DeepSeek R1)
+  if (openRouterKey && !apiKey) {
+    try {
+      const model = getRecommendedModelForPersona(persona);
+      const messages = [
+        { role: 'system' as const, content: systemPrompt },
+        ...chatHistory.map((m) => ({
+          role: (m.role === 'model' ? 'assistant' : 'user') as 'user' | 'assistant',
+          content: m.text
+        })),
+        { role: 'user' as const, content: userMessage }
+      ];
+      return await callOpenRouter(messages, model, persona === 'roommate' ? 0.9 : 0.6);
+    } catch (err) {
+      console.warn('OpenRouter chat routing failed, falling back to simulated', err);
+    }
+  }
+
+  if (!apiKey && !openRouterKey) {
     // Simulated Persona Responses for Demo Mode
     await new Promise((resolve) => setTimeout(resolve, 800));
     return getSimulatedPersonaResponse(persona, journey, userMessage);
