@@ -1,8 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useJourney } from './context/JourneyContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/layout/Navbar';
 import { ApiKeyModal } from './components/layout/ApiKeyModal';
 import { CreateJourneyModal } from './components/dashboard/CreateJourneyModal';
+import { PricingModal } from './components/layout/PricingModal';
+import { AuthModal } from './components/auth/AuthModal';
+import { LandingPage } from './components/landing/LandingPage';
 import { AdvisorView } from './components/alter/AdvisorView';
 import { LibrarianView } from './components/alter/LibrarianView';
 import { TutorView } from './components/alter/TutorView';
@@ -21,10 +25,19 @@ import { AlterPersona } from './types/alter';
 
 export const AppContent: React.FC = () => {
   const { activeJourney, activePersona, setActivePersona, setIsCreateModalOpen } = useJourney();
+  const [viewMode, setViewMode] = useState<'landing' | 'app'>(activeJourney ? 'app' : 'landing');
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
 
   useEffect(() => {
     document.body.setAttribute('data-screen', activePersona);
   }, [activePersona]);
+
+  // If a new journey is created, auto-switch to app view
+  useEffect(() => {
+    if (activeJourney) {
+      setViewMode('app');
+    }
+  }, [activeJourney?.id]);
 
   const mobileNavItems: { id: AlterPersona; label: string; letter: string; icon: any; colorVar: string }[] = [
     { id: 'advisor', label: 'Advisor', letter: 'A', icon: GraduationCap, colorVar: 'var(--advisor)' },
@@ -34,10 +47,25 @@ export const AppContent: React.FC = () => {
     { id: 'roommate', label: 'Roommate', letter: 'R', icon: Users, colorVar: 'var(--roommate)' },
   ];
 
+  if (viewMode === 'landing') {
+    return (
+      <div className="min-h-screen bg-[var(--void)] text-[var(--ink)] font-sans">
+        <LandingPage onEnterApp={() => setViewMode('app')} />
+        <ApiKeyModal />
+        <CreateJourneyModal />
+        <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
+        <AuthModal />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--void)] text-[var(--ink)] flex flex-col font-sans selection:bg-[var(--accent)] selection:text-[#04050a]">
       {/* Top Navbar */}
-      <Navbar />
+      <Navbar
+        onOpenLanding={() => setViewMode('landing')}
+        onOpenPricing={() => setIsPricingOpen(true)}
+      />
 
       {/* Main Screen Content */}
       <main className="screen active">
@@ -108,10 +136,16 @@ export const AppContent: React.FC = () => {
       {/* Global Modals */}
       <ApiKeyModal />
       <CreateJourneyModal />
+      <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
+      <AuthModal />
     </div>
   );
 };
 
 export default function App() {
-  return <AppContent />;
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
 }

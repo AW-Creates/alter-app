@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useJourney } from '../../context/JourneyContext';
+import { useAuth } from '../../context/AuthContext';
 import { AlterPersona } from '../../types/alter';
 import {
   Plus,
@@ -8,11 +9,20 @@ import {
   Download,
   Upload,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Zap,
+  HelpCircle,
+  CreditCard,
+  User
 } from 'lucide-react';
 import { exportAllData, importAllData } from '../../services/storage';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onOpenLanding?: () => void;
+  onOpenPricing?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) => {
   const {
     journeys,
     activeJourney,
@@ -24,6 +34,7 @@ export const Navbar: React.FC = () => {
     setIsCreateModalOpen
   } = useJourney();
 
+  const { user, setIsAuthModalOpen } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const personas: { id: AlterPersona; label: string; letter: string; colorVar: string }[] = [
@@ -65,11 +76,15 @@ export const Navbar: React.FC = () => {
 
   return (
     <div className="topnav">
-      {/* Brand */}
-      <div className="brand">
+      {/* Brand — click to open Landing / Overview */}
+      <button
+        onClick={onOpenLanding}
+        className="brand bg-transparent border-none cursor-pointer text-left p-0 hover:opacity-85 transition"
+        title="View Altor Overview & Landing Page"
+      >
         <div className="brand-mark">A</div>
         Altor <span className="brand-tag">UNIV</span>
-      </div>
+      </button>
 
       {/* Journey Selection */}
       <div className="journey-select">
@@ -127,6 +142,17 @@ export const Navbar: React.FC = () => {
           </span>
         )}
 
+        {/* Pricing / Tiers Modal Trigger */}
+        <button
+          onClick={onOpenPricing}
+          className="demo-mode hover:text-[var(--advisor)]"
+          title="View Pricing & Membership Tiers"
+        >
+          <CreditCard size={13} />
+          <span>Tiers</span>
+        </button>
+
+        {/* Gemini Live / Demo Key */}
         <button onClick={() => setIsApiKeyModalOpen(true)} className="demo-mode">
           {apiKey ? (
             <>
@@ -141,6 +167,26 @@ export const Navbar: React.FC = () => {
           )}
         </button>
 
+        {/* Scholar Profile / Cloud Sync Trigger */}
+        <button
+          onClick={() => setIsAuthModalOpen(true)}
+          className="demo-mode hover:text-white"
+          title="Account Profile & Cloud Sync"
+        >
+          <User size={13} />
+          <span className="truncate max-w-[80px]">{user.isGuest ? 'Sync' : user.username}</span>
+        </button>
+
+        {/* Overview Button */}
+        <button
+          onClick={onOpenLanding}
+          className="icon-btn"
+          title="Altor Manifesto & Overview"
+        >
+          <HelpCircle size={14} strokeWidth={2} />
+        </button>
+
+        {/* Export / Import */}
         <button onClick={handleExport} className="icon-btn" title="Export Backup (JSON)">
           <Download size={14} strokeWidth={2} />
         </button>
