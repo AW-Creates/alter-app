@@ -101,11 +101,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
           }}
         >
           {journeys.map((j) => (
-            <option key={j.id} value={j.id} className="bg-[#0e131f] text-white">
+            <option key={j.id} value={j.id} className="bg-[var(--surface-2)] text-[var(--ink)]">
               {j.title}
             </option>
           ))}
-          <option value="__new__" className="bg-[#0e131f] text-[#5eb8f5]">
+          <option value="__new__" className="bg-[var(--surface-2)] text-[var(--accent)]">
             + New Learning Journey...
           </option>
         </select>
@@ -172,7 +172,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
         {/* Scholar Profile / Cloud Sync Trigger */}
         <button
           onClick={() => setIsAuthModalOpen(true)}
-          className="demo-mode hover:text-white"
+          className="demo-mode"
           title="Account Profile & Cloud Sync"
         >
           <User size={13} />

@@ -83,8 +83,8 @@ export const AppContent: React.FC = () => {
             <div className="w-16 h-16 rounded-2xl bg-[var(--surface-2)] border border-[var(--hairline)] flex items-center justify-center text-[var(--accent)]">
               <Compass size={32} />
             </div>
-            <h2 className="text-2xl font-display font-semibold text-white m-0">Welcome to Altor</h2>
-            <p className="text-sm text-white/60 max-w-md m-0">
+            <h2 className="text-2xl font-display font-semibold text-[var(--ink)] m-0">Welcome to Altor</h2>
+            <p className="text-sm text-[var(--ink-2)] max-w-md m-0">
               Create your first learning journey to unleash your personal AI University in a Box.
             </p>
             <button
@@ -99,7 +99,7 @@ export const AppContent: React.FC = () => {
       </main>
 
       {/* Mobile Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[rgba(9,11,18,0.95)] backdrop-blur-lg border-t border-white/[0.07] px-2 py-1.5 shadow-2xl">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface-1)]/95 backdrop-blur-lg border-t border-[var(--hairline)] px-2 py-1.5 shadow-2xl">
         <div className="grid grid-cols-5 gap-1">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -111,15 +111,15 @@ export const AppContent: React.FC = () => {
                 style={{ '--tab-color': item.colorVar } as React.CSSProperties}
                 className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition ${
                   isActive
-                    ? 'text-white bg-[var(--surface-3)] shadow-[0_0_0_1px_rgba(255,255,255,0.13)]'
-                    : 'text-white/40 hover:text-white/70'
+                    ? 'text-[var(--ink)] bg-[var(--surface-3)] shadow-[0_0_0_1px_var(--hairline-strong)]'
+                    : 'text-[var(--ink-3)] hover:text-[var(--ink-2)]'
                 }`}
               >
                 <div className="relative">
                   <Icon size={18} />
                   <span
                     className={`absolute -top-1 -right-2 text-[9px] font-mono font-bold px-1 rounded transition-colors ${
-                      isActive ? 'bg-[var(--tab-color)]/20 text-[var(--tab-color)]' : 'bg-white/[0.05] text-white/40'
+                      isActive ? 'bg-[var(--tab-color)]/20 text-[var(--tab-color)]' : 'bg-[var(--hairline)] text-[var(--ink-3)]'
                     }`}
                   >
                     {item.letter}

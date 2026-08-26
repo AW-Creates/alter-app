@@ -8,13 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'A.L.T.E.R. — University in a Box',
-        short_name: 'A.L.T.E.R.',
+        name: 'Altor — University in a Box',
+        short_name: 'Altor',
         description: 'Master any discipline autonomously using the 5 AI pillars: Advisor, Librarian, Tutor, Editor, and Roommate.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#04050a',
+        background_color: '#04050a',
         display: 'standalone',
         orientation: 'portrait-primary',
         icons: [
@@ -29,10 +29,10 @@ export default defineConfig({
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'maskable'
           }
         ]
       }
