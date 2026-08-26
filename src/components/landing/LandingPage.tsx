@@ -55,7 +55,7 @@ interface LandingPageProps {
 type CategoryType = 'all' | 'business' | 'creative' | 'finance' | 'tech';
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
-  const { setIsCreateModalOpen } = useJourney();
+  const { createJourney, updateActiveJourney, setActiveJourneyId, setIsCreateModalOpen } = useJourney();
   const { user, setIsAuthModalOpen } = useAuth();
 
   const [activeFacultyTab, setActiveFacultyTab] = useState<AlterPersona>('advisor');
@@ -193,8 +193,95 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     setTimeout(() => setIsSimulating(false), 200);
   };
 
-  const handleLaunchWithTopic = () => {
-    setIsCreateModalOpen(true);
+  const handleLaunchWithTopic = (customTopic?: string, customSimData?: any) => {
+    const topicToUse = customTopic || simTopic;
+    const simDataToUse = customSimData || currentSim;
+
+    // 1. Create the Journey immediately
+    const newJourney = createJourney({
+      title: topicToUse,
+      topic: topicToUse,
+      destination: simDataToUse.brief || `Master ${topicToUse} from first principles.`,
+      baseline: 'Curious autodidact fundamentals',
+      hoursPerWeek: 8,
+      depth: 'practitioner'
+    });
+
+    // 2. Populate the Advisor roadmap and Sandeep Swadia cut list
+    updateActiveJourney((prev) => ({
+      ...prev,
+      advisorData: {
+        ...prev.advisorData,
+        overview: simDataToUse.brief || `Master ${topicToUse} with clear milestone deliverables and ruthless Cut-List filtering.`,
+        estimatedWeeks: 6,
+        phases: [
+          {
+            id: `phase-1-${Date.now()}`,
+            phaseNumber: 1,
+            title: (simDataToUse.phase1 || 'Core Foundations').replace(/^Phase 1:\s*/i, ''),
+            duration: '2 weeks',
+            objective: simDataToUse.brief,
+            coreConcepts: ['First-Principles Foundations', 'Core Mental Models', 'Tactical Implementation'],
+            checkpoint: {
+              id: `cp-1-${Date.now()}`,
+              title: 'Phase 1 Proof of Work',
+              description: simDataToUse.checkpoint || 'Build and validate your first working milestone.',
+              completed: false
+            },
+            completed: false
+          },
+          {
+            id: `phase-2-${Date.now()}`,
+            phaseNumber: 2,
+            title: 'Core Execution & High-Leverage Architecture',
+            duration: '2 weeks',
+            objective: 'Build and test the primary system under real-world conditions.',
+            coreConcepts: ['Intermediate Mechanics', 'Error Handling & Edge Cases', 'Optimization'],
+            checkpoint: {
+              id: `cp-2-${Date.now()}`,
+              title: 'Phase 2 Deliverable',
+              description: 'Deploy real-world system or execute second complete case study.',
+              completed: false
+            },
+            completed: false
+          },
+          {
+            id: `phase-3-${Date.now()}`,
+            phaseNumber: 3,
+            title: 'Mastery, Synthesis & Capstone Launch',
+            duration: '2 weeks',
+            objective: 'Complete autonomous mastery and publish tangible proof-of-work.',
+            coreConcepts: ['Lateral Synthesis', 'Antifragility', 'Publishing / Shipping'],
+            checkpoint: {
+              id: `cp-3-${Date.now()}`,
+              title: 'Capstone Masterwork',
+              description: 'Launch publicly or conduct capstone peer critique.',
+              completed: false
+            },
+            completed: false
+          }
+        ],
+        cutList: (simDataToUse.cutList || []).map((cut: string, idx: number) => ({
+          id: `cut-${idx + 1}-${Date.now()}`,
+          topic: cut.replace(/^Skip\s+/i, '').replace(/^Avoid\s+/i, ''),
+          reasonToSkip: 'Low-leverage distraction / passive consumption trap.',
+          alternativeFocus: 'Focus on foundational mental models and tangible proof of work.'
+        })),
+        chatHistory: [
+          {
+            id: `msg-${Date.now()}`,
+            sender: 'assistant',
+            persona: 'advisor',
+            content: `Welcome to your learning journey for **${topicToUse}**! I have locked in your custom roadmap and Sandeep Swadia Cut-List below. Check out Phase 1 to begin building your first proof-of-work.`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]
+      }
+    }));
+
+    // 3. Set active journey and enter app view immediately
+    setActiveJourneyId(newJourney.id);
+    onEnterApp();
   };
 
   // Expanded Multidisciplinary Case Studies
@@ -425,7 +512,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             <button
-              onClick={handleLaunchWithTopic}
+              onClick={() => handleLaunchWithTopic()}
               className="px-4 py-2 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto"
             >
               <span>Launch Full University for "{simTopic}" →</span>
@@ -477,7 +564,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               </div>
 
               <button
-                onClick={handleLaunchWithTopic}
+                onClick={() => handleLaunchWithTopic()}
                 className="w-full py-3 rounded-xl bg-[var(--surface-3)] hover:border-[var(--advisor)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-2 transition"
               >
                 <span>Enter Altor Academy with this Syllabus →</span>
@@ -695,14 +782,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   </div>
                   <button
                     onClick={() => {
-                      setSimTopic(cs.title);
-                      setCustomGoalInput(cs.title);
-                      setIsCreateModalOpen(true);
+                      handleLaunchWithTopic(cs.title, {
+                        brief: `Master ${cs.title} (${cs.tag}) from first principles.`,
+                        phase1: `Phase 1: Foundations of ${cs.title}`,
+                        checkpoint: cs.proofOfWork,
+                        cutList: [cs.advisorCut]
+                      });
                     }}
                     className="mt-3 w-full py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition flex items-center justify-center gap-1.5"
                   >
-                    <span>Start Learning "{cs.title}"</span>
-                    <ArrowRight size={12} />
+                    <span>Start Learning "{cs.title}" →</span>
                   </button>
                 </div>
               </div>
@@ -1138,7 +1227,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             <button
-              onClick={handleLaunchWithTopic}
+              onClick={() => handleLaunchWithTopic()}
               className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition"
             >
               Start Free Today
@@ -1197,7 +1286,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             <button
-              onClick={handleLaunchWithTopic}
+              onClick={() => handleLaunchWithTopic()}
               className="mt-8 w-full py-3.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition transform hover:-translate-y-0.5"
             >
               Start 14-Day Pro Trial
@@ -1244,7 +1333,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             <button
-              onClick={handleLaunchWithTopic}
+              onClick={() => handleLaunchWithTopic()}
               className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition"
             >
               Explore Fellow Quad
@@ -1268,7 +1357,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
           <div className="pt-8">
             <button
-              onClick={handleLaunchWithTopic}
+              onClick={() => handleLaunchWithTopic()}
               className="px-10 py-5 rounded-2xl bg-gradient-to-r from-[var(--advisor)] to-[var(--tutor)] text-[#04050a] font-bold text-base shadow-lg transition transform hover:-translate-y-1 hover:brightness-110 flex items-center gap-2.5 mx-auto"
             >
               <GraduationCap size={20} />

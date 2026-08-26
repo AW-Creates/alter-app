@@ -20,14 +20,18 @@ import {
   FileEdit,
   Users,
   Plus,
-  Compass
+  Compass,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { AlterPersona } from './types/alter';
 
 export const AppContent: React.FC = () => {
   const { activeJourney, activePersona, setActivePersona, setIsCreateModalOpen } = useJourney();
+  const { user, setIsAuthModalOpen } = useAuth();
   const [viewMode, setViewMode] = useState<'landing' | 'app'>(activeJourney ? 'app' : 'landing');
   const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [showSyncBanner, setShowSyncBanner] = useState(true);
 
   useEffect(() => {
     document.body.setAttribute('data-screen', activePersona);
@@ -67,6 +71,33 @@ export const AppContent: React.FC = () => {
         onOpenLanding={() => setViewMode('landing')}
         onOpenPricing={() => setIsPricingOpen(true)}
       />
+
+      {/* Guest Mode Cloud Sync Banner */}
+      {user.isGuest && activeJourney && showSyncBanner && (
+        <div className="bg-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-1))] border-b border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] px-4 py-2 flex items-center justify-between text-xs text-[var(--ink)] transition">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <Sparkles size={14} className="text-[var(--advisor)] flex-shrink-0" />
+            <span className="truncate">
+              Studying <strong>{activeJourney.title}</strong> in Guest Mode. <span className="hidden sm:inline text-[var(--ink-2)]">Create a free scholar account to preserve your streak &amp; sync across devices.</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="px-3 py-1 rounded-lg bg-[var(--advisor)] text-[#04050a] font-bold text-[11px] hover:brightness-110 shadow-sm transition"
+            >
+              Sign Up / Sync
+            </button>
+            <button
+              onClick={() => setShowSyncBanner(false)}
+              className="p-1 text-[var(--ink-3)] hover:text-[var(--ink)] transition"
+              title="Dismiss banner"
+            >
+              <X size={13} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Screen Content */}
       <main className="screen active">
