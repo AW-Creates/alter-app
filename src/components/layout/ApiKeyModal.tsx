@@ -24,41 +24,41 @@ export const ApiKeyModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 md:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-2xl p-6 md:p-8">
         <button
           onClick={() => setIsApiKeyModalOpen(false)}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition"
+          className="absolute top-4 right-4 text-[var(--ink-3)] hover:text-[var(--ink)] p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+          <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_14%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_30%,transparent)] flex items-center justify-center text-[var(--advisor)]">
             <Key className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-100">Google Gemini API Setup</h2>
-            <p className="text-xs text-slate-400">Connect your free Gemini API key to power all 5 A.L.T.E.R. personas</p>
+            <h2 className="text-xl font-bold text-[var(--ink)]">Google Gemini API Setup</h2>
+            <p className="text-xs text-[var(--ink-2)]">Connect your free Gemini API key to power all 5 A.L.T.E.R. personas</p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 text-xs text-slate-300 space-y-2">
-            <div className="flex items-center gap-2 text-sky-400 font-semibold">
+          <div className="bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl p-4 text-xs text-[var(--ink-2)] space-y-2">
+            <div className="flex items-center gap-2 text-[var(--advisor)] font-semibold">
               <ShieldCheck className="w-4 h-4" />
-              <span>100% Client-Side & Private</span>
+              <span>100% Client-Side &amp; Private</span>
             </div>
-            <p>
-              Your API key is saved directly in your browser's <code className="text-sky-300">localStorage</code>. It is never sent to any intermediary server.
+            <p className="m-0">
+              Your API key is saved directly in your browser's <code className="text-[var(--advisor)] bg-[var(--surface-3)] px-1 py-0.5 rounded font-mono">localStorage</code>. It is never sent to any intermediary server.
             </p>
-            <div className="pt-2 flex items-center justify-between border-t border-slate-800/60">
-              <span className="text-slate-400">Don't have a key?</span>
+            <div className="pt-2 flex items-center justify-between border-t border-[var(--hairline)]">
+              <span className="text-[var(--ink-3)]">Don't have a key?</span>
               <a
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-medium underline"
+                className="inline-flex items-center gap-1 text-[var(--advisor)] hover:underline font-medium"
               >
                 Get a free key from Google AI Studio
                 <ExternalLink className="w-3 h-3" />
@@ -67,7 +67,7 @@ export const ApiKeyModal: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono text-slate-500 mb-1.5 uppercase tracking-wider">
+            <label className="block text-[11px] font-mono text-[var(--ink-3)] mb-1.5 uppercase tracking-wider font-semibold">
               Gemini API key
             </label>
             <input
@@ -75,7 +75,7 @@ export const ApiKeyModal: React.FC = () => {
               value={inputKey}
               onChange={(e) => setInputKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-mono transition"
+              className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--advisor)] font-mono transition"
             />
           </div>
 
@@ -83,32 +83,33 @@ export const ApiKeyModal: React.FC = () => {
             <button
               onClick={handleClear}
               type="button"
-              className="text-xs text-slate-400 hover:text-rose-400 transition"
+              className="text-xs text-[var(--ink-3)] hover:text-rose-500 transition"
             >
-              Clear & Use Demo Mode
+              Clear &amp; Use Demo Mode
             </button>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsApiKeyModalOpen(false)}
                 type="button"
-                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-[var(--ink-2)] hover:text-[var(--ink)] hover:bg-[var(--surface-3)] transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 type="button"
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-lg shadow-sky-500/20 transition"
+                className="accent-btn"
+                style={{ padding: '9px 18px', borderRadius: '10px' }}
               >
                 {saved ? (
                   <>
                     <Check className="w-4 h-4" />
-                    Saved!
+                    <span>Saved</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    Save & Activate
+                    <span>Save Key</span>
                   </>
                 )}
               </button>

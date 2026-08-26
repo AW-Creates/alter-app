@@ -157,7 +157,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const entered = customGoalInput.trim();
     setSimTopic(entered);
 
-    // If not in canned list, generate dynamic custom preview
     if (!simulatedOutputs[entered]) {
       simulatedOutputs[entered] = {
         brief: `Master ${entered} from first principles with structured milestone phases, curated core insights, and hands-on practice.`,
@@ -291,29 +290,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     : caseStudies.filter(cs => cs.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-[var(--void)] text-[var(--ink)] font-sans selection:bg-[var(--accent)] selection:text-[#04050a] overflow-x-hidden">
+    <div className="min-h-screen bg-[var(--void)] text-[var(--ink)] font-sans selection:bg-[var(--accent)] selection:text-[#04050a] overflow-x-hidden transition-colors duration-300">
       
       {/* 1. Header Navigation */}
-      <header className="sticky top-0 z-50 bg-[rgba(4,5,10,0.85)] backdrop-blur-md border-b border-white/[0.07] px-6 py-4">
+      <header className="sticky top-0 z-50 bg-[var(--surface-1)]/90 backdrop-blur-md border-b border-[var(--hairline)] px-6 py-4 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center font-display font-bold text-sm text-[var(--advisor)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center font-display font-bold text-sm text-[var(--advisor)] shadow-sm">
               A
             </div>
-            <div className="font-display font-semibold text-lg text-white tracking-tight flex items-center gap-2">
+            <div className="font-display font-semibold text-lg text-[var(--ink)] tracking-tight flex items-center gap-2">
               Altor
-              <span className="text-[10px] font-mono tracking-widest text-white/40 border border-white/[0.13] rounded px-1.5 py-0.5">
+              <span className="text-[10px] font-mono tracking-widest text-[var(--ink-3)] border border-[var(--hairline-strong)] rounded px-1.5 py-0.5">
                 UNIV
               </span>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm text-white/60 font-medium">
-            <a href="#how-it-works" className="hover:text-white transition">How It Teaches You</a>
-            <a href="#examples" className="hover:text-white transition">What You Can Learn</a>
-            <a href="#faculty" className="hover:text-white transition">Your 5 Mentors</a>
-            <a href="#matrix" className="hover:text-white transition">University vs. Altor</a>
-            <a href="#pricing" className="hover:text-white transition">Tiers</a>
+          <nav className="hidden md:flex items-center gap-7 text-sm text-[var(--ink-2)] font-medium">
+            <a href="#how-it-works" className="hover:text-[var(--ink)] transition">How It Teaches You</a>
+            <a href="#examples" className="hover:text-[var(--ink)] transition">What You Can Learn</a>
+            <a href="#faculty" className="hover:text-[var(--ink)] transition">Your 5 Mentors</a>
+            <a href="#matrix" className="hover:text-[var(--ink)] transition">University vs. Altor</a>
+            <a href="#pricing" className="hover:text-[var(--ink)] transition">Tiers</a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -323,7 +322,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             {/* Sign In / Profile Button */}
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3.5 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-white/80 hover:text-white transition flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-medium text-[var(--ink-2)] hover:text-[var(--ink)] transition flex items-center gap-1.5"
             >
               <User size={13} />
               <span>{user.isGuest ? 'Sign In / Sync' : user.username}</span>
@@ -331,7 +330,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={onEnterApp}
-              className="px-4 py-2 rounded-lg bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-xs font-semibold text-white transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-[var(--surface-3)] hover:border-[var(--accent)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] transition flex items-center gap-1.5"
             >
               <span>Launch App</span>
               <ArrowRight size={13} />
@@ -345,19 +344,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[radial-gradient(circle,rgba(94,184,245,0.12),transparent_70%)]" />
         
         <div className="text-center space-y-6 max-w-4xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[rgba(94,184,245,0.08)] border border-[rgba(94,184,245,0.25)] text-xs font-mono text-[var(--advisor)] tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-xs font-mono text-[var(--advisor)] tracking-wide font-semibold">
             <Sparkles size={13} className="text-[var(--advisor)]" />
             <span>YOUR PERSONAL 5-PROFESSOR AI UNIVERSITY FOR ANYTHING YOU WANT TO LEARN</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
+          <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--ink)] leading-[1.1]">
             Type Any Goal. <br />
-            <span className="bg-gradient-to-r from-white via-slate-200 to-[var(--advisor)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r dark:from-white dark:via-slate-200 from-slate-900 via-slate-800 to-[var(--advisor)] bg-clip-text text-transparent">
               Five AI Mentors Teach You Step-by-Step.
             </span>
           </h1>
 
-          <p className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed font-sans">
+          <p className="text-base sm:text-xl text-[var(--ink-2)] max-w-2xl mx-auto leading-relaxed font-sans">
             Whether you want to launch an e-book business, learn real estate investing, bake artisan sourdough, or code your first app —
             Altor creates your custom curriculum, cuts the fluff, explains concepts in plain English, and guides you to real, tangible proof.
           </p>
@@ -365,14 +364,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           {/* Interactive Custom Topic Search/Creation Bar (Star of Hero) */}
           <div className="pt-2 max-w-2xl mx-auto">
             <form onSubmit={handleCustomSubmit} className="relative flex items-center">
-              <div className="relative w-full flex items-center bg-[var(--surface-2)] border-2 border-[var(--advisor)] rounded-2xl shadow-[0_0_35px_rgba(94,184,245,0.2)] focus-within:shadow-[0_0_45px_rgba(94,184,245,0.35)] transition">
+              <div className="relative w-full flex items-center bg-[var(--surface-1)] border-2 border-[var(--advisor)] rounded-2xl shadow-md focus-within:shadow-xl transition">
                 <Search size={18} className="absolute left-4 text-[var(--advisor)] pointer-events-none" />
                 <input
                   type="text"
                   placeholder='Type anything you want to master (e.g. "Sourdough Bakery", "Speak Italian", "Real Estate")...'
                   value={customGoalInput}
                   onChange={(e) => setCustomGoalInput(e.target.value)}
-                  className="w-full bg-transparent border-none text-white text-xs sm:text-sm pl-11 pr-36 py-4 outline-none placeholder-white/40 font-sans"
+                  className="w-full bg-transparent border-none text-[var(--ink)] text-xs sm:text-sm pl-11 pr-36 py-4 outline-none placeholder-[var(--ink-3)] font-sans"
                 />
                 <button
                   type="submit"
@@ -386,7 +385,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             {/* Suggestions Chips */}
             <div className="flex items-center flex-wrap justify-center gap-2 mt-3 text-xs">
-              <span className="text-white/40 font-mono text-[11px]">Or try:</span>
+              <span className="text-[var(--ink-3)] font-mono text-[11px]">Or try:</span>
               {heroSuggestions.map((sug) => (
                 <button
                   key={sug.value}
@@ -394,7 +393,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   className={`px-2.5 py-1 rounded-lg text-[11.5px] transition ${
                     simTopic === sug.value
                       ? 'bg-[var(--advisor)] text-[#04050a] font-semibold'
-                      : 'bg-[var(--surface-2)] text-white/60 hover:text-white border border-white/[0.08]'
+                      : 'bg-[var(--surface-1)] text-[var(--ink-2)] hover:text-[var(--ink)] border border-[var(--hairline)]'
                   }`}
                 >
                   {sug.label}
@@ -403,7 +402,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-white/40">
+          <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-[var(--ink-3)]">
             <span>✓ 100% Free Forever</span>
             <span>•</span>
             <span>✓ Any Topic on Earth</span>
@@ -413,14 +412,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
 
         {/* 2.5 Live Custom Curriculum Simulator Output */}
-        <div className="mt-12 relative z-10 max-w-5xl mx-auto rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border border-white/[0.12] p-6 sm:p-8 shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
+        <div className="mt-12 relative z-10 max-w-5xl mx-auto rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
             <div>
-              <div className="flex items-center gap-2 text-xs font-mono text-[var(--advisor)] uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-2 text-xs font-mono text-[var(--advisor)] uppercase tracking-wider mb-1 font-semibold">
                 <Radio size={14} className="animate-pulse text-[var(--advisor)]" />
                 Live Generated Curriculum Preview
               </div>
-              <h3 className="font-display text-xl font-bold text-white m-0">
+              <h3 className="font-display text-xl font-bold text-[var(--ink)] m-0">
                 Curriculum for: <span className="text-[var(--advisor)]">"{simTopic}"</span>
               </h3>
             </div>
@@ -436,41 +435,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           {/* Simulator Content Display */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
             <div className="lg:col-span-7 space-y-4">
-              <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-white/[0.07]">
-                <div className="text-[11px] font-mono uppercase text-white/40 tracking-wider mb-1">
+              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)]">
+                <div className="text-[11px] font-mono uppercase text-[var(--ink-3)] tracking-wider mb-1 font-semibold">
                   1. Strategic Advisor Brief (Your Big Picture)
                 </div>
-                <p className="text-sm text-white/90 leading-relaxed m-0 font-sans">
+                <p className="text-sm text-[var(--ink)] leading-relaxed m-0 font-sans">
                   {currentSim.brief}
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-l-2 border-white/[0.07] border-l-[var(--advisor)]">
-                <div className="text-[11px] font-mono uppercase text-[var(--advisor)] tracking-wider mb-1">
+              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-l-2 border-[var(--hairline)] border-l-[var(--advisor)]">
+                <div className="text-[11px] font-mono uppercase text-[var(--advisor)] tracking-wider mb-1 font-semibold">
                   2. Step-by-Step Chronological Phase
                 </div>
-                <h4 className="text-sm font-semibold text-white m-0 mb-1.5">
+                <h4 className="text-sm font-semibold text-[var(--ink)] m-0 mb-1.5">
                   {currentSim.phase1}
                 </h4>
-                <p className="text-xs text-white/70 m-0 leading-relaxed">
-                  <strong className="text-white">What You Build (Proof of Work):</strong> {currentSim.checkpoint}
+                <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
+                  <strong className="text-[var(--ink)]">What You Build (Proof of Work):</strong> {currentSim.checkpoint}
                 </p>
               </div>
             </div>
 
             <div className="lg:col-span-5 space-y-3">
-              <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[rgba(234,176,84,0.25)] space-y-2">
+              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-[rgba(234,176,84,0.35)] space-y-2">
                 <div className="flex items-center gap-1.5 text-[var(--editor)] text-xs font-semibold">
                   <ShieldAlert size={14} />
                   <span>3. The Sandeep Swadia "Cut List" (What to Skip)</span>
                 </div>
-                <p className="text-[11px] text-white/50 m-0">
+                <p className="text-[11px] text-[var(--ink-3)] m-0">
                   Save 40+ hours by ignoring generic tutorials and non-essential fluff:
                 </p>
-                <div className="space-y-1.5 text-[11.5px] text-white/70 pl-2">
+                <div className="space-y-1.5 text-[11.5px] text-[var(--ink-2)] pl-2">
                   {currentSim.cutList.map((cut, idx) => (
                     <div key={idx} className="flex items-start gap-1.5">
-                      <span className="text-rose-400 font-mono">✕</span>
+                      <span className="text-rose-500 font-mono font-bold">✕</span>
                       <span>{cut}</span>
                     </div>
                   ))}
@@ -479,7 +478,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
               <button
                 onClick={handleLaunchWithTopic}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[var(--surface-3)] to-[color-mix(in_srgb,var(--advisor)_20%,var(--surface-3))] hover:border-[var(--advisor)] border border-white/[0.15] text-xs font-semibold text-white flex items-center justify-center gap-2 transition"
+                className="w-full py-3 rounded-xl bg-[var(--surface-3)] hover:border-[var(--advisor)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-2 transition"
               >
                 <span>Enter Altor Academy with this Syllabus →</span>
               </button>
@@ -489,15 +488,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* 3. "How Altor Actually Teaches You" (Demystifying the 5 Faculty) */}
-      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
+      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)]">
+          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
             HOW IT ACTUALLY WORKS
           </span>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
             How Altor Teaches You (No Experience Needed)
           </h2>
-          <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+          <p className="text-[var(--ink-2)] text-sm sm:text-base leading-relaxed">
             You don't need to search the internet alone or guess what to study next. Five AI mentors guide you through a complete, friendly learning cycle.
           </p>
         </div>
@@ -505,76 +504,76 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         {/* 4 Clear Step Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {/* Step 1 */}
-          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--advisor)]/10 border border-[var(--advisor)]/25 flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
                 1
               </div>
-              <h3 className="font-display text-base font-bold text-white m-0">
+              <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
                 1. Ordered Roadmap &amp; Cut List
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0 font-sans">
                 Your <strong>Academic Advisor</strong> organizes your goal into clear, chronological phases (Phase 1 → Phase 2 → Phase 3) and tells you exactly what confusing fluff to skip.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--advisor)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+            <div className="text-[11px] font-mono text-[var(--advisor)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
               ✓ Step-by-step ordered timeline<br />
               ✓ Zero tutorial overload
             </div>
           </div>
 
           {/* Step 2 */}
-          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--librarian)]/10 border border-[var(--librarian)]/25 flex items-center justify-center text-[var(--librarian)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--librarian)_12%,transparent)] border border-[color-mix(in_srgb,var(--librarian)_35%,transparent)] flex items-center justify-center text-[var(--librarian)] font-bold text-sm">
                 2
               </div>
-              <h3 className="font-display text-base font-bold text-white m-0">
+              <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
                 2. Curated Notes &amp; Mental Models
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0 font-sans">
                 No need to read 500-page dry textbooks alone. Your <strong>Librarian</strong> summarizes the key mental models and notes directly into your private notebook.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--librarian)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+            <div className="text-[11px] font-mono text-[var(--librarian)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
               ✓ Top 1% seminal resources<br />
               ✓ Pre-digested flashcards
             </div>
           </div>
 
           {/* Step 3 */}
-          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--tutor)]/10 border border-[var(--tutor)]/25 flex items-center justify-center text-[var(--tutor)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--tutor)_12%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_35%,transparent)] flex items-center justify-center text-[var(--tutor)] font-bold text-sm">
                 3
               </div>
-              <h3 className="font-display text-base font-bold text-white m-0">
+              <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
                 3. Friendly 24/7 Socratic Lessons
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0 font-sans">
                 Your <strong>Socratic Tutor</strong> explains tricky concepts in plain English ("explain like I'm 10"), answers questions in Office Hours, and checks your understanding with gentle quizzes.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--tutor)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+            <div className="text-[11px] font-mono text-[var(--tutor)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
               ✓ "Explain like I'm 10" drills<br />
               ✓ 24/7 Office Hours homework help
             </div>
           </div>
 
           {/* Step 4 */}
-          <div className="card p-6 bg-[var(--surface-2)] border border-white/[0.08] space-y-3.5 flex flex-col justify-between">
+          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--roommate)]/10 border border-[var(--roommate)]/25 flex items-center justify-center text-[var(--roommate)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--roommate)_12%,transparent)] border border-[color-mix(in_srgb,var(--roommate)_35%,transparent)] flex items-center justify-center text-[var(--roommate)] font-bold text-sm">
                 4
               </div>
-              <h3 className="font-display text-base font-bold text-white m-0">
+              <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
                 4. Build &amp; Polish Real Projects
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed m-0 font-sans">
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0 font-sans">
                 You build real things (a published e-book, a garden harvest, an investment sheet, or a coded app). Your <strong>Editor</strong> polishes your work and your <strong>Roommate</strong> keeps it creative.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--roommate)] bg-[var(--surface-1)] p-2.5 rounded-lg">
+            <div className="text-[11px] font-mono text-[var(--roommate)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
               ✓ Real tangible deliverables<br />
               ✓ Public portfolio proof card
             </div>
@@ -582,53 +581,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
 
         {/* A 15-Minute Day in the Life Storyboard */}
-        <div className="mt-14 max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[var(--surface-3)] to-[var(--surface-2)] border border-white/[0.1] shadow-xl space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono text-[var(--tutor)] uppercase tracking-wider">
+        <div className="mt-14 max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-card space-y-4">
+          <div className="flex items-center gap-2 text-xs font-mono text-[var(--tutor)] uppercase tracking-wider font-semibold">
             <Clock size={15} />
             <span>A 15-Minute Daily Session in Altor</span>
           </div>
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-white m-0">
+          <h3 className="font-display text-xl sm:text-2xl font-bold text-[var(--ink)] m-0">
             How You Make Fast Daily Progress Without Burnout
           </h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs text-white/80">
-            <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-1.5">
-              <div className="font-semibold text-white flex items-center gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs text-[var(--ink-2)]">
+            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+              <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
                 <span className="text-[var(--advisor)] font-mono">01</span>
                 <span>Minutes 1–3</span>
               </div>
-              <p className="text-white/60 m-0">Check today's phase task &amp; review 2 bite-sized mental model notes.</p>
+              <p className="text-[var(--ink-2)] m-0">Check today's phase task &amp; review 2 bite-sized mental model notes.</p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-1.5">
-              <div className="font-semibold text-white flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+              <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
                 <span className="text-[var(--tutor)] font-mono">02</span>
                 <span>Minutes 4–10</span>
               </div>
-              <p className="text-white/60 m-0">Chat 1-on-1 with your Tutor, practice a Feynman explanation, and take a quick 2-question quiz.</p>
+              <p className="text-[var(--ink-2)] m-0">Chat 1-on-1 with your Tutor, practice a Feynman explanation, and take a quick 2-question quiz.</p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-1.5">
-              <div className="font-semibold text-white flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+              <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
                 <span className="text-[var(--editor)] font-mono">03</span>
                 <span>Minutes 11–15</span>
               </div>
-              <p className="text-white/60 m-0">Draft your milestone homework (writing, plan, recipe, or code) and get instant critique from your Editor.</p>
+              <p className="text-[var(--ink-2)] m-0">Draft your milestone homework (writing, plan, recipe, or code) and get instant critique from your Editor.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* 4. Expanded Multidisciplinary Showcase (What You Can Master) */}
-      <section id="examples" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
+      <section id="examples" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)]">
+          <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)] font-semibold">
             EXPLORE REAL EXAMPLES
           </span>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
             Learn Anything on Earth. From Books to Botany to Code.
           </h2>
-          <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+          <p className="text-[var(--ink-2)] text-sm sm:text-base leading-relaxed">
             See how everyday learners, creators, writers, investors, gardeners, and builders use Altor to achieve real outcomes.
           </p>
         </div>
@@ -647,8 +646,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               onClick={() => setActiveCategory(cat.id)}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition ${
                 activeCategory === cat.id
-                  ? 'bg-[var(--surface-3)] text-white border border-white/[0.2] shadow-sm'
-                  : 'bg-[var(--surface-1)] text-white/50 border border-white/[0.07] hover:text-white'
+                  ? 'bg-[var(--surface-3)] text-[var(--ink)] border border-[var(--hairline-strong)] shadow-sm font-semibold'
+                  : 'bg-[var(--surface-1)] text-[var(--ink-3)] border border-[var(--hairline)] hover:text-[var(--ink)]'
               }`}
             >
               {cat.label}
@@ -663,35 +662,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             return (
               <div
                 key={cs.id}
-                className="card p-6 flex flex-col justify-between bg-[var(--surface-2)] border border-white/[0.08] hover:border-white/[0.18] transition space-y-4"
+                className="card p-6 flex flex-col justify-between bg-[var(--surface-1)] border border-[var(--hairline)] hover:border-[var(--hairline-strong)] transition space-y-4 shadow-card"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className={`text-[10px] font-mono uppercase tracking-wider ${cs.color}`}>
+                    <span className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${cs.color}`}>
                       {cs.tag}
                     </span>
                     <Icon size={16} className={cs.color} />
                   </div>
 
-                  <h4 className="font-display text-base font-bold text-white m-0 leading-snug">
+                  <h4 className="font-display text-base font-bold text-[var(--ink)] m-0 leading-snug">
                     {cs.title}
                   </h4>
 
-                  <div className="space-y-2 text-xs text-white/70 border-t border-white/[0.07] pt-3 font-sans">
+                  <div className="space-y-2 text-xs text-[var(--ink-2)] border-t border-[var(--hairline)] pt-3 font-sans">
                     <div>
-                      <strong className="text-white/90">What to Skip:</strong> {cs.advisorCut}
+                      <strong className="text-[var(--ink)]">What to Skip:</strong> {cs.advisorCut}
                     </div>
                     <div>
-                      <strong className="text-white/90">Socratic Lesson:</strong> <em>{cs.tutorDrill}</em>
+                      <strong className="text-[var(--ink)]">Socratic Lesson:</strong> <em>{cs.tutorDrill}</em>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-white/[0.07]">
+                <div className="pt-3 border-t border-[var(--hairline)]">
                   <div className="text-[10px] font-mono text-[var(--tutor)] uppercase mb-1 font-semibold">
                     ✓ What You Actually Build (Proof of Work):
                   </div>
-                  <div className="text-xs text-white/90 font-medium leading-snug">
+                  <div className="text-xs text-[var(--ink)] font-medium leading-snug">
                     {cs.proofOfWork}
                   </div>
                   <button
@@ -700,7 +699,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                       setCustomGoalInput(cs.title);
                       setIsCreateModalOpen(true);
                     }}
-                    className="mt-3 w-full py-2 rounded-lg bg-[var(--surface-3)] hover:bg-[var(--surface-1)] border border-white/[0.1] text-xs font-semibold text-white/90 transition flex items-center justify-center gap-1.5"
+                    className="mt-3 w-full py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition flex items-center justify-center gap-1.5"
                   >
                     <span>Start Learning "{cs.title}"</span>
                     <ArrowRight size={12} />
@@ -713,15 +712,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* 5. Meet Your 5 AI Faculty Mentors */}
-      <section id="faculty" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
+      <section id="faculty" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)]">
+          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
             YOUR 5-PERSON MENTOR BOARD
           </span>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
             Meet Your 5 Specialized AI Mentors
           </h2>
-          <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+          <p className="text-[var(--ink-2)] text-sm sm:text-base leading-relaxed">
             Each mentor specializes in one critical phase of your learning journey.
           </p>
         </div>
@@ -740,11 +739,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               onClick={() => setActiveFacultyTab(fac.id)}
               className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-xs font-medium transition ${
                 activeFacultyTab === fac.id
-                  ? `bg-[var(--surface-3)] ${fac.color} ${fac.border} shadow-lg shadow-black/40`
-                  : 'bg-[var(--surface-1)] text-white/50 border-white/[0.07] hover:text-white hover:border-white/[0.15]'
+                  ? `bg-[var(--surface-3)] ${fac.color} ${fac.border} shadow-sm font-semibold`
+                  : 'bg-[var(--surface-1)] text-[var(--ink-3)] border-[var(--hairline)] hover:text-[var(--ink)]'
               }`}
             >
-              <span className="w-5 h-5 rounded-md font-mono text-[10px] font-bold flex items-center justify-center bg-white/[0.05]">
+              <span className="w-5 h-5 rounded-md font-mono text-[10px] font-bold flex items-center justify-center bg-[var(--surface-2)]">
                 {fac.letter}
               </span>
               <span>{fac.name}</span>
@@ -753,7 +752,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
 
         {/* Faculty Panel Preview */}
-        <div className="max-w-5xl mx-auto rounded-2xl bg-[var(--surface-2)] border border-white/[0.1] p-6 sm:p-8 shadow-card">
+        <div className="max-w-5xl mx-auto rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-card">
           {activeFacultyTab === 'advisor' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate-fade-in">
               <div className="space-y-4">
@@ -761,29 +760,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <span className="dot" style={{ background: 'var(--advisor)' }}></span>
                   A — ACADEMIC ADVISOR
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-[var(--ink)]">
                   Step-by-Step Roadmaps &amp; The "What to Skip" Cut List
                 </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-[var(--ink-2)] leading-relaxed font-sans">
                   The Advisor breaks your destination into manageable weekly phases. Most importantly, it gives you your
                   <strong> Cut List</strong>: the exact confusing theories, outdated books, and noise to ignore so you never waste weeks.
                 </p>
-                <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
+                <div className="space-y-2 text-xs font-mono text-[var(--ink-3)] pt-2">
                   <div className="flex items-center gap-2">✓ Ordered milestones with real checkpoints</div>
                   <div className="flex items-center gap-2">✓ Tailored to your weekly schedule (5–15 hrs/week)</div>
                   <div className="flex items-center gap-2">✓ Sandeep Swadia "Cut List" rule</div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3">
-                <div className="flex justify-between items-center text-xs text-white/40 font-mono border-b border-white/[0.07] pb-2">
+              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
+                <div className="flex justify-between items-center text-xs text-[var(--ink-3)] font-mono border-b border-[var(--hairline)] pb-2">
                   <span>Advisor Office Hours</span>
                   <span className="text-[var(--advisor)]">Live Strategy Session</span>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--surface-2)] text-xs text-white/80 leading-relaxed font-sans">
+                <div className="p-3 rounded-lg bg-[var(--surface-1)] text-xs text-[var(--ink)] leading-relaxed font-sans border border-[var(--hairline)]">
                   "I've configured your 6-week curriculum for E-Book Publishing. We are skipping traditional publisher query letters and going straight to reader pain validation and Gumroad pre-orders."
                 </div>
-                <div className="p-2.5 rounded-lg bg-[var(--surface-3)] text-[11px] text-[var(--advisor)] font-mono">
+                <div className="p-2.5 rounded-lg bg-[var(--surface-3)] text-[11px] text-[var(--advisor)] font-mono font-semibold">
                   → Checkpoint 1: Ship a 10-chapter outline with a live Gumroad pre-order landing page.
                 </div>
               </div>
@@ -797,31 +796,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <span className="dot" style={{ background: 'var(--librarian)' }}></span>
                   L — KNOWLEDGE LIBRARIAN &amp; GROUNDED VAULT
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-[var(--ink)]">
                   Signal 10/10 Source Curation &amp; NotebookLM Vault
                 </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-[var(--ink-2)] leading-relaxed font-sans">
                   Filters through thousands of SEO-bloated articles to give you only seminal papers, foundational textbooks,
                   and architectural breakdowns. Synthesize insights into a NotebookLM-style Grounded Vault.
                 </p>
-                <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
+                <div className="space-y-2 text-xs font-mono text-[var(--ink-3)] pt-2">
                   <div className="flex items-center gap-2">✓ Signal Score (1–10/10) on every resource</div>
                   <div className="flex items-center gap-2">✓ Reading status tracking (Unread / Reading / Mastered)</div>
                   <div className="flex items-center gap-2">✓ Mental Model Mastery Flashcards</div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3">
-                <div className="source-card m-0">
+              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
+                <div className="source-card m-0 bg-[var(--surface-1)]">
                   <div className="source-head">
                     <div>
-                      <p className="source-title text-sm">Write Useful Books</p>
-                      <p className="source-author text-xs">Rob Fitzpatrick</p>
+                      <p className="source-title text-sm text-[var(--ink)]">Write Useful Books</p>
+                      <p className="source-author text-xs text-[var(--ink-2)]">Rob Fitzpatrick</p>
                     </div>
                     <span className="signal-badge">Signal 10/10</span>
                   </div>
-                  <p className="source-row text-xs">
-                    <b>Why essential —</b> The definitive playbook for structuring nonfiction books that recommend themselves via word-of-mouth.
+                  <p className="source-row text-xs text-[var(--ink-2)]">
+                    <b className="text-[var(--ink)]">Why essential —</b> The definitive playbook for structuring nonfiction books that recommend themselves via word-of-mouth.
                   </p>
                 </div>
               </div>
@@ -835,32 +834,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <span className="dot" style={{ background: 'var(--tutor)' }}></span>
                   T — SOCRATIC MIDNIGHT TUTOR
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-[var(--ink)]">
                   Active Recall &amp; The Feynman Technique Studio
                 </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-[var(--ink-2)] leading-relaxed font-sans">
                   Your 24/7 intellectual sparring partner. Explain complex concepts in plain English; the Tutor grades your clarity,
                   exposes hidden blind spots, and quizzes edge cases.
                 </p>
-                <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
+                <div className="space-y-2 text-xs font-mono text-[var(--ink-3)] pt-2">
                   <div className="flex items-center gap-2">✓ Clarity &amp; Accuracy Scoring (0–100)</div>
                   <div className="flex items-center gap-2">✓ "Explain like I'm 10" plain language drills</div>
                   <div className="flex items-center gap-2">✓ Quick diagnostic check-in quizzes</div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3">
+              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="p-2.5 rounded-lg bg-[var(--surface-2)]">
-                    <span className="text-[10px] font-mono text-white/40 uppercase">Clarity</span>
+                  <div className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)]">
+                    <span className="text-[10px] font-mono text-[var(--ink-3)] uppercase">Clarity</span>
                     <div className="text-lg font-bold font-display text-[var(--tutor)]">98/100</div>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-[var(--surface-2)]">
-                    <span className="text-[10px] font-mono text-white/40 uppercase">Blind Spots</span>
+                  <div className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)]">
+                    <span className="text-[10px] font-mono text-[var(--ink-3)] uppercase">Blind Spots</span>
                     <div className="text-lg font-bold font-display text-[var(--advisor)]">0 Found</div>
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--surface-2)] text-xs text-white/70 italic">
+                <div className="p-3 rounded-lg bg-[var(--surface-1)] text-xs text-[var(--ink-2)] italic border border-[var(--hairline)]">
                   "Clarity Verified: You articulated the core problem-solution thesis cleanly in two crisp sentences."
                 </div>
               </div>
@@ -874,26 +873,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <span className="dot" style={{ background: 'var(--editor)' }}></span>
                   E — ANALYTICAL EDITOR
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-[var(--ink)]">
                   Logic Pressure-Testing &amp; Work Redlines
                 </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-[var(--ink-2)] leading-relaxed font-sans">
                   Submit drafts of your book chapters, business plans, recipes, or investment sheets. The Editor audits your logic, extracts unproven assumptions,
                   steelmans counterarguments, and provides helpful line edits.
                 </p>
-                <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
+                <div className="space-y-2 text-xs font-mono text-[var(--ink-3)] pt-2">
                   <div className="flex items-center gap-2">✓ Unproven assumption detection</div>
                   <div className="flex items-center gap-2">✓ Steelmanned counterargument synthesis</div>
                   <div className="flex items-center gap-2">✓ Helpful side-by-side redline diffs</div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-2.5 font-mono text-xs">
+              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2.5 font-mono text-xs">
                 <div className="text-[var(--editor)] font-semibold flex items-center gap-1.5">
                   <ShieldAlert size={14} />
                   Steelmanned Counterargument:
                 </div>
-                <p className="text-[11.5px] text-white/70 font-sans leading-relaxed m-0 p-3 rounded-lg bg-[var(--surface-2)]">
+                <p className="text-[11.5px] text-[var(--ink)] font-sans leading-relaxed m-0 p-3 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)]">
                   "If your e-book pricing exceeds $30 without included templates, digital friction will reduce checkout conversions by 40%."
                 </p>
               </div>
@@ -907,23 +906,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <span className="dot" style={{ background: 'var(--roommate)' }}></span>
                   R — CREATIVE ROOMMATE
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-[var(--ink)]">
                   Cross-Disciplinary Ideas &amp; Late-Night Sparks
                 </h3>
-                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-[var(--ink-2)] leading-relaxed font-sans">
                   Break out of creative blocks. Collide your core topic with biology, history, music, or business to discover fun, non-obvious breakthroughs.
                 </p>
-                <div className="space-y-2 text-xs font-mono text-white/50 pt-2">
+                <div className="space-y-2 text-xs font-mono text-[var(--ink-3)] pt-2">
                   <div className="flex items-center gap-2">✓ Creative Idea Collision Engine</div>
                   <div className="flex items-center gap-2">✓ Fun brainstorming partner</div>
                   <div className="flex items-center gap-2">✓ Creative analogical problem solving</div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] space-y-3">
-                <div className="p-3 rounded-lg bg-[color-mix(in_srgb,var(--roommate)_10%,var(--surface-2))] border border-[color-mix(in_srgb,var(--roommate)_25%,transparent)] text-xs text-white/90">
+              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
+                <div className="p-3 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)] text-xs text-[var(--ink)]">
                   <span className="font-bold text-[var(--roommate)]">Collision: Book Launches × Viral Growth Loops</span>
-                  <p className="mt-1 text-[11.5px] text-white/70 italic leading-relaxed m-0">
+                  <p className="mt-1 text-[11.5px] text-[var(--ink-2)] italic leading-relaxed m-0">
                     "Embed a free bonus chapter accessible only if the reader shares their personalized quote card on social media."
                   </p>
                 </div>
@@ -934,28 +933,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* 6. Public Proof-of-Work Showcase */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-1)] border border-white/[0.12] p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--hairline-strong)] p-8 sm:p-12 shadow-card relative overflow-hidden">
           <div className="pointer-events-none absolute -top-20 -right-20 w-80 h-80 bg-[radial-gradient(circle,rgba(94,184,245,0.15),transparent_70%)]" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
             <div className="lg:col-span-6 space-y-4">
-              <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)]">
+              <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
                 VERIFIABLE CREDENTIALS
               </span>
-              <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              <h2 className="font-display text-3xl sm:text-4xl font-bold text-[var(--ink)] tracking-tight">
                 Your Public Proof-of-Work Portfolio
               </h2>
-              <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans">
+              <p className="text-xs sm:text-sm text-[var(--ink-2)] leading-relaxed font-sans">
                 Every milestone checkpoint you complete generates a permanent, verifiable proof card. Share your live portfolio on Twitter, LinkedIn, or client proposals.
               </p>
               <div className="flex items-center gap-3 pt-2">
-                <div className="px-3.5 py-1.5 rounded-lg bg-[var(--surface-2)] border border-white/[0.1] text-xs font-mono text-white/80">
+                <div className="px-3.5 py-1.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-xs font-mono text-[var(--ink)]">
                   altor.app/@{user.username || 'scholar'}
                 </div>
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="text-xs text-[var(--advisor)] hover:underline flex items-center gap-1 font-medium"
+                  className="text-xs text-[var(--advisor)] hover:underline flex items-center gap-1 font-semibold"
                 >
                   <span>Claim Handle</span>
                   <ExternalLink size={12} />
@@ -964,37 +963,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             <div className="lg:col-span-6">
-              <div className="rounded-2xl bg-[var(--surface-1)] border border-white/[0.1] p-5 space-y-3.5 shadow-xl">
-                <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
+              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5 space-y-3.5 shadow-card">
+                <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-[var(--advisor)]/20 text-[var(--advisor)] font-bold text-xs flex items-center justify-center font-display">
+                    <div className="w-7 h-7 rounded-full bg-[color-mix(in_srgb,var(--advisor)_18%,transparent)] text-[var(--advisor)] font-bold text-xs flex items-center justify-center font-display">
                       A
                     </div>
                     <div>
-                      <div className="font-semibold text-xs text-white">Alex Vance</div>
-                      <div className="text-[10px] text-white/40 font-mono">3 Mastered Disciplines · 42 Checkpoints</div>
+                      <div className="font-semibold text-xs text-[var(--ink)]">Alex Vance</div>
+                      <div className="text-[10px] text-[var(--ink-3)] font-mono">3 Mastered Disciplines · 42 Checkpoints</div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-[var(--tutor)]/10 text-[var(--tutor)] text-[10px] font-mono border border-[var(--tutor)]/20">
+                  <span className="px-2 py-0.5 rounded bg-[color-mix(in_srgb,var(--tutor)_15%,transparent)] text-[var(--tutor)] text-[10px] font-mono border border-[color-mix(in_srgb,var(--tutor)_30%,transparent)] font-semibold">
                     Verified Fellow
                   </span>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-white/[0.07] text-xs space-y-1">
+                  <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-white">Digital Product Strategy Guide</span>
-                      <span className="text-[10px] font-mono text-[var(--tutor)]">100% Passed</span>
+                      <span className="font-semibold text-[var(--ink)]">Digital Product Strategy Guide</span>
+                      <span className="text-[10px] font-mono text-[var(--tutor)] font-semibold">100% Passed</span>
                     </div>
-                    <p className="text-[11px] text-white/50 m-0">Live Product: gumroad.com/alex/digital-creator-playbook (100 Pre-Orders)</p>
+                    <p className="text-[11px] text-[var(--ink-2)] m-0">Live Product: gumroad.com/alex/digital-creator-playbook (100 Pre-Orders)</p>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-white/[0.07] text-xs space-y-1">
+                  <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-white">ESP32 Telemetry Firmware</span>
-                      <span className="text-[10px] font-mono text-[var(--advisor)]">100% Passed</span>
+                      <span className="font-semibold text-[var(--ink)]">ESP32 Telemetry Firmware</span>
+                      <span className="text-[10px] font-mono text-[var(--advisor)] font-semibold">100% Passed</span>
                     </div>
-                    <p className="text-[11px] text-white/50 m-0">Repository: github.com/alex/esp32-sensor-node (Deep Sleep &lt;15µA)</p>
+                    <p className="text-[11px] text-[var(--ink-2)] m-0">Repository: github.com/alex/esp32-sensor-node (Deep Sleep &lt;15µA)</p>
                   </div>
                 </div>
               </div>
@@ -1004,58 +1003,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* 7. Comparison Matrix */}
-      <section id="matrix" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
+      <section id="matrix" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)]">
+          <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)] font-semibold">
             THE VALUE ARBITRAGE
           </span>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
             Traditional Higher Ed vs. Altor
           </h2>
-          <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+          <p className="text-[var(--ink-2)] text-sm sm:text-base leading-relaxed">
             Compare 4-year institutional debt with autonomous, first-principles cognitive leverage.
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto overflow-x-auto">
-          <table className="w-full text-left border-collapse border border-white/[0.07] rounded-2xl overflow-hidden bg-[var(--surface-2)]">
+          <table className="w-full text-left border-collapse border border-[var(--hairline)] rounded-2xl overflow-hidden bg-[var(--surface-1)] shadow-card">
             <thead>
-              <tr className="border-b border-white/[0.07] bg-[var(--surface-1)] text-xs font-mono uppercase tracking-wider text-white/50">
+              <tr className="border-b border-[var(--hairline)] bg-[var(--surface-2)] text-xs font-mono uppercase tracking-wider text-[var(--ink-3)]">
                 <th className="p-4 sm:p-5">Dimension</th>
-                <th className="p-4 sm:p-5 text-rose-300">Traditional University</th>
+                <th className="p-4 sm:p-5 text-rose-500 font-bold">Traditional University</th>
                 <th className="p-4 sm:p-5 text-[var(--advisor)] font-bold">Altor (University in a Box)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.07] text-xs sm:text-sm">
+            <tbody className="divide-y divide-[var(--hairline)] text-xs sm:text-sm">
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-white">Annual Cost</td>
-                <td className="p-4 sm:p-5 text-white/50">$50,000 – $80,000 / year (Debt)</td>
+                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Annual Cost</td>
+                <td className="p-4 sm:p-5 text-[var(--ink-3)]">$50,000 – $80,000 / year (Debt)</td>
                 <td className="p-4 sm:p-5 text-[var(--tutor)] font-semibold">$0 Free — $15 / month</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-white">Pacing &amp; Duration</td>
-                <td className="p-4 sm:p-5 text-white/50">Rigid 4-Year Monolith</td>
-                <td className="p-4 sm:p-5 text-white font-medium">Self-Driven Hyper-Velocity (4–8 Weeks)</td>
+                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Pacing &amp; Duration</td>
+                <td className="p-4 sm:p-5 text-[var(--ink-3)]">Rigid 4-Year Monolith</td>
+                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">Self-Driven Hyper-Velocity (4–8 Weeks)</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-white">Curriculum Freshness</td>
-                <td className="p-4 sm:p-5 text-white/50">3 to 5-year-old slides</td>
-                <td className="p-4 sm:p-5 text-white font-medium">Real-Time First-Principles &amp; ArXiv Papers</td>
+                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Curriculum Freshness</td>
+                <td className="p-4 sm:p-5 text-[var(--ink-3)]">3 to 5-year-old slides</td>
+                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">Real-Time First-Principles &amp; Fresh Sources</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-white">Feedback Frequency</td>
-                <td className="p-4 sm:p-5 text-white/50">TA grading once per month</td>
-                <td className="p-4 sm:p-5 text-white font-medium">24/7 Instant Socratic &amp; Logic Sparring</td>
+                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Feedback Frequency</td>
+                <td className="p-4 sm:p-5 text-[var(--ink-3)]">TA grading once per month</td>
+                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">24/7 Instant Socratic &amp; Logic Sparring</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-white">Signal-to-Noise Ratio</td>
-                <td className="p-4 sm:p-5 text-white/50">Bloated general education credits</td>
-                <td className="p-4 sm:p-5 text-white font-medium">Ruthless "Cut List" (Skip 90% commodity noise)</td>
+                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Signal-to-Noise Ratio</td>
+                <td className="p-4 sm:p-5 text-[var(--ink-3)]">Bloated general education credits</td>
+                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">Ruthless "Cut List" (Skip 90% commodity noise)</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-white">Proof of Mastery</td>
-                <td className="p-4 sm:p-5 text-white/50">Paper Diploma</td>
-                <td className="p-4 sm:p-5 text-[var(--advisor)] font-semibold">Shipped Checkpoint Artifacts &amp; Repositories</td>
+                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Proof of Mastery</td>
+                <td className="p-4 sm:p-5 text-[var(--ink-3)]">Paper Diploma</td>
+                <td className="p-4 sm:p-5 text-[var(--advisor)] font-semibold">Shipped Checkpoint Artifacts &amp; Projects</td>
               </tr>
             </tbody>
           </table>
@@ -1063,16 +1062,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* 8. Pricing Tiers */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.07]">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-10">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)]">
+          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
             TRANSPARENT VALUE
           </span>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
             Generous Free Forever. <br />
             Upgrade for Supercharged Velocity.
           </h2>
-          <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+          <p className="text-[var(--ink-2)] text-sm sm:text-base leading-relaxed">
             You will never be forced to pay to learn. Our Free tier gives you full access to all 5 faculty members.
           </p>
 
@@ -1097,20 +1096,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         {/* Pricing Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
           {/* Free Scholar */}
-          <div className="rounded-2xl bg-[var(--surface-2)] border border-white/[0.08] p-8 flex flex-col justify-between shadow-card hover:border-white/[0.15] transition">
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-8 flex flex-col justify-between shadow-card hover:border-[var(--hairline-strong)] transition">
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-mono uppercase text-white/50 tracking-wider">Free Scholar</span>
+                <span className="text-xs font-mono uppercase text-[var(--ink-3)] tracking-wider font-semibold">Free Scholar</span>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-display font-bold text-white">$0</span>
-                  <span className="text-xs text-white/40">/ forever</span>
+                  <span className="text-4xl font-display font-bold text-[var(--ink)]">$0</span>
+                  <span className="text-xs text-[var(--ink-3)]">/ forever</span>
                 </div>
-                <p className="text-xs text-white/60 mt-2 font-sans">
+                <p className="text-xs text-[var(--ink-2)] mt-2 font-sans">
                   The complete autodidactic learning suite. Master any subject with zero paywalls.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs text-white/80 border-t border-white/[0.07] pt-6 font-sans">
+              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-6 font-sans">
                 <div className="flex items-start gap-2.5">
                   <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span><strong>Full access to all 5 AI Faculty</strong> (Advisor, Librarian, Tutor, Editor, Roommate)</span>
@@ -1140,34 +1139,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={handleLaunchWithTopic}
-              className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-xs font-semibold text-white transition"
+              className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition"
             >
               Start Free Today
             </button>
           </div>
 
           {/* Pro Autodidact */}
-          <div className="relative rounded-2xl bg-gradient-to-b from-[var(--surface-3)] to-[var(--surface-2)] border-2 border-[var(--advisor)] p-8 flex flex-col justify-between shadow-[0_0_40px_rgba(94,184,245,0.15)] transform lg:-translate-y-2">
+          <div className="relative rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border-2 border-[var(--advisor)] p-8 flex flex-col justify-between shadow-card transform lg:-translate-y-2">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[var(--advisor)] text-[#04050a] text-[10.5px] font-mono font-bold uppercase tracking-wider shadow-md">
               Most Popular
             </div>
 
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--advisor)] tracking-wider">Pro Autodidact</span>
+                <span className="text-xs font-mono uppercase text-[var(--advisor)] tracking-wider font-semibold">Pro Autodidact</span>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-display font-bold text-white">
+                  <span className="text-4xl font-display font-bold text-[var(--ink)]">
                     {billingCycle === 'annual' ? '$12' : '$15'}
                   </span>
-                  <span className="text-xs text-white/40">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
+                  <span className="text-xs text-[var(--ink-3)]">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
                 </div>
-                <p className="text-xs text-white/60 mt-2 font-sans">
+                <p className="text-xs text-[var(--ink-2)] mt-2 font-sans">
                   For creators, investors, engineers, and knowledge workers who demand peak cognitive velocity.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs text-white/90 border-t border-white/[0.07] pt-6 font-sans">
-                <div className="text-[11px] font-mono text-[var(--advisor)] uppercase font-semibold">
+              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-6 font-sans">
+                <div className="text-[11px] font-mono text-[var(--advisor)] uppercase font-bold">
                   Everything in Free, plus:
                 </div>
                 <div className="flex items-start gap-2.5">
@@ -1199,30 +1198,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={handleLaunchWithTopic}
-              className="mt-8 w-full py-3.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-lg shadow-[rgba(94,184,245,0.25)] transition transform hover:-translate-y-0.5"
+              className="mt-8 w-full py-3.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition transform hover:-translate-y-0.5"
             >
               Start 14-Day Pro Trial
             </button>
           </div>
 
           {/* Fellow Quad */}
-          <div className="rounded-2xl bg-[var(--surface-2)] border border-white/[0.08] p-8 flex flex-col justify-between shadow-card hover:border-white/[0.15] transition">
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-8 flex flex-col justify-between shadow-card hover:border-[var(--hairline-strong)] transition">
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--roommate)] tracking-wider">Fellow Quad</span>
+                <span className="text-xs font-mono uppercase text-[var(--roommate)] tracking-wider font-semibold">Fellow Quad</span>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-display font-bold text-white">
+                  <span className="text-4xl font-display font-bold text-[var(--ink)]">
                     {billingCycle === 'annual' ? '$24' : '$29'}
                   </span>
-                  <span className="text-xs text-white/40">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
+                  <span className="text-xs text-[var(--ink-3)]">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
                 </div>
-                <p className="text-xs text-white/60 mt-2 font-sans">
+                <p className="text-xs text-[var(--ink-2)] mt-2 font-sans">
                   For study groups, research labs, team upskilling, and elite polymaths.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs text-white/80 border-t border-white/[0.07] pt-6 font-sans">
-                <div className="text-[11px] font-mono text-[var(--roommate)] uppercase font-semibold">
+              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-6 font-sans">
+                <div className="text-[11px] font-mono text-[var(--roommate)] uppercase font-bold">
                   Everything in Pro, plus:
                 </div>
                 <div className="flex items-start gap-2.5">
@@ -1246,7 +1245,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={handleLaunchWithTopic}
-              className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-xs font-semibold text-white transition"
+              className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition"
             >
               Explore Fellow Quad
             </button>
@@ -1259,18 +1258,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(circle,rgba(95,219,158,0.1),transparent_70%)]" />
 
         <div className="space-y-6 relative z-10">
-          <blockquote className="font-display text-2xl sm:text-4xl font-semibold text-white leading-relaxed italic max-w-3xl mx-auto">
+          <blockquote className="font-display text-2xl sm:text-4xl font-semibold text-[var(--ink)] leading-relaxed italic max-w-3xl mx-auto">
             "In an age of infinite AI leverage, the self-directed mind inherits the world. The passive consumer inherits obsolete knowledge."
           </blockquote>
 
-          <p className="text-xs font-mono text-white/40 tracking-widest uppercase">
+          <p className="text-xs font-mono text-[var(--ink-3)] tracking-widest uppercase">
             — The Altor Autodidactic Creed
           </p>
 
           <div className="pt-8">
             <button
               onClick={handleLaunchWithTopic}
-              className="px-10 py-5 rounded-2xl bg-gradient-to-r from-[var(--advisor)] to-[var(--tutor)] text-[#04050a] font-bold text-base shadow-[0_0_50px_rgba(94,184,245,0.35)] transition transform hover:-translate-y-1 hover:brightness-110 flex items-center gap-2.5 mx-auto"
+              className="px-10 py-5 rounded-2xl bg-gradient-to-r from-[var(--advisor)] to-[var(--tutor)] text-[#04050a] font-bold text-base shadow-lg transition transform hover:-translate-y-1 hover:brightness-110 flex items-center gap-2.5 mx-auto"
             >
               <GraduationCap size={20} />
               <span>Enter the Academy Free →</span>
@@ -1280,13 +1279,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.07] py-12 px-6 bg-[var(--surface-1)] text-xs text-white/40">
+      <footer className="border-t border-[var(--hairline)] py-12 px-6 bg-[var(--surface-1)] text-xs text-[var(--ink-3)] transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-white/[0.05] border border-white/[0.1] flex items-center justify-center font-display text-[10px] text-white">
+            <div className="w-5 h-5 rounded bg-[var(--surface-2)] border border-[var(--hairline)] flex items-center justify-center font-display text-[10px] text-[var(--ink)]">
               A
             </div>
-            <span className="font-semibold text-white/80">Altor — University in a Box</span>
+            <span className="font-semibold text-[var(--ink)]">Altor — University in a Box</span>
           </div>
 
           <div>
@@ -1294,9 +1293,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </div>
 
           <div className="flex gap-6">
-            <button onClick={onEnterApp} className="hover:text-white transition">App Dashboard</button>
-            <a href="#pricing" className="hover:text-white transition">Pricing</a>
-            <a href="#examples" className="hover:text-white transition">Case Studies</a>
+            <button onClick={onEnterApp} className="hover:text-[var(--ink)] transition">App Dashboard</button>
+            <a href="#pricing" className="hover:text-[var(--ink)] transition">Pricing</a>
+            <a href="#examples" className="hover:text-[var(--ink)] transition">Case Studies</a>
           </div>
         </div>
       </footer>

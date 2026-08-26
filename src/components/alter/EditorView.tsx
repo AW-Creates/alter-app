@@ -159,7 +159,7 @@ export const EditorView: React.FC = () => {
         {critiqueResult && (
           <div className="card space-y-4">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
-              <span className="font-display font-semibold text-white text-base">Editorial Verdict</span>
+              <span className="font-display font-semibold text-[var(--ink)] text-base">Editorial Verdict</span>
               <span className="signal-badge" style={{ color: 'var(--editor)', borderColor: 'rgba(234,176,84,0.3)', background: 'rgba(234,176,84,0.1)' }}>
                 Score: {critiqueResult.overallScore}/100
               </span>
@@ -170,13 +170,13 @@ export const EditorView: React.FC = () => {
             {/* Logic Flaws */}
             {critiqueResult.logicFlaws && critiqueResult.logicFlaws.length > 0 && (
               <div className="space-y-1.5 text-xs">
-                <span className="font-semibold text-rose-400 flex items-center gap-1.5">
+                <span className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
                   <AlertCircle size={14} />
                   Identified Logic Gaps &amp; Assumptions:
                 </span>
-                <ul className="list-disc list-inside space-y-1 text-white/60">
+                <ul className="list-disc list-inside space-y-1 text-[var(--ink-2)]">
                   {critiqueResult.logicFlaws.map((flaw, i) => (
-                    <li key={i}><span className="text-white/80">{flaw}</span></li>
+                    <li key={i}><span className="text-[var(--ink)]">{flaw}</span></li>
                   ))}
                 </ul>
               </div>
@@ -189,9 +189,9 @@ export const EditorView: React.FC = () => {
                   <ShieldCheck size={14} />
                   Steelmanned Counterargument:
                 </span>
-                <ul className="list-disc list-inside space-y-1 text-white/60">
+                <ul className="list-disc list-inside space-y-1 text-[var(--ink-2)]">
                   {critiqueResult.counterarguments.map((ca, i) => (
-                    <li key={i}><span className="text-white/80">{ca}</span></li>
+                    <li key={i}><span className="text-[var(--ink)]">{ca}</span></li>
                   ))}
                 </ul>
               </div>
@@ -199,14 +199,14 @@ export const EditorView: React.FC = () => {
 
             {/* Redlines */}
             {critiqueResult.redlines && critiqueResult.redlines.length > 0 && (
-              <div className="space-y-2 text-xs pt-2 border-t border-white/[0.07]">
-                <span className="font-semibold text-white">Surgical Redline Edits:</span>
+              <div className="space-y-2 text-xs pt-2 border-t border-[var(--hairline)]">
+                <span className="font-semibold text-[var(--ink)]">Surgical Redline Edits:</span>
                 <div className="space-y-2">
                   {critiqueResult.redlines.map((rl, i) => (
-                    <div key={i} className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-white/[0.07] space-y-1 font-mono text-[11.5px]">
-                      <div className="text-rose-400/80 line-through">- {rl.originalText}</div>
+                    <div key={i} className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)] space-y-1 font-mono text-[11.5px]">
+                      <div className="text-rose-600 dark:text-rose-400/80 line-through">- {rl.originalText}</div>
                       <div className="text-[var(--tutor)]">+ {rl.improvedText}</div>
-                      <div className="text-white/40 text-[10.5px] font-sans pt-1">Why: {rl.critiqueReason}</div>
+                      <div className="text-[var(--ink-3)] text-[10.5px] font-sans pt-1">Why: {rl.critiqueReason}</div>
                     </div>
                   ))}
                 </div>
@@ -215,9 +215,9 @@ export const EditorView: React.FC = () => {
 
             {/* Revised Version */}
             {critiqueResult.revisedVersion && (
-              <div className="space-y-2 pt-2 border-t border-white/[0.07]">
+              <div className="space-y-2 pt-2 border-t border-[var(--hairline)]">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="font-semibold text-xs text-white">Polished Revision:</span>
+                  <span className="font-semibold text-xs text-[var(--ink)]">Polished Revision:</span>
                   <button
                     onClick={handleCopyRevised}
                     className="open-link"
@@ -227,7 +227,7 @@ export const EditorView: React.FC = () => {
                     <span>{isCopied ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--surface-1)] border border-white/[0.07] text-xs text-white/80 leading-relaxed font-sans">
+                <div className="p-3 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] leading-relaxed font-sans">
                   {critiqueResult.revisedVersion}
                 </div>
               </div>
@@ -259,7 +259,7 @@ export const EditorView: React.FC = () => {
                 key={msg.id}
                 className={`msg ${
                   msg.sender === 'user'
-                    ? 'bg-[var(--surface-3)] border-white/[0.13] text-white'
+                    ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-1))]'
                     : ''
                 }`}
                 style={{ marginBottom: '12px' }}
@@ -302,9 +302,10 @@ export const EditorView: React.FC = () => {
           <button
             type="submit"
             disabled={isChatLoading || !chatInput.trim()}
-            className="send"
+            className="accent-btn"
+            style={{ padding: '9px 12px', borderRadius: '8px' }}
           >
-            <Send size={15} />
+            <Send size={13} />
           </button>
         </form>
       </div>

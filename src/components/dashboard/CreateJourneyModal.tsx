@@ -91,24 +91,24 @@ export const CreateJourneyModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-void/85 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-2xl rounded-2xl bg-surface-2 border border-hairline shadow-lift p-6 md:p-8 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-2xl p-6 md:p-8 my-8">
         <button
           onClick={() => !isGenerating && setIsCreateModalOpen(false)}
           disabled={isGenerating}
-          className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 p-1.5 rounded-lg hover:bg-white/[0.05] transition disabled:opacity-50"
+          className="absolute top-4 right-4 text-[var(--ink-3)] hover:text-[var(--ink)] p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] transition disabled:opacity-50"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-surface-3 to-surface-1 border border-hairline-strong flex items-center justify-center text-advisor shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="w-11 h-11 rounded-lg bg-[color-mix(in_srgb,var(--advisor)_14%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_30%,transparent)] flex items-center justify-center text-[var(--advisor)] shadow-sm">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-display text-xl font-semibold text-slate-100">Create a new learning journey</h2>
-            <p className="text-xs text-slate-500">
-              Your AI Advisor will generate a tailored curriculum, milestones, and a strict <span className="text-advisor font-semibold">Cut List</span>.
+            <h2 className="font-display text-xl font-semibold text-[var(--ink)]">Create a new learning journey</h2>
+            <p className="text-xs text-[var(--ink-2)]">
+              Your AI Advisor will generate a tailored curriculum, milestones, and a strict <span className="text-[var(--advisor)] font-semibold">Cut List</span>.
             </p>
           </div>
         </div>
@@ -116,8 +116,8 @@ export const CreateJourneyModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Topic */}
           <div>
-            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
-              <Compass className="w-3.5 h-3.5 text-advisor" />
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--ink-3)] uppercase tracking-wider mb-1.5 font-semibold">
+              <Compass className="w-3.5 h-3.5 text-[var(--advisor)]" />
               What discipline or skill do you want to master?
             </label>
             <input
@@ -125,15 +125,15 @@ export const CreateJourneyModal: React.FC = () => {
               required
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Distributed Systems Architecture, Classical Stoicism, Fullstack React & AI..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+              placeholder="e.g. Distributed Systems Architecture, Classical Stoicism, Organic Gardening, Sourdough Bakery..."
+              className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--advisor)] transition"
             />
           </div>
 
           {/* Destination */}
           <div>
-            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
-              <Target className="w-3.5 h-3.5 text-tutor" />
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--ink-3)] uppercase tracking-wider mb-1.5 font-semibold">
+              <Target className="w-3.5 h-3.5 text-[var(--tutor)]" />
               What is your target destination? (proof of mastery)
             </label>
             <textarea
@@ -141,35 +141,35 @@ export const CreateJourneyModal: React.FC = () => {
               rows={2}
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="e.g. Build and deploy a multi-node Raft consensus cluster, write an authoritative essay series, or launch a SaaS..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+              placeholder="e.g. Build and deploy a multi-node Raft consensus cluster, write an authoritative e-book series, or launch a micro-bakery..."
+              className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--advisor)] transition"
             />
           </div>
 
           {/* Baseline */}
           <div>
-            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
-              <Layers className="w-3.5 h-3.5 text-editor" />
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--ink-3)] uppercase tracking-wider mb-1.5 font-semibold">
+              <Layers className="w-3.5 h-3.5 text-[var(--editor)]" />
               Current baseline knowledge
             </label>
             <input
               type="text"
               value={baseline}
               onChange={(e) => setBaseline(e.target.value)}
-              placeholder="e.g. Comfortable with basic Python and networking fundamentals, but zero distributed state experience..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+              placeholder="e.g. Total beginner with zero experience, or comfortable with the basics..."
+              className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder:[var(--ink-3)] focus:outline-none focus:border-[var(--advisor)] transition"
             />
           </div>
 
           {/* Hours & Depth Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             <div>
-              <label className="flex items-center justify-between text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+              <label className="flex items-center justify-between text-[11px] font-mono text-[var(--ink-3)] uppercase tracking-wider mb-1.5 font-semibold">
                 <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-advisor" />
+                  <Clock className="w-3.5 h-3.5 text-[var(--advisor)]" />
                   Time commitment
                 </span>
-                <span className="text-advisor font-semibold">{hoursPerWeek} hrs/week</span>
+                <span className="text-[var(--advisor)] font-semibold">{hoursPerWeek} hrs/week</span>
               </label>
               <input
                 type="range"
@@ -178,9 +178,9 @@ export const CreateJourneyModal: React.FC = () => {
                 step="1"
                 value={hoursPerWeek}
                 onChange={(e) => setHoursPerWeek(Number(e.target.value))}
-                className="w-full accent-advisor bg-surface-1 rounded-lg cursor-pointer"
+                className="w-full accent-[var(--advisor)] bg-[var(--surface-3)] rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+              <div className="flex justify-between text-[10px] text-[var(--ink-3)] mt-1 font-mono">
                 <span>Light (2h)</span>
                 <span>Standard (8h)</span>
                 <span>Intensive (20h+)</span>
@@ -188,7 +188,7 @@ export const CreateJourneyModal: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-mono text-[var(--ink-3)] uppercase tracking-wider mb-1.5 font-semibold">
                 Target depth level
               </label>
               <div className="grid grid-cols-2 gap-1.5">
@@ -199,8 +199,8 @@ export const CreateJourneyModal: React.FC = () => {
                     onClick={() => setDepth(d)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize border transition ${
                       depth === d
-                        ? 'bg-advisor/16 border-advisor/40 text-advisor'
-                        : 'bg-surface-1 border-hairline text-slate-400 hover:border-hairline-strong'
+                        ? 'bg-[color-mix(in_srgb,var(--advisor)_16%,var(--surface-1))] border-[var(--advisor)] text-[var(--advisor)] font-semibold'
+                        : 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--ink-2)] hover:border-[var(--hairline-strong)]'
                     }`}
                   >
                     {d}
@@ -211,19 +211,19 @@ export const CreateJourneyModal: React.FC = () => {
           </div>
 
           {/* Footer Actions */}
-          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-hairline">
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-[var(--hairline)]">
             <button
               type="button"
               disabled={isGenerating}
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition disabled:opacity-50 w-full sm:w-auto"
+              className="px-4 py-2.5 rounded-lg text-xs font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)] transition disabled:opacity-50 w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isGenerating || !topic.trim() || !destination.trim()}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold bg-advisor hover:brightness-110 text-slate-950 transition disabled:opacity-50 cursor-pointer w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold bg-[var(--advisor)] hover:brightness-110 text-[#04050a] transition disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-md"
             >
               {isGenerating ? (
                 <>

@@ -171,7 +171,7 @@ export const RoommateView: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--hairline)', paddingBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Sparkles size={16} color="var(--accent)" />
-                  <h4 style={{ margin: 0, fontSize: '16px' }}>
+                  <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--ink)' }}>
                     {activeJourney.topic} × {activeCollision.collidingDomain}
                   </h4>
                 </div>
@@ -189,8 +189,8 @@ export const RoommateView: React.FC = () => {
               </div>
 
               {activeCollision.discussionStarters && activeCollision.discussionStarters.length > 0 && (
-                <div className="space-y-2 pt-2 border-t border-white/[0.07] text-xs">
-                  <span className="font-semibold text-white">Debate Sparks:</span>
+                <div className="space-y-2 pt-2 border-t border-[var(--hairline)] text-xs">
+                  <span className="font-semibold text-[var(--ink)]">Debate Sparks:</span>
                   <div className="space-y-1.5">
                     {activeCollision.discussionStarters.map((starter, i) => (
                       <button
@@ -227,7 +227,7 @@ export const RoommateView: React.FC = () => {
                 key={msg.id}
                 className={`msg ${
                   msg.sender === 'user'
-                    ? 'bg-[var(--surface-3)] border-white/[0.13] text-white'
+                    ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-1))]'
                     : ''
                 }`}
                 style={{ marginBottom: '12px' }}
@@ -269,9 +269,10 @@ export const RoommateView: React.FC = () => {
             <button
               type="submit"
               disabled={isChatLoading || !chatInput.trim()}
-              className="send"
+              className="accent-btn"
+              style={{ padding: '9px 12px', borderRadius: '8px' }}
             >
-              <Send size={15} />
+              <Send size={13} />
             </button>
           </form>
         </div>

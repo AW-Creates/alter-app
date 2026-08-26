@@ -21,27 +21,27 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-5xl rounded-2xl bg-[var(--surface-1)] border border-white/[0.12] p-6 sm:p-8 shadow-2xl space-y-6 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-2xl space-y-6 my-8">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-white/40 hover:text-white transition p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.07]"
+          className="absolute top-5 right-5 text-[var(--ink-3)] hover:text-[var(--ink)] transition p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)]"
         >
           <X size={18} />
         </button>
 
         {/* Modal Header */}
         <div className="text-center space-y-3 max-w-2xl mx-auto pt-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[rgba(94,184,245,0.1)] border border-[rgba(94,184,245,0.25)] text-xs font-mono text-[var(--advisor)] uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-xs font-mono text-[var(--advisor)] uppercase tracking-wider font-semibold">
             <Sparkles size={13} />
             <span>Altor Membership &amp; Tiers</span>
           </div>
-          <h2 className="font-display text-2xl sm:text-4xl font-bold text-white tracking-tight">
+          <h2 className="font-display text-2xl sm:text-4xl font-bold text-[var(--ink)] tracking-tight">
             Elevate Your Cognitive Velocity
           </h2>
-          <p className="text-xs sm:text-sm text-white/60">
+          <p className="text-xs sm:text-sm text-[var(--ink-2)]">
             Enjoy full access to all 5 AI faculty on our generous free tier, or unlock cloud synchronization, voice sparring, and hosted reasoning models.
           </p>
 
@@ -67,20 +67,20 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
         {/* 3 Tier Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
           {/* 1. Free Scholar */}
-          <div className="rounded-xl bg-[var(--surface-2)] border border-white/[0.08] p-6 flex flex-col justify-between space-y-6">
+          <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] p-6 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div>
-                <span className="text-xs font-mono uppercase text-white/50 tracking-wider">Free Scholar</span>
+                <span className="text-xs font-mono uppercase text-[var(--ink-3)] tracking-wider font-semibold">Free Scholar</span>
                 <div className="flex items-baseline gap-1 mt-1.5">
-                  <span className="text-3xl font-display font-bold text-white">$0</span>
-                  <span className="text-xs text-white/40">/ forever</span>
+                  <span className="text-3xl font-display font-bold text-[var(--ink)]">$0</span>
+                  <span className="text-xs text-[var(--ink-3)]">/ forever</span>
                 </div>
-                <p className="text-xs text-white/60 mt-1 font-sans">
+                <p className="text-xs text-[var(--ink-2)] mt-1 font-sans">
                   The complete autodidactic learning suite. Master any subject with zero paywalls.
                 </p>
               </div>
 
-              <div className="space-y-2.5 text-xs text-white/80 border-t border-white/[0.07] pt-4 font-sans">
+              <div className="space-y-2.5 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-4 font-sans">
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span>All 5 AI Faculty Unlocked</span>
@@ -106,105 +106,105 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
             <button
               onClick={onClose}
-              className="w-full py-2.5 rounded-lg bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-xs font-semibold text-white/80 transition"
+              className="w-full py-2.5 rounded-lg bg-[var(--surface-3)] hover:border-[var(--hairline-strong)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] transition"
             >
               Current Plan (Active)
             </button>
           </div>
 
           {/* 2. Pro Autodidact */}
-          <div className="relative rounded-xl bg-gradient-to-b from-[var(--surface-3)] to-[var(--surface-2)] border-2 border-[var(--advisor)] p-6 flex flex-col justify-between space-y-6 shadow-xl shadow-[rgba(94,184,245,0.12)]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[var(--advisor)] text-[#04050a] text-[10px] font-mono font-bold uppercase tracking-wider">
+          <div className="relative rounded-xl bg-gradient-to-b from-[var(--surface-3)] to-[var(--surface-2)] border-2 border-[var(--advisor)] p-6 flex flex-col justify-between space-y-6 shadow-xl">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[var(--advisor)] text-[#04050a] text-[10px] font-mono font-bold uppercase tracking-wider shadow-sm">
               Recommended
             </div>
 
             <div className="space-y-4">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--advisor)] tracking-wider">Pro Autodidact</span>
+                <span className="text-xs font-mono uppercase text-[var(--advisor)] tracking-wider font-semibold">Pro Autodidact</span>
                 <div className="flex items-baseline gap-1 mt-1.5">
-                  <span className="text-3xl font-display font-bold text-white">
+                  <span className="text-3xl font-display font-bold text-[var(--ink)]">
                     {billingCycle === 'annual' ? '$12' : '$15'}
                   </span>
-                  <span className="text-xs text-white/40">/ mo</span>
+                  <span className="text-xs text-[var(--ink-3)]">/ mo</span>
                 </div>
-                <p className="text-xs text-white/60 mt-1 font-sans">
+                <p className="text-xs text-[var(--ink-2)] mt-1 font-sans">
                   Unlimited velocity with cloud sync, voice sparring, and hosted reasoning models.
                 </p>
               </div>
 
-              <div className="space-y-2.5 text-xs text-white/90 border-t border-white/[0.07] pt-4 font-sans">
+              <div className="space-y-2.5 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-4 font-sans">
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span><strong>Unlimited Active Journeys</strong></span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
-                  <span><strong>Encrypted Cloud Sync</strong> across devices</span>
+                  <span>Encrypted Cloud Vault Backup</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
-                  <span>🎙️ <strong>Live Voice Socratic Sparring</strong></span>
+                  <span>Audio Voice Socratic Drills</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
-                  <span>⚡ <strong>Hosted Claude / DeepSeek R1</strong> included</span>
+                  <span>Claude 3.5 &amp; DeepSeek R1 Hosted AI</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
-                  <span>📑 <strong>1-Click Export to Obsidian &amp; Notion</strong></span>
+                  <span>Obsidian &amp; Notion Graph Export</span>
                 </div>
               </div>
             </div>
 
             <button
-              onClick={() => alert('Pro subscription checkout will be activated with Stripe integration.')}
+              onClick={onClose}
               className="w-full py-2.5 rounded-lg bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition"
             >
-              Upgrade to Pro
+              Start 14-Day Pro Trial
             </button>
           </div>
 
           {/* 3. Fellow Quad */}
-          <div className="rounded-xl bg-[var(--surface-2)] border border-white/[0.08] p-6 flex flex-col justify-between space-y-6">
+          <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] p-6 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--roommate)] tracking-wider">Fellow Quad</span>
+                <span className="text-xs font-mono uppercase text-[var(--roommate)] tracking-wider font-semibold">Fellow Quad</span>
                 <div className="flex items-baseline gap-1 mt-1.5">
-                  <span className="text-3xl font-display font-bold text-white">
+                  <span className="text-3xl font-display font-bold text-[var(--ink)]">
                     {billingCycle === 'annual' ? '$24' : '$29'}
                   </span>
-                  <span className="text-xs text-white/40">/ mo</span>
+                  <span className="text-xs text-[var(--ink-3)]">/ mo</span>
                 </div>
-                <p className="text-xs text-white/60 mt-1 font-sans">
-                  For study groups, research labs, and teams who want collaborative sparring quad rooms.
+                <p className="text-xs text-[var(--ink-2)] mt-1 font-sans">
+                  For study groups, research labs, team upskilling, and elite polymaths.
                 </p>
               </div>
 
-              <div className="space-y-2.5 text-xs text-white/80 border-t border-white/[0.07] pt-4 font-sans">
+              <div className="space-y-2.5 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-4 font-sans">
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
-                  <span>👥 <strong>Collaborative Quad Study Rooms</strong></span>
+                  <span>Collaborative Quad Study Rooms</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
-                  <span>📜 <strong>Verifiable GitHub Proof Badges</strong></span>
+                  <span>Cryptographic Proof Credentials</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
-                  <span>🧠 <strong>Custom Historical Persona Calibration</strong></span>
+                  <span>Feynman / von Neumann Calibration</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
-                  <span>⚡ <strong>Priority Inference Dedicated Tier</strong></span>
+                  <span>Priority GPU High-Throughput Inference</span>
                 </div>
               </div>
             </div>
 
             <button
-              onClick={() => alert('Fellow Quad membership checkout will be activated with Stripe integration.')}
-              className="w-full py-2.5 rounded-lg bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-xs font-semibold text-white transition"
+              onClick={onClose}
+              className="w-full py-2.5 rounded-lg bg-[var(--surface-3)] hover:border-[var(--hairline-strong)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] transition"
             >
-              Get Fellow Quad
+              Explore Fellow Quad
             </button>
           </div>
         </div>

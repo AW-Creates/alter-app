@@ -54,13 +54,13 @@ export const AuthModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md rounded-2xl bg-[var(--surface-1)] border border-white/[0.12] p-6 sm:p-8 shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-md rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-2xl space-y-6">
         
         {/* Close button */}
         <button
           onClick={() => setIsAuthModalOpen(false)}
-          className="absolute top-5 right-5 text-white/40 hover:text-white transition p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.07]"
+          className="absolute top-5 right-5 text-[var(--ink-3)] hover:text-[var(--ink)] transition p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)]"
         >
           <X size={18} />
         </button>
@@ -70,14 +70,14 @@ export const AuthModal: React.FC = () => {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center font-display font-bold text-base text-[var(--advisor)] shadow-md mx-auto">
             A
           </div>
-          <h3 className="font-display text-xl font-bold text-white tracking-tight">
+          <h3 className="font-display text-xl font-bold text-[var(--ink)] tracking-tight">
             {user.isGuest
               ? authMode === 'signin'
                 ? 'Sign in to Altor Academy'
                 : 'Create Your Scholar Account'
               : 'Scholar Profile & Cloud Sync'}
           </h3>
-          <p className="text-xs text-white/60">
+          <p className="text-xs text-[var(--ink-2)]">
             {user.isGuest
               ? 'Sync your curricula, grounded notes, and streak across all devices.'
               : 'Manage your portfolio handle, plan tier, and encrypted backup.'}
@@ -91,7 +91,7 @@ export const AuthModal: React.FC = () => {
             <div className="space-y-2.5">
               <button
                 onClick={loginWithGoogle}
-                className="w-full py-3 px-4 rounded-xl bg-white text-slate-950 font-semibold text-xs flex items-center justify-center gap-3 hover:bg-slate-100 transition shadow-sm"
+                className="w-full py-3 px-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] hover:bg-[var(--surface-3)] text-[var(--ink)] font-semibold text-xs flex items-center justify-center gap-3 transition shadow-sm"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -104,7 +104,7 @@ export const AuthModal: React.FC = () => {
 
               <button
                 onClick={loginWithGithub}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--surface-3)] hover:bg-[var(--surface-2)] border border-white/[0.12] text-white font-semibold text-xs flex items-center justify-center gap-3 transition"
+                className="w-full py-3 px-4 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[var(--ink)] font-semibold text-xs flex items-center justify-center gap-3 transition"
               >
                 <Github size={16} />
                 <span>Continue with GitHub</span>
@@ -112,41 +112,41 @@ export const AuthModal: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 py-1">
-              <div className="flex-1 border-t border-white/[0.07]" />
-              <span className="text-[10px] font-mono uppercase text-white/40">or email passcode</span>
-              <div className="flex-1 border-t border-white/[0.07]" />
+              <div className="flex-1 border-t border-[var(--hairline)]" />
+              <span className="text-[10px] font-mono uppercase text-[var(--ink-3)]">or email passcode</span>
+              <div className="flex-1 border-t border-[var(--hairline)]" />
             </div>
 
             {/* Email Form */}
             <form onSubmit={handleEmailSubmit} className="space-y-3">
               {authMode === 'signup' && (
                 <div>
-                  <label className="block text-[11px] font-medium text-white/70 mb-1">Your Name</label>
+                  <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">Your Name</label>
                   <div className="relative">
                     <input
                       type="text"
                       placeholder="e.g. Marie Curie"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-[var(--surface-2)] border border-white/[0.08] focus:border-[var(--advisor)] text-white text-xs rounded-xl p-3 outline-none pl-9"
+                      className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none pl-9"
                     />
-                    <User size={14} className="absolute left-3 top-3.5 text-white/40" />
+                    <User size={14} className="absolute left-3 top-3.5 text-[var(--ink-3)]" />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-medium text-white/70 mb-1">Email Address</label>
+                <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">Email Address</label>
                 <div className="relative">
                   <input
                     type="email"
                     placeholder="scholar@domain.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[var(--surface-2)] border border-white/[0.08] focus:border-[var(--advisor)] text-white text-xs rounded-xl p-3 outline-none pl-9"
+                    className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none pl-9"
                     required
                   />
-                  <Mail size={14} className="absolute left-3 top-3.5 text-white/40" />
+                  <Mail size={14} className="absolute left-3 top-3.5 text-[var(--ink-3)]" />
                 </div>
               </div>
 
@@ -161,7 +161,7 @@ export const AuthModal: React.FC = () => {
             <div className="text-center pt-1">
               <button
                 onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
-                className="text-xs text-white/50 hover:text-white transition"
+                className="text-xs text-[var(--ink-3)] hover:text-[var(--ink)] transition"
               >
                 {authMode === 'signin'
                   ? "Don't have an account? Create one"
@@ -173,44 +173,44 @@ export const AuthModal: React.FC = () => {
           /* Authenticated User Profile View */
           <div className="space-y-5">
             {/* User Badge */}
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--surface-2)] border border-white/[0.07]">
+            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)]">
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-white/[0.15]" />
+                <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-[var(--hairline-strong)]" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-[var(--advisor)]/20 border border-[var(--advisor)]/30 flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--advisor)_18%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
                   {user.name.charAt(0)}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-white text-xs truncate">{user.name}</div>
-                <div className="text-[11px] text-white/50 truncate font-mono">{user.email || 'Cloud Account'}</div>
+                <div className="font-semibold text-[var(--ink)] text-xs truncate">{user.name}</div>
+                <div className="text-[11px] text-[var(--ink-3)] truncate font-mono">{user.email || 'Cloud Account'}</div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-[var(--tutor)]/10 text-[var(--tutor)] border border-[var(--tutor)]/25 text-[10px] font-mono uppercase">
+              <span className="px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--tutor)_15%,transparent)] text-[var(--tutor)] border border-[color-mix(in_srgb,var(--tutor)_30%,transparent)] text-[10px] font-mono uppercase font-semibold">
                 {user.tier}
               </span>
             </div>
 
             {/* Public Portfolio Handle */}
             <form onSubmit={handleSaveUsername} className="space-y-2">
-              <label className="block text-[11px] font-medium text-white/70">
+              <label className="block text-[11px] font-medium text-[var(--ink-2)]">
                 Public Proof-of-Work Portfolio URL
               </label>
               <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center bg-[var(--surface-2)] border border-white/[0.08] focus-within:border-[var(--advisor)] rounded-xl px-3 py-2 text-xs">
-                  <Globe size={13} className="text-white/40 mr-2 flex-shrink-0" />
-                  <span className="text-white/40 font-mono">altor.app/@</span>
+                <div className="flex-1 flex items-center bg-[var(--surface-2)] border border-[var(--hairline)] focus-within:border-[var(--advisor)] rounded-xl px-3 py-2 text-xs">
+                  <Globe size={13} className="text-[var(--ink-3)] mr-2 flex-shrink-0" />
+                  <span className="text-[var(--ink-3)] font-mono">altor.app/@</span>
                   <input
                     type="text"
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value)}
-                    className="bg-transparent border-none text-white outline-none font-mono flex-1 min-w-0"
+                    className="bg-transparent border-none text-[var(--ink)] outline-none font-mono flex-1 min-w-0"
                     placeholder="username"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isSavingProfile}
-                  className="px-3.5 py-2.5 rounded-xl bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-xs font-semibold text-white transition"
+                  className="px-3.5 py-2.5 rounded-xl bg-[var(--surface-3)] hover:border-[var(--accent)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] transition"
                 >
                   {isSavingProfile ? <Check size={13} className="text-[var(--tutor)]" /> : 'Save'}
                 </button>
@@ -218,12 +218,12 @@ export const AuthModal: React.FC = () => {
             </form>
 
             {/* Cloud Sync Status */}
-            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-white/[0.07] flex items-center justify-between text-xs">
+            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
                 <Cloud size={16} className="text-[var(--advisor)]" />
                 <div>
-                  <div className="font-semibold text-white">Cloud Encrypted Backup</div>
-                  <div className="text-[10px] text-white/50">Auto-syncs across Desktop &amp; Mobile</div>
+                  <div className="font-semibold text-[var(--ink)]">Cloud Encrypted Backup</div>
+                  <div className="text-[10px] text-[var(--ink-3)]">Auto-syncs across Desktop &amp; Mobile</div>
                 </div>
               </div>
               <span className="text-[11px] font-mono text-[var(--tutor)] font-semibold flex items-center gap-1">
@@ -235,14 +235,14 @@ export const AuthModal: React.FC = () => {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={logout}
-                className="flex-1 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 font-semibold text-xs flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-300 font-semibold text-xs flex items-center justify-center gap-2 transition"
               >
                 <LogOut size={13} />
                 <span>Sign Out</span>
               </button>
               <button
                 onClick={() => setIsAuthModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl bg-[var(--surface-3)] hover:border-white/[0.2] border border-white/[0.1] text-white font-semibold text-xs transition"
+                className="flex-1 py-2.5 rounded-xl bg-[var(--surface-3)] hover:border-[var(--hairline-strong)] border border-[var(--hairline)] text-[var(--ink)] font-semibold text-xs transition"
               >
                 Close
               </button>

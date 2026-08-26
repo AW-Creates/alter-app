@@ -200,7 +200,7 @@ export const TutorView: React.FC = () => {
                   key={msg.id}
                   className={`msg ${
                     msg.sender === 'user'
-                      ? 'bg-[var(--surface-3)] border-white/[0.13] text-white'
+                      ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-1))]'
                       : ''
                   }`}
                   style={{ marginBottom: '12px' }}
@@ -228,9 +228,10 @@ export const TutorView: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading || !inputText.trim()}
-                className="send"
+                className="accent-btn"
+                style={{ padding: '9px 12px', borderRadius: '8px' }}
               >
-                <Send size={15} />
+                <Send size={13} />
               </button>
             </form>
           </div>
@@ -247,19 +248,19 @@ export const TutorView: React.FC = () => {
             </p>
 
             <div>
-              <label className="block text-xs font-medium text-white/70 mb-1">Concept to Explain</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1">Concept to Explain</label>
               <input
                 type="text"
                 placeholder="e.g. Backpropagation, CAP Theorem, Transformer Attention..."
                 value={feynmanConcept}
                 onChange={(e) => setFeynmanConcept(e.target.value)}
-                className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-2.5 outline-none"
+                className="w-full bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--accent)] text-[var(--ink)] text-xs rounded-lg p-2.5 outline-none"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-white/70 mb-1">Your Plain-Language Explanation</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1">Your Plain-Language Explanation</label>
               <textarea
                 placeholder="Break it down simply without hiding behind technical jargon..."
                 value={feynmanExplanation}
@@ -297,13 +298,13 @@ export const TutorView: React.FC = () => {
               <div className="card space-y-4">
                 <p className="card-label">Socratic Evaluation &amp; Diagnostics</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] text-center">
+                  <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-center">
                     <span className="card-label" style={{ margin: 0 }}>Clarity</span>
                     <div className="text-2xl font-display font-bold text-[var(--accent)] mt-1">
                       {feynmanResult.clarityScore}/100
                     </div>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-white/[0.07] text-center">
+                  <div className="p-3.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-center">
                     <span className="card-label" style={{ margin: 0 }}>Accuracy</span>
                     <div className="text-2xl font-display font-bold text-[var(--tutor)] mt-1">
                       {feynmanResult.accuracyScore}/100
@@ -313,27 +314,27 @@ export const TutorView: React.FC = () => {
 
                 {feynmanResult.simplifiedAnalogy && (
                   <div className="p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-1))] border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] text-xs space-y-1">
-                    <span className="font-semibold text-white">Intuitive Master Analogy:</span>
-                    <p className="text-white/80 italic leading-relaxed m-0">"{feynmanResult.simplifiedAnalogy}"</p>
+                    <span className="font-semibold text-[var(--ink)]">Intuitive Master Analogy:</span>
+                    <p className="text-[var(--ink-2)] italic leading-relaxed m-0">"{feynmanResult.simplifiedAnalogy}"</p>
                   </div>
                 )}
 
                 <div className="space-y-2 text-xs">
-                  <span className="font-semibold text-white">Identified Blind Spots:</span>
-                  <ul className="list-disc list-inside space-y-1 text-white/60">
+                  <span className="font-semibold text-[var(--ink)]">Identified Blind Spots:</span>
+                  <ul className="list-disc list-inside space-y-1 text-[var(--ink-2)]">
                     {feynmanResult.blindSpots?.map((bs, i) => (
-                      <li key={i}><span className="text-white/80">{bs}</span></li>
+                      <li key={i}><span className="text-[var(--ink)]">{bs}</span></li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="pt-2 border-t border-white/[0.07] text-xs text-white/70 leading-relaxed">
-                  <span className="font-semibold text-white">Tutor Coaching: </span>
+                <div className="pt-2 border-t border-[var(--hairline)] text-xs text-[var(--ink-2)] leading-relaxed">
+                  <span className="font-semibold text-[var(--ink)]">Tutor Coaching: </span>
                   {feynmanResult.tutorFeedback}
                 </div>
               </div>
             ) : (
-              <div className="card flex flex-col items-center justify-center text-center py-20 text-white/30 space-y-2">
+              <div className="card flex flex-col items-center justify-center text-center py-20 text-[var(--ink-3)] space-y-2">
                 <Award size={32} className="opacity-30" />
                 <p className="text-xs">Submit your Feynman explanation to receive instant clarity and gap analysis.</p>
               </div>
@@ -345,10 +346,10 @@ export const TutorView: React.FC = () => {
       {/* Mode 3: Diagnostic Quiz */}
       {tutorMode === 'quiz' && (
         <div className="card space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.07] pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--hairline)] pb-4">
             <div>
-              <h3 className="font-display font-semibold text-lg text-white m-0">Edge-Case Knowledge Diagnostic</h3>
-              <p className="text-xs text-white/50 m-0 mt-0.5">3-Question First-Principles Challenge</p>
+              <h3 className="font-display font-semibold text-lg text-[var(--ink)] m-0">Edge-Case Knowledge Diagnostic</h3>
+              <p className="text-xs text-[var(--ink-3)] m-0 mt-0.5">3-Question First-Principles Challenge</p>
             </div>
             <button
               onClick={handleGenerateDiagnosticQuiz}
@@ -369,8 +370,8 @@ export const TutorView: React.FC = () => {
           ) : quizQuestions.length > 0 ? (
             <div className="space-y-6">
               {quizQuestions.map((q, qIdx) => (
-                <div key={q.id || qIdx} className="space-y-3 p-4 rounded-xl bg-[var(--surface-1)] border border-white/[0.07]">
-                  <p className="text-sm font-semibold text-white">
+                <div key={q.id || qIdx} className="space-y-3 p-4 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)]">
+                  <p className="text-sm font-semibold text-[var(--ink)]">
                     <span className="text-[var(--accent)] font-mono mr-2">Q{qIdx + 1}.</span>
                     {q.question}
                   </p>
@@ -379,13 +380,13 @@ export const TutorView: React.FC = () => {
                     {q.options.map((opt, optIdx) => {
                       const isSelected = userAnswers[qIdx] === optIdx;
                       const isCorrect = q.correctIndex === optIdx;
-                      let btnStyle = 'bg-[var(--surface-2)] border-white/[0.07] text-white/70 hover:border-white/[0.13]';
+                      let btnStyle = 'bg-[var(--surface-2)] border-[var(--hairline)] text-[var(--ink-2)] hover:border-[var(--hairline-strong)]';
 
                       if (showResults) {
                         if (isCorrect) btnStyle = 'bg-[rgba(95,219,158,0.1)] border-[var(--tutor)] text-[var(--tutor)] font-semibold';
-                        else if (isSelected && !isCorrect) btnStyle = 'bg-rose-500/10 border-rose-500/40 text-rose-300';
+                        else if (isSelected && !isCorrect) btnStyle = 'bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-300';
                       } else if (isSelected) {
-                        btnStyle = 'bg-[color-mix(in_srgb,var(--accent)_16%,var(--surface-3))] border-[var(--accent)] text-white font-medium';
+                        btnStyle = 'bg-[color-mix(in_srgb,var(--accent)_16%,var(--surface-3))] border-[var(--accent)] text-[var(--ink)] font-medium';
                       }
 
                       return (
@@ -404,8 +405,8 @@ export const TutorView: React.FC = () => {
                   </div>
 
                   {showResults && (
-                    <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-white/[0.07] text-xs text-white/70 leading-relaxed mt-2">
-                      <span className="font-semibold text-white">First-Principles Explanation: </span>
+                    <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] leading-relaxed mt-2">
+                      <span className="font-semibold text-[var(--ink)]">First-Principles Explanation: </span>
                       {q.explanation}
                     </div>
                   )}

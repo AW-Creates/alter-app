@@ -99,19 +99,18 @@ export const LibrarianView: React.FC = () => {
     if (!newNoteTitle.trim() || !newNoteContent.trim()) return;
 
     const newNote = {
-      id: 'note_' + Date.now(),
+      id: Date.now().toString(),
       title: newNoteTitle.trim(),
       content: newNoteContent.trim(),
-      sourceReferences: [activeJourney.topic],
-      tags: ['First Principles', 'Grounded'],
-      createdAt: new Date().toLocaleDateString()
+      createdAt: new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+      tags: [activeJourney.topic.toLowerCase().split(' ')[0]]
     };
 
     updateActiveJourney((prev) => ({
       ...prev,
       librarianData: {
         ...prev.librarianData,
-        groundedNotes: [newNote, ...(prev.librarianData.groundedNotes || prev.librarianData.vaultNotes || [])]
+        groundedNotes: [newNote, ...groundedNotes]
       }
     }));
 
@@ -257,7 +256,7 @@ export const LibrarianView: React.FC = () => {
                   placeholder="Note Title / Synthesis Topic..."
                   value={newNoteTitle}
                   onChange={(e) => setNewNoteTitle(e.target.value)}
-                  className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-2.5 outline-none"
+                  className="w-full bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--accent)] text-[var(--ink)] text-xs rounded-lg p-2.5 outline-none"
                   required
                 />
                 <textarea
@@ -265,7 +264,7 @@ export const LibrarianView: React.FC = () => {
                   value={newNoteContent}
                   onChange={(e) => setNewNoteContent(e.target.value)}
                   rows={4}
-                  className="w-full bg-[var(--surface-1)] border border-white/[0.07] focus:border-[var(--accent)] text-white text-xs rounded-lg p-2.5 outline-none font-mono"
+                  className="w-full bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--accent)] text-[var(--ink)] text-xs rounded-lg p-2.5 outline-none font-mono"
                   required
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -287,7 +286,7 @@ export const LibrarianView: React.FC = () => {
             {groundedNotes.map((note) => (
               <div key={note.id} className="card space-y-2">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: 0 }}>{note.title}</h4>
+                  <h4 style={{ margin: 0, color: 'var(--ink)' }}>{note.title}</h4>
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{note.createdAt}</span>
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--ink-2)', lineHeight: '1.6' }}>
@@ -327,7 +326,7 @@ export const LibrarianView: React.FC = () => {
                   </span>
                   <span style={{ fontSize: '10.5px', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>Mastery Card</span>
                 </div>
-                <h4 style={{ margin: 0 }}>{card.front || card.term}</h4>
+                <h4 style={{ margin: 0, color: 'var(--ink)' }}>{card.front || card.term}</h4>
                 <p className="source-row" style={{ marginTop: '6px', borderTop: '1px solid var(--hairline)', paddingTop: '8px' }}>
                   {card.back || card.definition || card.mentalModel}
                 </p>
@@ -360,7 +359,7 @@ export const LibrarianView: React.FC = () => {
                 key={msg.id}
                 className={`msg ${
                   msg.sender === 'user'
-                    ? 'bg-[var(--surface-3)] border-white/[0.13] text-white'
+                    ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-1))]'
                     : ''
                 }`}
                 style={{ marginBottom: '12px' }}
@@ -398,14 +397,15 @@ export const LibrarianView: React.FC = () => {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask for high-signal sources, summaries, or citations..."
+            placeholder="Ask the Librarian for paper syntheses or cheat sheets..."
           />
           <button
             type="submit"
-            disabled={isLoading || !inputText.trim()}
-            className="send"
+            disabled={!inputText.trim() || isLoading}
+            className="accent-btn"
+            style={{ padding: '9px 12px', borderRadius: '8px' }}
           >
-            <Send size={15} />
+            <Send size={13} />
           </button>
         </form>
       </div>
