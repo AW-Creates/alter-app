@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Compass,
   ArrowRight,
-  Loader2
+  Loader2,
+  Globe
 } from 'lucide-react';
 import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini';
 
@@ -251,6 +252,9 @@ export const AdvisorView: React.FC = () => {
               <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">The Cut List</h3>
               <span className="text-[10px] font-mono uppercase bg-[rgba(234,176,84,0.1)] text-[var(--editor)] border border-[rgba(234,176,84,0.25)] px-1.5 py-0.5 rounded font-semibold">
                 Sandeep Swadia Rule
+              </span>
+              <span className="text-[10px] font-mono uppercase bg-[color-mix(in_srgb,var(--advisor)_10%,transparent)] text-[var(--advisor)] border border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
+                <Globe size={10} /> Live Grounded
               </span>
             </div>
             <div className="space-y-2.5">

@@ -10,7 +10,8 @@ import {
   CheckCircle,
   FileText,
   Lightbulb,
-  Loader2
+  Loader2,
+  Globe
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { chatWithPersona, generateSourcesWithAI } from '../../services/gemini';
@@ -156,6 +157,12 @@ export const LibrarianView: React.FC = () => {
             Filter the 99% noise of YouTube tutorials and surface the top 1% highest-signal books, seminal papers,
             and first-principles mental models.
           </p>
+          <div className="flex items-center gap-2 pt-3">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--librarian)] bg-[color-mix(in_srgb,var(--librarian)_10%,transparent)] border border-[color-mix(in_srgb,var(--librarian)_25%,transparent)] px-2.5 py-0.5 rounded-full font-medium">
+              <Globe size={11} />
+              Live Web Grounded (Google Search &amp; Perplexity)
+            </span>
+          </div>
         </div>
 
         {/* Subtabs */}

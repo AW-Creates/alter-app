@@ -9,6 +9,7 @@ import {
   LearningJourney,
   AlterPersona
 } from '../types/alter';
+import { queryGroundedAI, getStoredPerplexityKey } from './grounding';
 
 const STORAGE_API_KEY = 'alter_gemini_api_key';
 
@@ -55,7 +56,8 @@ const extractJsonFromResponse = <T>(text: string): T => {
 export async function callGemini(
   prompt: string,
   systemInstruction?: string,
-  model = 'gemini-2.0-flash'
+  model = 'gemini-2.0-flash',
+  enableSearchGrounding = false
 ): Promise<string> {
   const apiKey = getStoredApiKey();
   if (!apiKey) {
@@ -64,7 +66,7 @@ export async function callGemini(
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const payload = {
+  const payload: any = {
     contents: [
       {
         role: 'user',
@@ -80,6 +82,10 @@ export async function callGemini(
       maxOutputTokens: 2500
     }
   };
+
+  if (enableSearchGrounding) {
+    payload.tools = [{ googleSearch: {} }];
+  }
 
   const response = await fetch(url, {
     method: 'POST',
@@ -167,13 +173,29 @@ export async function generateCurriculumWithAI(
   depth: string
 ): Promise<AdvisorData> {
   const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const perplexityKey = getStoredPerplexityKey();
+
+  if (!apiKey && !perplexityKey) {
     await new Promise((r) => setTimeout(r, 1000));
     return getSimulatedCurriculum(topic, destination);
   }
 
   const prompt = GENERATOR_PROMPTS.generateCurriculum(topic, destination, baseline, hoursPerWeek, depth);
-  const raw = await callGemini(prompt, 'You are an elite academic curriculum architect and dean.');
+  
+  let raw = '';
+  try {
+    // Attempt with Google Search Grounding to verify modern frameworks vs deprecated cuts
+    raw = await callGemini(
+      prompt,
+      'You are an elite academic curriculum architect and dean. Ground your recommendations in current, live industry standards and verified first principles.',
+      'gemini-2.0-flash',
+      true
+    );
+  } catch (err) {
+    // Fallback without search grounding if quota/search issues occur
+    raw = await callGemini(prompt, 'You are an elite academic curriculum architect and dean.', 'gemini-2.0-flash', false);
+  }
+
   const parsed = extractJsonFromResponse<{
     overview: string;
     estimatedWeeks: number;
@@ -215,13 +237,45 @@ export async function generateSourcesWithAI(
   baseline: string
 ): Promise<CuratedSource[]> {
   const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const perplexityKey = getStoredPerplexityKey();
+
+  if (!apiKey && !perplexityKey) {
     await new Promise((r) => setTimeout(r, 900));
     return getSimulatedSources(topic);
   }
 
+  // 1. Try real-time web grounding via Google Search or Perplexity Sonar
+  try {
+    const groundedPrompt = `Find the top 5 most authoritative, seminal books, official documentation, or seminal research papers for mastering "${topic}" (goal: ${destination}). Return a strictly valid JSON array of objects with keys: "type" ('book'|'paper'|'doc'|'case_study'), "title", "authorOrCreator", "url" (valid https URL or official site), "signalScore" (integer 8-10), "whyEssential" (1 sentence), "keyTakeaway" (1 sentence).`;
+    
+    const groundedResult = await queryGroundedAI(
+      groundedPrompt,
+      'You are an elite academic research librarian. Use live web search to verify real existing titles, authors, and URLs. Output only raw JSON.'
+    );
+
+    if (groundedResult.text) {
+      const parsed = extractJsonFromResponse<any[]>(groundedResult.text);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((s, idx) => ({
+          id: `source-${idx + 1}-${Date.now()}`,
+          type: s.type || 'book',
+          title: s.title || 'Seminal Source',
+          authorOrCreator: s.authorOrCreator || 'Author',
+          url: s.url || groundedResult.citations[idx]?.url || '',
+          signalScore: s.signalScore || 10,
+          whyEssential: s.whyEssential || 'Top 1% high signal material.',
+          keyTakeaway: s.keyTakeaway || 'Foundational intuition',
+          status: 'unread'
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn('Grounded source generation fallback to standard prompt', err);
+  }
+
+  // 2. Direct Gemini Search Grounding fallback
   const prompt = GENERATOR_PROMPTS.generateSources(topic, destination, baseline);
-  const raw = await callGemini(prompt, 'You are a master academic research librarian.');
+  const raw = await callGemini(prompt, 'You are a master academic research librarian.', 'gemini-2.0-flash', true);
   const parsed = extractJsonFromResponse<any[]>(raw);
 
   return parsed.map((s, idx) => ({
