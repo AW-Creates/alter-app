@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useJourney } from '../../context/JourneyContext';
 import {
   Sparkles,
@@ -14,22 +14,34 @@ import {
   GraduationCap,
   ShieldCheck,
   RotateCcw,
-  Check
+  Check,
+  Send,
+  MessageSquare,
+  Scissors
 } from 'lucide-react';
 import { VoiceInputButton } from './VoiceInputButton';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import {
-  generateDiagnosticQuestionsWithAI,
+  conductAdvisorIntakeTurnWithAI,
   evaluateDiagnosticAnswersWithAI,
   generateCurriculumWithAI,
   generateSourcesWithAI
 } from '../../services/gemini';
-import { DiagnosticQuestion, DiagnosticAssessment, LearningJourney } from '../../types/alter';
+import { DiagnosticAssessment } from '../../types/alter';
 
 interface DiagnosticIntakeModalProps {
   isOpen: boolean;
   initialTopic: string;
   onClose: () => void;
   onLaunchJourney: () => void;
+}
+
+interface IntakeChatMessage {
+  id: string;
+  sender: 'advisor' | 'user';
+  content: string;
+  options?: string[];
+  timestamp: string;
 }
 
 export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
@@ -41,67 +53,112 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
   const { createJourney, updateActiveJourney, setActiveJourneyId } = useJourney();
 
   const [topic, setTopic] = useState(initialTopic);
-  const [step, setStep] = useState<'loading_questions' | 'answering' | 'evaluating' | 'profile_ready'>('loading_questions');
-  const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
-  const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [currentAnswerText, setCurrentAnswerText] = useState('');
+  const [step, setStep] = useState<'chat' | 'evaluating' | 'profile_ready'>('chat');
+  const [chatMessages, setChatMessages] = useState<IntakeChatMessage[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoadingTurn, setIsLoadingTurn] = useState(false);
   const [assessment, setAssessment] = useState<DiagnosticAssessment | null>(null);
   const [isBuildingCurriculum, setIsBuildingCurriculum] = useState(false);
+
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && initialTopic) {
       setTopic(initialTopic);
-      loadDiagnosticQuestions(initialTopic);
+      startIntakeConversation(initialTopic);
     }
   }, [isOpen, initialTopic]);
 
-  const loadDiagnosticQuestions = async (topicToProbe: string) => {
-    setStep('loading_questions');
-    setCurrentQIndex(0);
-    setAnswers({});
-    setCurrentAnswerText('');
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isLoadingTurn]);
+
+  const startIntakeConversation = async (topicToStart: string) => {
+    setStep('chat');
+    setChatMessages([]);
+    setInputText('');
     setAssessment(null);
+    setIsLoadingTurn(true);
 
     try {
-      const qList = await generateDiagnosticQuestionsWithAI(topicToProbe, '', 'Beginner to Intermediate');
-      setQuestions(qList);
-      setStep('answering');
+      const firstTurn = await conductAdvisorIntakeTurnWithAI(topicToStart, []);
+      setChatMessages([
+        {
+          id: `msg-0-${Date.now()}`,
+          sender: 'advisor',
+          content: firstTurn.advisorMessage,
+          options: firstTurn.suggestedQuickReplies,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
     } catch (err) {
-      console.error('Failed to load diagnostic questions', err);
-      setStep('answering');
+      console.error('Failed to start intake conversation', err);
+    } finally {
+      setIsLoadingTurn(false);
     }
   };
 
-  if (!isOpen) return null;
+  const handleSendMessage = async (customMessage?: string) => {
+    const userText = (customMessage || inputText).trim();
+    if (!userText || isLoadingTurn) return;
 
-  const currentQ = questions[currentQIndex];
+    setInputText('');
 
-  const handleNextQuestion = () => {
-    if (!currentAnswerText.trim() && !answers[currentQIndex]) return;
+    // 1. Add user message
+    const userMsg: IntakeChatMessage = {
+      id: `msg-user-${Date.now()}`,
+      sender: 'user',
+      content: userText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
 
-    const finalAnswer = currentAnswerText.trim() || answers[currentQIndex] || '';
-    const updatedAnswers = { ...answers, [currentQIndex]: finalAnswer };
-    setAnswers(updatedAnswers);
-    setCurrentAnswerText('');
+    const updatedChat = [...chatMessages, userMsg];
+    setChatMessages(updatedChat);
+    setIsLoadingTurn(true);
 
-    if (currentQIndex < questions.length - 1) {
-      setCurrentQIndex((prev) => prev + 1);
-      setCurrentAnswerText(updatedAnswers[currentQIndex + 1] || '');
-    } else {
-      // Evaluate all answers
-      handleRunEvaluation(updatedAnswers);
+    // If user has answered at least 3 turns, offer to synthesize
+    const userTurnsCount = updatedChat.filter((m) => m.sender === 'user').length;
+
+    try {
+      const history = updatedChat.map((m) => ({
+        sender: m.sender,
+        content: m.content
+      }));
+
+      const advisorTurn = await conductAdvisorIntakeTurnWithAI(topic, history, userText);
+
+      if (advisorTurn.isInterviewComplete || userTurnsCount >= 3) {
+        // Run full evaluation
+        await handleRunEvaluation(updatedChat);
+        return;
+      }
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-adv-${Date.now()}`,
+          sender: 'advisor',
+          content: advisorTurn.advisorMessage,
+          options: advisorTurn.suggestedQuickReplies,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+    } catch (err) {
+      console.error('Failed to conduct advisor intake turn', err);
+    } finally {
+      setIsLoadingTurn(false);
     }
   };
 
-  const handleRunEvaluation = async (finalAnswers: Record<number, string>) => {
+  const handleRunEvaluation = async (finalChat: IntakeChatMessage[]) => {
     setStep('evaluating');
 
-    const qaPairs = questions.map((q, idx) => ({
-      question: q.question,
-      answer: finalAnswers[idx] || 'Not answered',
-      type: q.type
-    }));
+    const qaPairs: Array<{ question: string; answer: string; type?: string }> = [];
+    for (let i = 0; i < finalChat.length; i += 2) {
+      const q = finalChat[i]?.content || 'Question';
+      const a = finalChat[i + 1]?.content || 'Answer';
+      qaPairs.push({ question: q, answer: a, type: 'Intake Probe' });
+    }
 
     try {
       const result = await evaluateDiagnosticAnswersWithAI(topic, qaPairs);
@@ -156,7 +213,7 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
               id: `msg-${Date.now()}`,
               sender: 'assistant',
               persona: 'advisor',
-              content: `🎯 **Diagnostic Calibration Complete**: Based on your Socratic intake assessment, I have personalized your curriculum to target your exact knowledge gaps (*${assessment.criticalGapsToFill.join(', ')}*). Let's master Phase 1!`,
+              content: `🎯 **Diagnostic Calibration Complete**: Based on our friendly intake chat, I have personalized your curriculum to focus on what matters most (*${assessment.criticalGapsToFill.join(', ')}*).\n\n${assessment.whyCustomizedExplanation || ''}\n\nLet's get started on Phase 1!`,
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }
           ]
@@ -177,21 +234,23 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
       <div className="w-full max-w-2xl bg-[var(--surface-1)] border-2 border-[var(--advisor)]/40 rounded-2xl shadow-2xl overflow-hidden text-[var(--ink)] flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="p-5 border-b border-[var(--hairline)] flex items-center justify-between bg-[var(--surface-2)]/60">
+        <div className="p-5 border-b border-[var(--hairline)] flex items-center justify-between bg-[var(--surface-2)]/70">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_18%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-[var(--advisor)] flex items-center justify-center flex-shrink-0 shadow-xs font-bold font-mono">
-              🎯
+            <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_18%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-[var(--advisor)] flex items-center justify-center flex-shrink-0 shadow-xs font-bold font-mono text-base">
+              🎓
             </div>
             <div>
               <div className="text-[10px] font-mono text-[var(--advisor)] uppercase font-bold tracking-wider">
-                Socratic Diagnostic Intake &amp; Baseline Calibration
+                1-ON-1 ADVISOR INTAKE CONSULTATION
               </div>
               <h3 className="font-display text-lg font-bold text-[var(--ink)] m-0">
-                Calibrating: {topic}
+                Personalizing: {topic}
               </h3>
             </div>
           </div>
@@ -205,221 +264,200 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs">
-          {step === 'loading_questions' && (
-            <div className="py-12 text-center space-y-3">
-              <Loader2 size={32} className="animate-spin text-[var(--advisor)] mx-auto" />
-              <p className="font-bold text-sm text-[var(--ink)]">
-                Formulating Socratic Diagnostic Probes...
-              </p>
-              <p className="text-xs text-[var(--ink-3)]">
-                Analyzing domain invariants and edge cases to test your exact frontier of competence.
-              </p>
-            </div>
-          )}
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1">
+          {/* STEP 1: CONVERSATIONAL CHAT */}
+          {step === 'chat' && (
+            <div className="space-y-4 flex flex-col min-h-[350px]">
+              {/* Chat Stream */}
+              <div className="space-y-4 flex-1">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className="space-y-2 animate-fade-in">
+                    {msg.sender === 'advisor' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-md bg-[var(--advisor)]/20 text-[var(--advisor)] flex items-center justify-center text-[10px] font-bold font-mono">
+                            A
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[var(--advisor)] uppercase tracking-wider">
+                            Academic Advisor
+                          </span>
+                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
+                            {msg.timestamp}
+                          </span>
+                        </div>
 
-          {step === 'answering' && currentQ && (
-            <div className="space-y-4 animate-fade-in">
-              {/* Progress Indicator */}
-              <div className="flex items-center justify-between text-xs font-mono text-[var(--ink-3)]">
-                <span>
-                  Question {currentQIndex + 1} of {questions.length}
-                </span>
-                <span className="capitalize text-[var(--advisor)] font-bold">
-                  {currentQ.type.replace('_', ' ')}
-                </span>
-              </div>
+                        <div className="p-4 rounded-2xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink)] leading-relaxed space-y-2 shadow-xs">
+                          <MarkdownRenderer content={msg.content} />
+                        </div>
 
-              <div className="w-full bg-[var(--surface-2)] h-1.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-[var(--advisor)] h-full transition-all duration-300"
-                  style={{ width: `${((currentQIndex + 1) / questions.length) * 100}%` }}
-                />
-              </div>
-
-              {/* Question Box */}
-              <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
-                <p className="font-bold text-sm sm:text-base text-[var(--ink)] m-0 leading-relaxed font-sans">
-                  {currentQ.question}
-                </p>
-                <p className="text-[11px] text-[var(--ink-3)] m-0 font-mono">
-                  💡 <em>Why we ask: {currentQ.contextReason}</em>
-                </p>
-              </div>
-
-              {/* Suggested Options */}
-              {currentQ.suggestedOptions && currentQ.suggestedOptions.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-[11px] font-mono text-[var(--ink-3)]">
-                    Quick-Select or customize below:
+                        {/* Quick Reply Pills */}
+                        {msg.options && msg.options.length > 0 && !isLoadingTurn && (
+                          <div className="pt-1.5 space-y-1.5 pl-2">
+                            <div className="text-[11px] font-mono text-[var(--ink-3)]">
+                              👉 Quick-select a response or speak below:
+                            </div>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {msg.options.map((opt, oIdx) => (
+                                <button
+                                  key={oIdx}
+                                  onClick={() => handleSendMessage(opt)}
+                                  className="p-2.5 rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] hover:border-[var(--advisor)] hover:text-[var(--advisor)] text-left text-xs transition flex items-start gap-2 text-[var(--ink-2)]"
+                                >
+                                  <span className="font-mono text-[10px] opacity-50 mt-0.5">💬</span>
+                                  <span className="flex-1 font-medium">{opt}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* User Message Bubble */
+                      <div className="flex flex-col items-end space-y-1 pl-8">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
+                            {msg.timestamp}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-[var(--ink-2)]">
+                            You
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[var(--advisor)] text-[#04050a] font-medium text-xs max-w-[90%] shadow-xs leading-relaxed">
+                          {msg.content}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 gap-1.5">
-                    {currentQ.suggestedOptions.map((opt, oIdx) => (
-                      <button
-                        key={oIdx}
-                        onClick={() => setCurrentAnswerText(opt)}
-                        className={`p-2.5 rounded-lg border text-left text-xs transition flex items-start gap-2 ${
-                          currentAnswerText === opt
-                            ? 'bg-[var(--surface-3)] border-[var(--advisor)] text-[var(--advisor)] font-bold'
-                            : 'bg-[var(--surface-1)] border-[var(--hairline)] text-[var(--ink-2)] hover:border-[var(--hairline-strong)] hover:text-[var(--ink)]'
-                        }`}
-                      >
-                        <span className="font-mono text-[10px] opacity-60 mt-0.5">👉</span>
-                        <span className="flex-1">{opt}</span>
-                      </button>
-                    ))}
+                ))}
+
+                {isLoadingTurn && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] font-mono animate-pulse">
+                    <Loader2 size={14} className="animate-spin text-[var(--advisor)]" />
+                    <span>Advisor is listening &amp; personalizing your next question...</span>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Custom Voice/Text Input */}
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[var(--ink)]">
-                    Your Response:
-                  </label>
-                  <VoiceInputButton
-                    onTranscript={(t) =>
-                      setCurrentAnswerText((prev) => (prev ? `${prev} ${t}` : t))
-                    }
-                  />
-                </div>
-
-                <textarea
-                  placeholder="Type or click the microphone to speak your answer to the Intake Advisor..."
-                  value={currentAnswerText}
-                  onChange={(e) => setCurrentAnswerText(e.target.value)}
-                  rows={3}
-                  className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none leading-relaxed font-sans"
-                />
-              </div>
-
-              {/* Navigation Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-[var(--hairline)]">
-                <button
-                  onClick={() => {
-                    if (currentQIndex > 0) {
-                      setCurrentQIndex((prev) => prev - 1);
-                      setCurrentAnswerText(answers[currentQIndex - 1] || '');
-                    }
-                  }}
-                  disabled={currentQIndex === 0}
-                  className="ghost-btn disabled:opacity-30"
-                >
-                  <ArrowLeft size={13} />
-                  <span>Previous</span>
-                </button>
-
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={!currentAnswerText.trim() && !answers[currentQIndex]}
-                  className="accent-btn"
-                  style={{ padding: '8px 18px', borderRadius: '10px' }}
-                >
-                  <span>{currentQIndex === questions.length - 1 ? 'Analyze & Calibrate →' : 'Next Question →'}</span>
-                  <ArrowRight size={13} />
-                </button>
+                <div ref={chatEndRef} />
               </div>
             </div>
           )}
 
+          {/* STEP 2: EVALUATION SYNTHESIS */}
           {step === 'evaluating' && (
-            <div className="py-12 text-center space-y-3">
-              <Loader2 size={32} className="animate-spin text-[var(--advisor)] mx-auto" />
-              <p className="font-bold text-sm text-[var(--ink)]">
-                Synthesizing Your Competence Profile...
+            <div className="py-16 text-center space-y-3">
+              <Loader2 size={36} className="animate-spin text-[var(--advisor)] mx-auto" />
+              <p className="font-bold text-base text-[var(--ink)] m-0">
+                Personalizing Your Custom 3-Phase Roadmap...
               </p>
-              <p className="text-xs text-[var(--ink-3)]">
-                Calibrating your true baseline, separating buzzwords from core invariants, and mapping gap-filling modules.
+              <p className="text-xs text-[var(--ink-3)] max-w-md mx-auto leading-relaxed">
+                Analyzing what you already know, adding starter courses to bridge your knowledge gaps, and cutting out low-value distractions.
               </p>
             </div>
           )}
 
+          {/* STEP 3: CALIBRATED PROFILE & ROADMAP SUMMARY */}
           {step === 'profile_ready' && assessment && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="p-4 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_12%,var(--surface-2))] border-2 border-[var(--advisor)] space-y-3">
+            <div className="space-y-5 animate-fade-in">
+              {/* Top Banner */}
+              <div className="p-4 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_12%,var(--surface-2))] border-2 border-[var(--advisor)] space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <ShieldCheck size={20} className="text-[var(--advisor)]" />
                     <span className="font-bold text-sm text-[var(--ink)]">
-                      Diagnostic Assessment &amp; Calibration Complete
+                      Your Customized Learning Profile &amp; Roadmap
                     </span>
                   </div>
                   <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[var(--advisor)] text-[#04050a]">
-                    Score: {assessment.diagnosticScore || 84}/100
+                    Assessed Score: {assessment.diagnosticScore || 80}/100
                   </span>
                 </div>
 
-                <div className="space-y-1.5 text-xs text-[var(--ink)]">
+                <div className="space-y-1 text-xs text-[var(--ink)]">
                   <p className="m-0">
-                    <strong>Refined Destination:</strong> {assessment.refinedDestination}
+                    <strong>Target Destination:</strong> {assessment.refinedDestination}
                   </p>
                   <p className="m-0 text-[var(--ink-2)]">
-                    <strong>Assessed True Baseline:</strong> {assessment.actualBaselineAssessment}
+                    <strong>Starting Baseline:</strong> {assessment.actualBaselineAssessment}
                   </p>
                 </div>
               </div>
 
-              {/* Strengths & Gaps Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Confirmed Strengths */}
-                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 space-y-2">
-                  <div className="font-mono text-[11px] uppercase font-bold text-emerald-500 flex items-center gap-1.5">
-                    <CheckCircle2 size={13} />
-                    <span>Confirmed Strengths (Skip Re-teaching):</span>
-                  </div>
-                  <div className="space-y-1 text-xs text-[var(--ink)]">
-                    {assessment.masteredStrengths.map((s, idx) => (
-                      <div key={idx} className="flex items-start gap-1.5">
-                        <Check size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                        <span>{s}</span>
-                      </div>
-                    ))}
-                  </div>
+              {/* WHY WE CUSTOMIZED YOUR ROADMAP (The Rationale) */}
+              <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2.5">
+                <div className="font-mono text-[11px] uppercase font-bold text-[var(--advisor)] flex items-center gap-1.5">
+                  <Sparkles size={14} />
+                  <span>Why We Customized Your Roadmap (Added vs. Subtracted):</span>
                 </div>
+                <p className="text-xs text-[var(--ink)] leading-relaxed m-0 font-sans">
+                  {assessment.whyCustomizedExplanation}
+                </p>
 
-                {/* Critical Gaps */}
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-2">
-                  <div className="font-mono text-[11px] uppercase font-bold text-amber-500 flex items-center gap-1.5">
-                    <AlertTriangle size={13} />
-                    <span>Critical Gaps to Fill (Phase 1 Priority):</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {/* Added Modules */}
+                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-1">
+                    <div className="font-mono text-[10px] font-bold uppercase text-emerald-500 flex items-center gap-1">
+                      <CheckCircle2 size={12} />
+                      <span>Courses Added to Fill Gaps:</span>
+                    </div>
+                    <p className="text-[11px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+                      {assessment.addedCoursesReason || assessment.criticalGapsToFill.join('; ')}
+                    </p>
                   </div>
-                  <div className="space-y-1 text-xs text-[var(--ink)]">
-                    {assessment.criticalGapsToFill.map((g, idx) => (
-                      <div key={idx} className="flex items-start gap-1.5">
-                        <span className="text-amber-500 font-bold">•</span>
-                        <span>{g}</span>
-                      </div>
-                    ))}
+
+                  {/* Cut Fluff */}
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1">
+                    <div className="font-mono text-[10px] font-bold uppercase text-amber-500 flex items-center gap-1">
+                      <Scissors size={12} />
+                      <span>Fluff Cut to Save You Time:</span>
+                    </div>
+                    <p className="text-[11px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+                      {assessment.subtractedCoursesReason || assessment.recommendedCutList.join('; ')}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Recommended Cut List */}
-              {assessment.recommendedCutList && assessment.recommendedCutList.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
-                  <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                    ✂️ Tailored Cut-List for Your Level:
+              {/* 3-PHASE TIMELINE PREVIEW */}
+              {assessment.phasesSummary && assessment.phasesSummary.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-mono uppercase font-bold text-[var(--ink-3)]">
+                    Your Complete 3-Phase Roadmap (What You'll Actually Build):
                   </div>
-                  <div className="space-y-1 text-xs text-[var(--ink-2)]">
-                    {assessment.recommendedCutList.map((c, idx) => (
-                      <p key={idx} className="m-0">
-                        🚫 {c}
-                      </p>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    {assessment.phasesSummary.map((p, idx) => (
+                      <div key={idx} className="p-3 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] space-y-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[var(--ink)] font-sans">
+                            Phase {p.phaseNumber}: {p.title}
+                          </span>
+                          <span className="font-mono text-[10px] text-[var(--advisor)] font-semibold px-2 py-0.5 rounded bg-[var(--surface-2)]">
+                            {p.duration}
+                          </span>
+                        </div>
+                        <p className="text-[11.5px] text-[var(--ink-2)] m-0">
+                          🎯 <strong>What You Build:</strong> {p.tangibleAsset}
+                        </p>
+                        {p.whyThisOrder && (
+                          <p className="text-[10.5px] text-[var(--ink-3)] font-mono m-0 pt-0.5">
+                            💡 <em>Why this order? {p.whyThisOrder}</em>
+                          </p>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
 
               {/* Final Launch Action */}
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--hairline)]">
+              <div className="pt-3 flex items-center justify-between border-t border-[var(--hairline)]">
                 <button
                   type="button"
-                  onClick={() => loadDiagnosticQuestions(topic)}
+                  onClick={() => startIntakeConversation(topic)}
                   className="ghost-btn"
                 >
                   <RotateCcw size={13} />
-                  <span>Re-test</span>
+                  <span>Re-do Chat Consultation</span>
                 </button>
 
                 <button
@@ -432,12 +470,12 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
                   {isBuildingCurriculum ? (
                     <>
                       <Loader2 size={15} className="animate-spin" />
-                      <span>Synthesizing Adaptive Curriculum...</span>
+                      <span>Synthesizing Your Custom Academy...</span>
                     </>
                   ) : (
                     <>
                       <Zap size={15} />
-                      <span>Launch Calibrated Journey →</span>
+                      <span>Enter Altor Academy with This Roadmap →</span>
                     </>
                   )}
                 </button>
@@ -445,6 +483,59 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* Modal Chat Input Footer (Visible only in Chat step) */}
+        {step === 'chat' && (
+          <div className="p-4 border-t border-[var(--hairline)] bg-[var(--surface-2)]/90 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-mono text-[var(--ink-3)] font-semibold">
+                💬 Reply to your Academic Advisor:
+              </label>
+              <VoiceInputButton
+                onTranscript={(t) =>
+                  setInputText((prev) => (prev ? `${prev} ${t}` : t))
+                }
+              />
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="flex gap-2"
+            >
+              <textarea
+                placeholder="Type or click the microphone to speak your answer to your Advisor..."
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                rows={2}
+                className="flex-1 bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none resize-none font-sans leading-relaxed"
+              />
+
+              <button
+                type="submit"
+                disabled={!inputText.trim() || isLoadingTurn}
+                className="px-4 py-2 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-1.5 transition disabled:opacity-50 shadow-sm cursor-pointer self-end h-[58px]"
+              >
+                {isLoadingTurn ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <>
+                    <Send size={14} />
+                    <span className="hidden sm:inline">Send →</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

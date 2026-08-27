@@ -272,6 +272,16 @@ export interface DiagnosticAssessment {
   recommendedStartingPhase: number;
   recommendedCutList: string[];
   diagnosticScore?: number;
+  whyCustomizedExplanation?: string;
+  addedCoursesReason?: string;
+  subtractedCoursesReason?: string;
+  phasesSummary?: Array<{
+    phaseNumber: number;
+    title: string;
+    duration: string;
+    tangibleAsset: string;
+    whyThisOrder: string;
+  }>;
 }
 
 export interface LiveClassroomTurn {

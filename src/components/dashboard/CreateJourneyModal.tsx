@@ -298,15 +298,15 @@ export const CreateJourneyModal: React.FC = () => {
                   disabled={!topic.trim() || isGenerating}
                   className="flex-1 py-3 px-4 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-2 transition shadow-md disabled:opacity-50 cursor-pointer"
                 >
-                  <Target className="w-4 h-4" />
-                  <span>🎯 Grill Me &amp; Calibrate Baseline (Recommended) →</span>
+                  <Sparkles className="w-4 h-4" />
+                  <span>🎓 Chat with Advisor to Personalize (Recommended) →</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleDirectOrCalibratedLaunch(false)}
                   disabled={!topic.trim() || isGenerating}
-                  className="py-3 px-4 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
+                  className="py-3 px-4 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
                 >
                   {isGenerating ? (
                     <>

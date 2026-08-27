@@ -718,7 +718,7 @@ export const LibrarianView: React.FC = () => {
                       {deepDiveData.mechanicsAndAnatomy?.corePrimitives && (
                         <div className="space-y-2">
                           <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                            🧩 The 3 Core Primitives in this Architecture:
+                            🧩 The 3 Core Elements of this Concept:
                           </div>
                           <div className="space-y-2">
                             {deepDiveData.mechanicsAndAnatomy.corePrimitives.map((prim, idx) => (

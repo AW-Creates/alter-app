@@ -655,29 +655,29 @@ export const TutorView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Key Takeaways */}
-                  {activeLesson.keyTakeaways && activeLesson.keyTakeaways.length > 0 && (
-                    <div className="space-y-2 pt-1">
-                      <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                        🔑 Essential First-Principles Invariants:
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        {activeLesson.keyTakeaways.map((takeaway, idx) => (
-                          <div key={idx} className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1">
-                            <div className="font-bold text-[var(--ink)] text-xs flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-full bg-[var(--tutor)] text-[#04050a] font-mono text-[10px] flex items-center justify-center font-bold">
-                                {idx + 1}
-                              </span>
-                              <span>Invariant #{idx + 1}</span>
-                            </div>
-                            <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
-                              {takeaway}
-                            </p>
+                      {/* Key Takeaways */}
+                      {activeLesson.keyTakeaways && activeLesson.keyTakeaways.length > 0 && (
+                        <div className="space-y-2 pt-1">
+                          <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
+                            🔑 Core Principles &amp; Takeaways:
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            {activeLesson.keyTakeaways.map((takeaway, idx) => (
+                              <div key={idx} className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1">
+                                <div className="font-bold text-[var(--ink)] text-xs flex items-center gap-1.5">
+                                  <span className="w-4 h-4 rounded-full bg-[var(--tutor)] text-[#04050a] font-mono text-[10px] flex items-center justify-center font-bold">
+                                    {idx + 1}
+                                  </span>
+                                  <span>Core Rule #{idx + 1}</span>
+                                </div>
+                                <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+                                  {takeaway}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                   {/* Next Navigation */}
                   <div className="pt-3 flex justify-end">

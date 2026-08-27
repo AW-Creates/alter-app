@@ -567,6 +567,37 @@ export async function generateDiagnosticQuestionsWithAI(
   return getSimulatedDiagnosticQuestions(topic, destination);
 }
 
+export async function conductAdvisorIntakeTurnWithAI(
+  topic: string,
+  history: Array<{ sender: 'advisor' | 'user'; content: string }>,
+  userResponse?: string
+): Promise<{
+  advisorMessage: string;
+  suggestedQuickReplies: string[];
+  isInterviewComplete: boolean;
+  turnStage: string;
+}> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 600));
+    return getSimulatedAdvisorIntakeTurn(topic, history, userResponse);
+  }
+
+  const prompt = GENERATOR_PROMPTS.conductAdvisorIntakeTurn(topic, history, userResponse);
+  const raw = await callGemini(
+    prompt,
+    'You are a warm, welcoming, and encouraging AI Academic Advisor conducting a 1-on-1 friendly intake conversation.'
+  );
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    advisorMessage: parsed.advisorMessage || `Tell me more about what you'd love to achieve with ${topic}!`,
+    suggestedQuickReplies: parsed.suggestedQuickReplies || ['I want to build a complete project', 'I am starting from scratch', 'I have basic experience'],
+    isInterviewComplete: parsed.isInterviewComplete ?? false,
+    turnStage: parsed.turnStage || 'conversation'
+  };
+}
+
 export async function evaluateDiagnosticAnswersWithAI(
   topic: string,
   qaPairs: Array<{ question: string; answer: string; type?: string }>
@@ -578,18 +609,44 @@ export async function evaluateDiagnosticAnswersWithAI(
   }
 
   const prompt = GENERATOR_PROMPTS.evaluateDiagnosticAnswers(topic, qaPairs);
-  const raw = await callGemini(prompt, 'You are a master diagnostic professor assessing student competence.');
+  const raw = await callGemini(prompt, 'You are a supportive, insightful Academic Advisor creating a personalized curriculum.');
   const parsed = extractJsonFromResponse<any>(raw);
 
   return {
     refinedTopic: parsed.refinedTopic || topic,
-    refinedDestination: parsed.refinedDestination || `Master ${topic} with verified proof-of-work`,
-    actualBaselineAssessment: parsed.actualBaselineAssessment || 'Foundational knowledge with targeted gaps to fill',
-    masteredStrengths: parsed.masteredStrengths || ['Foundational syntax', 'Core motivation'],
-    criticalGapsToFill: parsed.criticalGapsToFill || ['State transition invariants', 'Execution error boundaries'],
+    refinedDestination: parsed.refinedDestination || `Master ${topic} with a real-world project`,
+    actualBaselineAssessment: parsed.actualBaselineAssessment || 'Curious autodidact with specific strengths and areas to build confidence',
+    masteredStrengths: parsed.masteredStrengths || ['Clear motivation and strategic vision'],
+    criticalGapsToFill: parsed.criticalGapsToFill || ['Foundational core steps and starter confidence'],
     recommendedStartingPhase: parsed.recommendedStartingPhase || 1,
-    recommendedCutList: parsed.recommendedCutList || ['Skip generic introductory tutorials', 'Cut passive video consumption'],
-    diagnosticScore: parsed.diagnosticScore || 82
+    recommendedCutList: parsed.recommendedCutList || ['Skip generic low-value video lectures', 'Avoid passive consumption without building'],
+    diagnosticScore: parsed.diagnosticScore || 80,
+    whyCustomizedExplanation: parsed.whyCustomizedExplanation || `We customized your roadmap to focus on hands-on building while ensuring you master foundational concepts first.`,
+    addedCoursesReason: parsed.addedCoursesReason || `We added Phase 1 foundational checkpoints so you have 100% confidence before moving to advanced milestones.`,
+    subtractedCoursesReason: parsed.subtractedCoursesReason || `We cut out unnecessary fluff so you save dozens of hours and focus on what works.`,
+    phasesSummary: parsed.phasesSummary || [
+      {
+        phaseNumber: 1,
+        title: 'Foundations & First Prototype',
+        duration: 'Weeks 1-2',
+        tangibleAsset: 'Working First Prototype / Outline',
+        whyThisOrder: 'Validates your core idea and builds initial momentum with zero overwhelm.'
+      },
+      {
+        phaseNumber: 2,
+        title: 'Core Build & Execution',
+        duration: 'Weeks 3-4',
+        tangibleAsset: 'Complete Functional Milestone',
+        whyThisOrder: 'Develops the primary asset using the validated foundations from Phase 1.'
+      },
+      {
+        phaseNumber: 3,
+        title: 'Polish, Launch & Real-World Results',
+        duration: 'Weeks 5-6',
+        tangibleAsset: 'Live Published Deliverable',
+        whyThisOrder: 'Brings your project into the real world for feedback and tangible proof.'
+      }
+    ]
   };
 }
 
@@ -730,14 +787,248 @@ export async function triageStuckStudentWithAI(
   };
 }
 
-// ----------------------------------------------------
-// Simulation Engines (for offline / instant demo mode)
-// ----------------------------------------------------
+function getSimulatedAdvisorIntakeTurn(
+  topic: string,
+  history: Array<{ sender: 'advisor' | 'user'; content: string }>,
+  userResponse?: string
+): {
+  advisorMessage: string;
+  suggestedQuickReplies: string[];
+  isInterviewComplete: boolean;
+  turnStage: string;
+} {
+  const turnCount = history.filter((h) => h.sender === 'user').length;
+  const isEbook = topic.toLowerCase().includes('book') || topic.toLowerCase().includes('publish');
+  const isGarden = topic.toLowerCase().includes('garden') || topic.toLowerCase().includes('herb') || topic.toLowerCase().includes('plant');
+  const isBake = topic.toLowerCase().includes('sourdough') || topic.toLowerCase().includes('bake') || topic.toLowerCase().includes('bread');
+  const isTrade = topic.toLowerCase().includes('trade') || topic.toLowerCase().includes('forex') || topic.toLowerCase().includes('future');
+  const isDigitalProduct = topic.toLowerCase().includes('digital product') || topic.toLowerCase().includes('saas') || topic.toLowerCase().includes('app');
+
+  if (turnCount === 0) {
+    if (isEbook) {
+      return {
+        advisorMessage: `Hey there! 👋 I'm your Academic Advisor. Welcome to Altor!\n\nBefore we build your personalized curriculum for **${topic}**, I want to get crystal clear on your vision so we don't give you a cookie-cutter plan.\n\nTell me about the e-book you want to create! What is the topic, who is your dream reader, and what's the main transformation you want them to get?`,
+        suggestedQuickReplies: [
+          'A practical non-fiction guide solving a specific problem',
+          'A creative story or memoir to inspire others',
+          'A technical breakdown / reference guide for professionals',
+          'I have general ideas, but need help choosing the most profitable niche'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'vision'
+      };
+    }
+
+    if (isGarden) {
+      return {
+        advisorMessage: `Hey there! 🌿 I'm your Academic Advisor. Welcome to Altor!\n\nBefore we map out your customized roadmap for **${topic}**, tell me about your dream garden! Are you setting up a kitchen windowsill with culinary herbs, an indoor grow tent, or a balcony container garden?`,
+        suggestedQuickReplies: [
+          'Kitchen windowsill culinary herbs (basil, thyme, rosemary)',
+          'Indoor LED grow-light herb & microgreen station',
+          'Balcony or small patio organic container garden',
+          'Starting 100% from scratch and need help picking the best starter greens'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'vision'
+      };
+    }
+
+    if (isBake) {
+      return {
+        advisorMessage: `Hey! 🍞 I'm your Academic Advisor. Welcome to Altor!\n\nBefore we engineer your customized baking curriculum for **${topic}**, tell me what your dream outcome is! Do you want to master baking blistered, open-crumb sourdough at home, or are you hoping to start a micro-bakery selling to neighbors?`,
+        suggestedQuickReplies: [
+          'Master consistent, open-crumb artisan sourdough loaves for my family',
+          'Launch a weekend cottage food micro-bakery for local customers',
+          'Learn sourdough starter maintenance and troubleshooting from zero'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'vision'
+      };
+    }
+
+    return {
+      advisorMessage: `Hey there! 👋 I'm your Academic Advisor. Welcome to Altor!\n\nBefore we build your customized curriculum for **${topic}**, I'd love to chat for 2 minutes so we understand your exact dream and current starting point.\n\nTell me: What would a completely successful project or outcome look like for you in **${topic}**?`,
+      suggestedQuickReplies: [
+        `Create a finished, real-world project or deliverable in ${topic}`,
+        `Master the core foundations so I have 100% confidence`,
+        `Build a commercial product or service to sell to clients`
+      ],
+      isInterviewComplete: false,
+      turnStage: 'vision'
+    };
+  }
+
+  if (turnCount === 1) {
+    return {
+      advisorMessage: `Awesome! That gives me a very clear picture of where you want to end up.\n\nNow tell me about your hands-on background with this: Have you ever tried doing anything related to **${topic}** before (even small experiments, reading books, or trying tutorials), or are you starting 100% from square one?`,
+      suggestedQuickReplies: [
+        'Complete beginner — starting from absolute zero',
+        'I have read books and watched videos, but have never built a complete project',
+        'I have basic hands-on experience and want to level up to an advanced standard'
+      ],
+      isInterviewComplete: false,
+      turnStage: 'background'
+    };
+  }
+
+  if (turnCount === 2) {
+    if (isEbook) {
+      return {
+        advisorMessage: `Great context! Let's do a quick foundational check:\n\nWhen writing a successful e-book, how would you approach validating reader demand and outlining chapter milestones before writing 200 pages? Or is market validation something you'd like us to teach you from the ground up?`,
+        suggestedQuickReplies: [
+          'I usually just start writing drafts and figure out marketing later',
+          'I know I should validate with a landing page or survey, but need a step-by-step checklist',
+          'Brand new to me — please teach me the step-by-step validation process from scratch!'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'knowledge_probe'
+      };
+    }
+
+    if (isGarden) {
+      return {
+        advisorMessage: `Got it! Quick foundational question:\n\nIn indoor container gardening, how comfortable are you with balancing soil aeration/drainage vs watering schedules and LED light distance? Or is indoor plant biology something you want to learn step-by-step?`,
+        suggestedQuickReplies: [
+          'My plants often get overwatered or dry out; I need a clear watering & light guide',
+          'I understand basic potting soil, but struggle with lighting schedules and nutrient feeding',
+          'Brand new to indoor plant care — please teach me the core essentials from scratch!'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'knowledge_probe'
+      };
+    }
+
+    if (isTrade) {
+      return {
+        advisorMessage: `Understood! Quick foundational check:\n\nWhen you place a live trade, what's your understanding of how Bid vs. Ask spreads and slippage affect your entry, and how do you calculate position size so you never risk more than 1-2% of your capital?`,
+        suggestedQuickReplies: [
+          'I understand candlestick charts, but struggle with order book execution and position sizing math',
+          'I know the difference between Bid and Ask, but need a disciplined risk management rulebook',
+          'Brand new to order book mechanics — please teach me proper risk management from zero!'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'knowledge_probe'
+      };
+    }
+
+    if (isDigitalProduct) {
+      return {
+        advisorMessage: `Got it! Quick practical check:\n\nWhen setting up a digital product or SaaS, how comfortable are you with handling customer authentication and automated billing webhooks? Or is backend data flow something you'd like to learn step-by-step?`,
+        suggestedQuickReplies: [
+          'I can build nice frontend layouts, but backend databases and Stripe billing are brand new to me',
+          'I have never written code or databases — I need a clear step-by-step fullstack or no-code path',
+          'I know how to code APIs, but need guidance on conversion funnels and launch architecture'
+        ],
+        isInterviewComplete: false,
+        turnStage: 'knowledge_probe'
+      };
+    }
+
+    return {
+      advisorMessage: `Got it! Quick foundational check:\n\nIn **${topic}**, what is the single biggest question, obstacle, or concept that you currently feel uncertain about when trying to reach your goal?`,
+      suggestedQuickReplies: [
+        'Knowing what step to take first without getting overwhelmed',
+        'Understanding how to turn theoretical knowledge into a tangible finished project',
+        'Avoiding common beginner mistakes and knowing what fluff to skip'
+      ],
+      isInterviewComplete: false,
+      turnStage: 'knowledge_probe'
+    };
+  }
+
+  // Turn 3+: Ready to synthesize
+  return {
+    advisorMessage: `Thank you for sharing that! That gives me everything I need.\n\nI can see exactly where you are today and what missing puzzle pieces we need to fill in. I'm ready to customize your complete 3-phase curriculum, cut out the distractions, and show you why each step is in that exact order.`,
+    suggestedQuickReplies: ['View My Personalized Curriculum →'],
+    isInterviewComplete: true,
+    turnStage: 'ready_to_synthesize'
+  };
+}
 
 function getSimulatedDiagnosticQuestions(topic: string, destination: string): DiagnosticQuestion[] {
+  const isEbook = topic.toLowerCase().includes('book') || topic.toLowerCase().includes('publish');
+  const isGarden = topic.toLowerCase().includes('garden') || topic.toLowerCase().includes('herb');
+  const isBake = topic.toLowerCase().includes('sourdough') || topic.toLowerCase().includes('bake');
+  const isTrade = topic.toLowerCase().includes('trade') || topic.toLowerCase().includes('forex') || topic.toLowerCase().includes('future');
   const isDigitalProduct = topic.toLowerCase().includes('digital product') || topic.toLowerCase().includes('saas') || topic.toLowerCase().includes('app');
-  const isTrading = topic.toLowerCase().includes('trade') || topic.toLowerCase().includes('forex') || topic.toLowerCase().includes('future');
   
+  if (isEbook) {
+    return [
+      {
+        id: 'diag-1',
+        type: 'clarification',
+        question: 'What kind of e-book are you aiming to write and publish?',
+        contextReason: 'Determines the ideal outline structure, target audience, and distribution platform.',
+        suggestedOptions: [
+          'A practical non-fiction guide solving a specific problem',
+          'A creative story, memoir, or essay collection',
+          'A technical reference handbook for professionals',
+          'A short checklist & resource guide for beginners'
+        ]
+      },
+      {
+        id: 'diag-2',
+        type: 'claimed_baseline',
+        question: 'What is your current writing and publishing experience so far?',
+        contextReason: 'Helps us skip beginner outlining if you already write, or guide you from zero.',
+        suggestedOptions: [
+          'Complete beginner — I have never written a book or published online',
+          'I write blog posts or articles, but have never structured a complete multi-chapter book',
+          'I have written draft chapters, but struggle with editing, formatting, and selling'
+        ]
+      },
+      {
+        id: 'diag-3',
+        type: 'technical_probe',
+        question: 'Before writing 100+ pages, how would you test whether readers actually want to buy this specific topic?',
+        contextReason: 'Checks whether you understand audience validation before spending months writing.',
+        suggestedOptions: [
+          'Create a 1-page pre-order landing page or survey to collect early email waitlist signups',
+          'Write the entire manuscript in secret and then post it on social media',
+          'Send query letters to traditional publishers'
+        ]
+      }
+    ];
+  }
+
+  if (isGarden) {
+    return [
+      {
+        id: 'diag-1',
+        type: 'clarification',
+        question: 'What type of indoor garden are you setting up?',
+        contextReason: 'Different plants require completely different soil mixes, container depths, and light cycles.',
+        suggestedOptions: [
+          'Kitchen windowsill culinary herb garden (basil, thyme, mint)',
+          'Indoor LED grow-light shelf for microgreens and salad greens',
+          'Balcony or patio container vegetable garden'
+        ]
+      },
+      {
+        id: 'diag-2',
+        type: 'claimed_baseline',
+        question: 'What is your hands-on experience with caring for indoor plants?',
+        contextReason: 'Ensures we start with foolproof starter herbs without overwhelming you.',
+        suggestedOptions: [
+          'Absolute beginner — I have never grown plants before',
+          'I have kept houseplants alive, but want to grow edible culinary herbs successfully',
+          'Experienced gardener looking to master year-round indoor grow-light optimization'
+        ]
+      },
+      {
+        id: 'diag-3',
+        type: 'technical_probe',
+        question: 'What is the most common reason indoor culinary herbs turn yellow or wilt, and how do you prevent it?',
+        contextReason: 'Tests your practical understanding of soil drainage and root aeration vs overwatering.',
+        suggestedOptions: [
+          'Overwatering and poor container drainage suffocating the root system',
+          'Not giving them enough chemical fertilizer in the first week',
+          'Keeping them in soil that stays completely dry for weeks'
+        ]
+      }
+    ];
+  }
+
   if (isDigitalProduct) {
     return [
       {
@@ -766,7 +1057,7 @@ function getSimulatedDiagnosticQuestions(topic: string, destination: string): Di
       {
         id: 'diag-3',
         type: 'technical_probe',
-        question: 'Quick technical dilemma: When a customer pays via Stripe, what security measure ensures an attacker cannot spoof the payment webhook event to grant themselves free access?',
+        question: 'When a customer pays via Stripe, what security measure ensures an attacker cannot spoof the payment webhook event to grant themselves free access?',
         contextReason: 'Tests your practical understanding of secure payment architecture vs. surface-level tutorial knowledge.',
         suggestedOptions: [
           'Verify the Stripe-Signature header using the endpoint signing secret before processing the event payload',
@@ -777,7 +1068,7 @@ function getSimulatedDiagnosticQuestions(topic: string, destination: string): Di
     ];
   }
 
-  if (isTrading) {
+  if (isTrade) {
     return [
       {
         id: 'diag-1',
@@ -804,7 +1095,7 @@ function getSimulatedDiagnosticQuestions(topic: string, destination: string): Di
       {
         id: 'diag-3',
         type: 'technical_probe',
-        question: 'Quick diagnostic check: If ES Futures are quoted at Bid: 5200.00 / Ask: 5200.25 and you submit a Market Buy, at what price will you be filled, and what is your slippage risk during high-volatility news?',
+        question: 'If ES Futures are quoted at Bid: 5200.00 / Ask: 5200.25 and you submit a Market Buy, at what price will you be filled, and what is your slippage risk during high-volatility news?',
         contextReason: 'Tests whether you understand order book liquidity and market vs limit mechanics.',
         suggestedOptions: [
           'Filled immediately at 5200.25 (the Ask), with high slippage risk if the Ask book thins out',
@@ -819,34 +1110,34 @@ function getSimulatedDiagnosticQuestions(topic: string, destination: string): Di
     {
       id: 'diag-1',
       type: 'clarification',
-      question: `What specific high-leverage project or outcome do you want to build in ${topic}?`,
-      contextReason: 'Translates broad interests into an exact, tangible target artifact.',
+      question: `What specific goal or project are you hoping to create in ${topic}?`,
+      contextReason: 'Translates broad interests into an exact, tangible target outcome.',
       suggestedOptions: [
-        `Build and deploy a complete production-grade system in ${topic}`,
-        `Master first-principles concepts to lead technical teams`,
-        `Create a commercial MVP or client deliverable in ${topic}`
+        `Build and complete a finished, real-world project in ${topic}`,
+        `Master the core fundamentals from scratch with zero confusion`,
+        `Create a professional deliverable or service in ${topic}`
       ]
     },
     {
       id: 'diag-2',
       type: 'claimed_baseline',
-      question: `What is your current background or hands-on experience with ${topic}?`,
-      contextReason: 'Establishes your self-assessed starting point.',
+      question: `What is your current hands-on background with ${topic}?`,
+      contextReason: 'Establishes your self-assessed starting point so we meet you where you are.',
       suggestedOptions: [
-        'Complete novice — starting from zero',
-        'Familiar with basic concepts, but lacking end-to-end execution confidence',
-        'Intermediate practitioner looking for advanced master-level polish'
+        'Complete beginner — starting from square one',
+        'I know some basic ideas, but have never built an end-to-end project',
+        'I have basic experience and want to fill in my knowledge gaps'
       ]
     },
     {
       id: 'diag-3',
       type: 'technical_probe',
-      question: `When executing a project in ${topic}, what is the single most common failure mode or hidden bottleneck that beginners overlook?`,
-      contextReason: 'Probes your actual first-principles mental models vs. textbook definitions.',
+      question: `What do you feel is the most challenging part of getting started with ${topic}?`,
+      contextReason: 'Helps us tailor Phase 1 to directly eliminate your biggest bottleneck.',
       suggestedOptions: [
-        'Premature optimization and lack of error-recovery boundaries',
-        'Choosing the wrong framework before validating core constraints',
-        'Not having clear quantitative metrics for success'
+        'Knowing what step to take first without getting overwhelmed',
+        'Finding clear, practical guides that avoid confusing jargon',
+        'Staying consistent and having clear milestones to track progress'
       ]
     }
   ];
@@ -857,27 +1148,158 @@ function getSimulatedDiagnosticEvaluation(
   qaPairs: Array<{ question: string; answer: string; type?: string }>
 ): DiagnosticAssessment {
   const answerSummary = qaPairs.map((q) => q.answer).join(' ');
-  const isBeginner = answerSummary.toLowerCase().includes('beginner') || answerSummary.toLowerCase().includes('never') || answerSummary.toLowerCase().includes('zero');
+  const isBeginner = answerSummary.toLowerCase().includes('beginner') || answerSummary.toLowerCase().includes('never') || answerSummary.toLowerCase().includes('zero') || answerSummary.toLowerCase().includes('square one');
   
+  const isEbook = topic.toLowerCase().includes('book') || topic.toLowerCase().includes('publish');
+  const isGarden = topic.toLowerCase().includes('garden') || topic.toLowerCase().includes('herb');
+  const isTrade = topic.toLowerCase().includes('trade') || topic.toLowerCase().includes('forex');
+  const isDigitalProduct = topic.toLowerCase().includes('digital product') || topic.toLowerCase().includes('saas');
+
+  if (isEbook) {
+    return {
+      refinedTopic: 'Publishing & Selling My First E-Book',
+      refinedDestination: 'Write, design, and launch a validated 10-chapter e-book with an automated Gumroad pre-order landing page',
+      actualBaselineAssessment: isBeginner 
+        ? 'Great creative ideas and motivation; needs a step-by-step framework for outline validation, formatting, and direct sales.'
+        : 'Comfortable with writing drafts; needs practical guidance on audience pre-sales and automated store funnels.',
+      masteredStrengths: [
+        'Clear vision for target readers and core message',
+        'High motivation to create a tangible published asset'
+      ],
+      criticalGapsToFill: [
+        'Testing topic demand with a 1-page landing page before writing 200 pages',
+        'EPUB/PDF formatting, cover design, and setting up automated payment checkout'
+      ],
+      recommendedStartingPhase: 1,
+      diagnosticScore: isBeginner ? 70 : 85,
+      whyCustomizedExplanation: `Because you want to write a book that actually sells, we customized Phase 1 to validate your concept with real readers first—so you never spend months writing in secret only to hear crickets.`,
+      addedCoursesReason: `We added 'Phase 1: Idea Validation & Landing Page Setup' so you can collect early email signups before drafting the full manuscript.`,
+      subtractedCoursesReason: `We cut out 3-month traditional publisher query letters and expensive PR firms because you're publishing direct to readers.`,
+      recommendedCutList: [
+        'Skip sending query letters to traditional publishing gatekeepers',
+        'Skip complex paid advertising until your landing page conversion is proven'
+      ],
+      phasesSummary: [
+        {
+          phaseNumber: 1,
+          title: 'Phase 1: Market Validation & Chapter Outline',
+          duration: 'Weeks 1-2',
+          tangibleAsset: '1-Page Book Proposal + Gumroad Waitlist Page with 25 signups',
+          whyThisOrder: 'Validates reader interest first so you write with 100% confidence.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Phase 2: Focused Manuscript Drafting & Cover Design',
+          duration: 'Weeks 3-4',
+          tangibleAsset: 'Complete 10-Chapter Manuscript + Professional 3D Cover',
+          whyThisOrder: 'Drafts the core content using the validated chapter outline from Phase 1.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Phase 3: Formatting, Store Launch & First 50 Sales',
+          duration: 'Weeks 5-6',
+          tangibleAsset: 'Live Published E-Book accepting orders on Gumroad/Amazon',
+          whyThisOrder: 'Brings your finished book to market and generates real-world readers.'
+        }
+      ]
+    };
+  }
+
+  if (isGarden) {
+    return {
+      refinedTopic: 'Organic Culinary Herb & Urban Gardening',
+      refinedDestination: 'Build a flourishing 4-pot indoor organic culinary herb nursery with automated LED lighting and continuous fresh harvests',
+      actualBaselineAssessment: isBeginner
+        ? 'Enthusiastic beginner; needs a foolproof starter checklist for soil drainage, watering schedules, and light placement.'
+        : 'Basic houseplant care experience; needs guidance on pruning kinetics and continuous culinary harvesting.',
+      masteredStrengths: [
+        'Clear space and excitement to grow fresh organic herbs at home',
+        'Appreciation for fresh culinary ingredients'
+      ],
+      criticalGapsToFill: [
+        'Preventing overwatering through proper container drainage and aeration',
+        'Balancing full-spectrum LED light distance and daily light cycles'
+      ],
+      recommendedStartingPhase: 1,
+      diagnosticScore: isBeginner ? 65 : 82,
+      whyCustomizedExplanation: `We tailored your roadmap to start with the top 3 easiest, highest-flavor culinary herbs (basil, thyme, mint) so you get quick wins in your first 14 days without frustration.`,
+      addedCoursesReason: `We added 'Phase 1: Soil Mix, Drainage & Germination' to ensure your roots stay healthy and never rot.`,
+      subtractedCoursesReason: `We cut out commercial 100-acre agricultural chemistry and synthetic pesticides because you're growing clean food indoors.`,
+      recommendedCutList: [
+        'Skip industrial commercial farming agronomy textbooks',
+        'Avoid synthetic chemical pesticides for indoor culinary greens'
+      ],
+      phasesSummary: [
+        {
+          phaseNumber: 1,
+          title: 'Phase 1: Container Setup, Soil Mix & Seed Germination',
+          duration: 'Weeks 1-2',
+          tangibleAsset: '4-Pot Indoor Herb Station with Sprouting Seedlings',
+          whyThisOrder: 'Establishes healthy root drainage and strong initial sprouts.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Phase 2: Vegetative Growth, Lighting & Nutrient Feeding',
+          duration: 'Weeks 3-4',
+          tangibleAsset: 'Bushy, Thriving Herb Nursery with Full-Spectrum LED Schedule',
+          whyThisOrder: 'Builds lush leaf volume using the established root systems.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Phase 3: Continuous Pruning, Propagation & Kitchen Harvest',
+          duration: 'Weeks 5-6',
+          tangibleAsset: 'Weekly Fresh Herb Harvests for Cooking + Rooted Cuttings',
+          whyThisOrder: 'Teaches ongoing harvest methods so your plants produce for months.'
+        }
+      ]
+    };
+  }
+
   return {
     refinedTopic: topic,
-    refinedDestination: `Ship a production-grade, validated deliverable in ${topic}`,
+    refinedDestination: `Complete a finished, real-world project and master the core foundations of ${topic}`,
     actualBaselineAssessment: isBeginner 
-      ? `Foundational interest with critical gaps in practical execution and architectural invariants.`
-      : `Solid conceptual awareness with specific blindspots in edge-case resilience and backend error handling.`,
+      ? `Enthusiastic autodidact starting from scratch; ready for a clear, step-by-step foundation with zero jargon.`
+      : `Solid conceptual awareness; ready to fill specific execution gaps and build a polished project.`,
     masteredStrengths: [
-      'High motivation and clear strategic vision',
-      'Familiarity with high-level terminology and use-cases'
+      'High motivation and clear goal orientation',
+      'Desire for practical hands-on results over passive theory'
     ],
     criticalGapsToFill: [
-      'Core invariant and state transition mechanics',
-      'End-to-end security, error recovery, and failure boundaries'
+      'Step-by-step foundational workflow and starter setup',
+      'Hands-on execution confidence and error troubleshooting'
     ],
     recommendedStartingPhase: 1,
-    diagnosticScore: isBeginner ? 65 : 84,
+    diagnosticScore: isBeginner ? 68 : 84,
+    whyCustomizedExplanation: `We structured your roadmap so every single phase ends with a real, tangible project you can see and touch—ensuring you build real confidence at every step.`,
+    addedCoursesReason: `We added Phase 1 foundational checkpoints to give you an easy, quick win in your first 2 weeks.`,
+    subtractedCoursesReason: `We cut out dry theoretical lectures and confusing jargon so you spend 80% of your time actually building.`,
     recommendedCutList: [
-      'Skip generic superficial video tutorials that copy-paste pre-built templates',
-      'Avoid theoretical rabbit holes that delay hands-on building'
+      'Skip generic superficial video tutorials that talk without demonstrating practical steps',
+      'Avoid passive reading marathons without hands-on practice'
+    ],
+    phasesSummary: [
+      {
+        phaseNumber: 1,
+        title: 'Phase 1: Core Foundations & First Working Prototype',
+        duration: 'Weeks 1-2',
+        tangibleAsset: 'First Working Prototype or Draft Deliverable',
+        whyThisOrder: 'Validates your core understanding and gives you an immediate tangible win.'
+      },
+      {
+        phaseNumber: 2,
+        title: 'Phase 2: Core Execution & In-Depth Build',
+        duration: 'Weeks 3-4',
+        tangibleAsset: 'Complete Functional Milestone System',
+        whyThisOrder: 'Expands your prototype into a robust, comprehensive system.'
+      },
+      {
+        phaseNumber: 3,
+        title: 'Phase 3: Polish, Launch & Real-World Results',
+        duration: 'Weeks 5-6',
+        tangibleAsset: 'Live Published Deliverable or Final Showcase',
+        whyThisOrder: 'Brings your project to completion and shares it with real users.'
+      }
     ]
   };
 }

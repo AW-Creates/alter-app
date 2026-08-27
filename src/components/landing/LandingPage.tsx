@@ -81,76 +81,221 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     { label: '⚡ DIY Electronics & ESP32', value: 'DIY Electronics & ESP32 IoT Sensors' }
   ];
 
-  const simulatedOutputs: Record<string, { brief: string; cutList: string[]; phase1: string; checkpoint: string }> = {
+  interface SimOutputData {
+    brief: string;
+    whyThisOrder: string;
+    phases: Array<{
+      phaseNumber: number;
+      title: string;
+      duration: string;
+      checkpoint: string;
+    }>;
+    cutList: string[];
+  }
+
+  const simulatedOutputs: Record<string, SimOutputData> = {
     'Publishing & Selling My First E-Book': {
-      brief: 'Master niche topic validation, first-principles outline structuring, high-conversion copy, direct-to-consumer digital distribution, and automated launch funnels.',
-      cutList: [
-        'Skip 3-month traditional publisher query letter rituals.',
-        'Skip generic social media follower growth schemes before having a validated manuscript.',
-        'Avoid complex paid ad campaigns until your landing page conversion rate is proven.'
+      brief: 'Validate your target readers, structure a compelling chapter-by-chapter outline, write clear actionable chapters, and launch direct pre-orders on Gumroad or Amazon with zero publisher gatekeepers.',
+      whyThisOrder: 'We validate your concept with a waitlist in Phase 1 before you write hundreds of pages, draft the core manuscript in Phase 2, and launch the store in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Market Validation & 1-Page Thesis Outline',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Create a 1-page book proposal, sample chapter outline, and a pre-order Gumroad landing page with 25 early signups.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Focused Manuscript Drafting & Cover Design',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Complete your full 10-chapter manuscript, professional 3D cover art, and export clean EPUB/PDF files.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Direct Store Launch & First 50 Readers',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Launch your live payment checkout, publish reader bonuses, and generate your first 50 paid reader downloads.'
+        }
       ],
-      phase1: 'Phase 1: Market Gap Validation & 1-Page Thesis Outline (Weeks 1–2)',
-      checkpoint: 'Write a validated 10-chapter book proposal with sample chapter, pre-order Gumroad landing page, and 50 early waitlist signups.'
+      cutList: [
+        'Skip 3-month traditional publisher query letters and gatekeeper rituals.',
+        'Skip generic social media follower growth schemes before having a validated outline.',
+        'Avoid expensive paid ad campaigns until your landing page conversion is proven.'
+      ]
     },
     'Organic Culinary Herb & Urban Gardening': {
-      brief: 'Master indoor container biology, soil microbial ecology, PAR spectrum light cycles, nutrient feeding schedules, and continuous vegetative pruning.',
+      brief: 'Master indoor container biology, soil microbial drainage, full-spectrum LED light placement, watering schedules, and continuous culinary harvesting.',
+      whyThisOrder: 'We establish strong root aeration and germination in Phase 1, grow lush vegetative foliage in Phase 2, and master continuous pruning and kitchen harvesting in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Container Setup, Soil Mix & Seed Germination',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Set up a 4-pot indoor nursery with custom organic potting mix, full-spectrum LED light schedule, and germinate basil, rosemary, and thyme.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Vegetative Foliage, Lighting & Nutrient Feeding',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Develop bushy, thriving herb plants with automated light timers and organic compost tea feeding.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Continuous Pruning, Propagation & Kitchen Harvests',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Harvest weekly fresh culinary greens for cooking and propagate healthy stem cuttings for endless new plants.'
+        }
+      ],
       cutList: [
         'Skip 100-acre commercial farming agronomy manuals.',
-        'Skip synthetic chemical pesticide guides for indoor culinary greens.',
+        'Skip synthetic chemical pesticides for indoor culinary greens.',
         'Avoid expensive automated greenhouse kits before learning manual moisture & light balancing.'
-      ],
-      phase1: 'Phase 1: Seed Germination, Soil Aeration & Spectrum Lighting (Weeks 1–2)',
-      checkpoint: 'Set up a 4-pot indoor nursery with custom organic potting mix, full-spectrum LED light schedule, and germinate basil, rosemary, and thyme seedlings.'
+      ]
     },
     'Personal Wealth, Real Estate & Cash-Flow Investing': {
       brief: 'Deconstruct cash-flow allocation, high-yield debt elimination, index fund portfolio rebalancing, tax-advantaged accounts, and real estate cash-on-cash underwriting.',
+      whyThisOrder: 'We lock in your cash flow foundation in Phase 1, build automated index portfolios in Phase 2, and underwrite cash-flowing real estate deals in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Cash Flow Audit, Emergency Reserves & Index Foundations',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Build an automated monthly cash-flow spreadsheet modeling a 3-fund Boglehead portfolio and a 10-year retirement roadmap.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Tax Optimization, Roth Backdoors & Asset Allocation',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Set up automated tax-advantaged savings funnels and execute your first dollar-cost averaged index investment.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Real Estate Cash-on-Cash Underwriting & Deal Analysis',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Underwrite 3 live rental property listings to calculate net operating income, cap rate, and cash-on-cash return.'
+        }
+      ],
       cutList: [
         'Skip speculative day-trading Discord channels and meme coin pumps.',
         'Skip high-fee financial advisor mutual fund brochures.',
         'Avoid complex option straddles before mastering core index fund asset allocation.'
-      ],
-      phase1: 'Phase 1: Cash Flow Audit, Emergency Reserves & Index Foundations (Weeks 1–2)',
-      checkpoint: 'Build an automated monthly cash-flow spreadsheet modeling a 3-fund Boglehead portfolio, tax deductions, and a 10-year retirement projection.'
+      ]
     },
     'Artisan Sourdough Baking & Micro-Bakery Business': {
       brief: 'Master wild yeast fermentation kinetics, hydration baker percentages, gluten matrix development, Dutch oven steam baking, and local cottage food regulations.',
+      whyThisOrder: 'We culture a vigorous wild sourdough starter in Phase 1, master dough shaping and baking in Phase 2, and scale cottage bakery batching in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Wild Starter Culturing, Hydration Ratios & Bulk Fermentation',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Culture an active, bubbly sourdough starter and master 75% hydration stretch-and-fold fermentation timing.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Dough Shaping, Scoring & Dutch Oven Steam Baking',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Bake 2 blistered, open-crumb sourdough boules with razor scoring and deep caramelized crusts.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Weekend Micro-Bakery Batching & Cottage Sales',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Bake a 6-loaf batch, package with custom bakery labels, and calculate cottage food profit margins.'
+        }
+      ],
       cutList: [
         'Skip industrial commercial yeast mass-production manuals.',
         'Skip buying $3,000 professional deck ovens before mastering Dutch oven heat retention.',
-        'Avoid complex sourdough decorative scoring before mastering core fermentation timing.'
-      ],
-      phase1: 'Phase 1: Starter Culturing, Hydration Ratios & Bulk Fermentation (Weeks 1–2)',
-      checkpoint: 'Bake 2 blistered, open-crumb sourdough boules with a custom flour blend and calculate cottage food profit margins per loaf.'
+        'Avoid complex decorative scoring before mastering core fermentation timing.'
+      ]
     },
     'Executive Persuasion & High-Stakes Public Speaking': {
       brief: 'Master narrative story architecture, rhetorical contrast framing, vocal modulation, impromptu rebuttal sparring, and keynote presentation delivery.',
+      whyThisOrder: 'We craft your core thesis and 3-act narrative in Phase 1, master vocal delivery and body language in Phase 2, and deliver a live keynote in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Core Thesis Framing & 3-Act Narrative Arc',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Write and record a 5-minute impromptu persuasive pitch on video, evaluated for thesis clarity and pacing.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Vocal Modulation, Pause Dynamics & Slide Minimalism',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Design a 7-slide visual narrative deck and deliver a seamless 10-minute presentation with zero filler words.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Impromptu Q&A Sparring & High-Stakes Keynote',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Defend your thesis live in a 15-minute hostile Q&A session with confident, grounded rebuttals.'
+        }
+      ],
       cutList: [
         'Skip superficial slide transition animations and visual clutter.',
         'Skip memorizing scripted speeches word-for-word without understanding core beat markers.',
         'Avoid reading bullet points directly from slides.'
-      ],
-      phase1: 'Phase 1: Core Thesis Framing & 3-Act Narrative Arc (Weeks 1–2)',
-      checkpoint: 'Deliver and record a 5-minute impromptu persuasive pitch on video, evaluated for thesis clarity, pacing, and zero filler words.'
+      ]
     },
     'Autonomous AI Agents & Systems Architecture': {
-      brief: 'Master first-principles agentic cognitive loops, hierarchical memory architectures, deterministic planning, and self-correcting swarm coordination.',
-      cutList: [
-        'Skip superficial LangChain "hello world" wrapper tutorials.',
-        'Skip generic prompt engineering blogs without evaluation harnesses.',
-        'Avoid building toy chatbots with zero state persistence or tool grounding.'
+      brief: 'Master first-principles agentic cognitive loops, hierarchical memory architectures, deterministic planning, and self-correcting tool-use workflows.',
+      whyThisOrder: 'We build the deterministic ReAct cognitive loop in Phase 1, attach external tools and memory in Phase 2, and orchestrate multi-agent coordination in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Agentic Cognitive Loops & State Machines',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Ship an autonomous ReAct loop with state transitions, memory recall, and tool execution verification.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Tool Grounding, Vector Memory & Error Self-Correction',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Integrate MCP tool calling, embeddings semantic search, and an automated retry-reflection loop.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Multi-Agent Swarm Orchestration & Evaluation Benchmarks',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Deploy a multi-agent team with leader-follower task delegation evaluated across 20 synthetic tasks.'
+        }
       ],
-      phase1: 'Phase 1: Agentic Cognitive Loops & State Machines (Weeks 1–2)',
-      checkpoint: 'Ship an autonomous ReAct loop with deterministic state transitions, memory recall, and tool execution verification in Python/TypeScript.'
+      cutList: [
+        'Skip superficial wrapper tutorials with zero persistent state.',
+        'Skip generic prompt engineering blogs without automated evaluation harnesses.',
+        'Avoid building toy chatbots with zero tool grounding.'
+      ]
     },
     'DIY Electronics & ESP32 IoT Sensors': {
       brief: 'Master microcontroller architectures, GPIO registers, breadboard prototyping, I2C/SPI bus protocols, and power-efficient C/C++ firmware.',
+      whyThisOrder: 'We wire breadboards and read raw registers in Phase 1, connect WiFi/MQTT telemetry in Phase 2, and design custom PCB enclosures in Phase 3.',
+      phases: [
+        {
+          phaseNumber: 1,
+          title: 'Microcontroller Registers, Power & Breadboarding',
+          duration: 'Weeks 1–2',
+          checkpoint: 'Wire an ESP32 with a BME280 sensor over I2C on a breadboard, read sensor registers, and trigger deep sleep (<15µA).'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Wireless Telemetry, MQTT & Home Automation',
+          duration: 'Weeks 3–4',
+          checkpoint: 'Transmit encrypted sensor telemetry over MQTT to Home Assistant with an automated live dashboard.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Custom PCB Schematic Design & 3D Printed Enclosure',
+          duration: 'Weeks 5–6',
+          checkpoint: 'Design a 2-layer PCB in KiCad and 3D print a snap-fit enclosure for wall mounting.'
+        }
+      ],
       cutList: [
         'Skip 30 hours of dry semiconductor chemistry theory.',
-        'Skip high-level Python Raspberry Pi scripts that hide the hardware registers.',
+        'Skip high-level Python scripts that hide hardware registers.',
         'Avoid buying bloated pre-built kits without learning manual schematic wiring.'
-      ],
-      phase1: 'Phase 1: Microcontroller Registers, Power & Breadboarding (Weeks 1–2)',
-      checkpoint: 'Wire an ESP32 with a BME280 sensor over I2C on a breadboard, read raw telemetry registers in C++, and put the chip into deep sleep (<15µA).'
+      ]
     }
   };
 
@@ -163,14 +308,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
     if (!simulatedOutputs[entered]) {
       simulatedOutputs[entered] = {
-        brief: `Master ${entered} from first principles with structured milestone phases, curated core insights, and hands-on practice.`,
+        brief: `Master ${entered} step-by-step with structured milestone phases, curated core insights, and hands-on practice.`,
+        whyThisOrder: `We build your foundation in Phase 1, develop the primary project in Phase 2, and launch/polish in Phase 3.`,
+        phases: [
+          {
+            phaseNumber: 1,
+            title: `Phase 1: Core Foundations & Starter Project in ${entered}`,
+            duration: 'Weeks 1–2',
+            checkpoint: `Complete and showcase your first working prototype or outline in ${entered}.`
+          },
+          {
+            phaseNumber: 2,
+            title: `Phase 2: Core Execution & In-Depth Build`,
+            duration: 'Weeks 3–4',
+            checkpoint: `Develop your comprehensive, full-scale project in ${entered}.`
+          },
+          {
+            phaseNumber: 3,
+            title: `Phase 3: Polish, Launch & Real-World Results`,
+            duration: 'Weeks 5–6',
+            checkpoint: `Publish or demonstrate your finished masterwork deliverable in ${entered}.`
+          }
+        ],
         cutList: [
           `Skip introductory fluff and passive video bingeing on ${entered}.`,
           `Avoid memorizing isolated trivia without hands-on application.`,
           `Cut outdated manuals and non-essential edge-case distractions.`
-        ],
-        phase1: `Phase 1: Core Foundations & First Principles of ${entered} (Weeks 1–2)`,
-        checkpoint: `Complete and showcase your first tangible milestone project in ${entered}.`
+        ]
       };
     }
 
@@ -180,14 +344,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   };
 
   const currentSim = simulatedOutputs[simTopic] || {
-    brief: `Master ${simTopic} from first principles with structured milestone phases, curated core insights, and hands-on practice.`,
+    brief: `Master ${simTopic} step-by-step with structured milestone phases, curated core insights, and hands-on practice.`,
+    whyThisOrder: `We build your foundation in Phase 1, develop the primary project in Phase 2, and launch/polish in Phase 3.`,
+    phases: [
+      {
+        phaseNumber: 1,
+        title: `Phase 1: Core Foundations & Starter Project in ${simTopic}`,
+        duration: 'Weeks 1–2',
+        checkpoint: `Complete and showcase your first working prototype or outline in ${simTopic}.`
+      },
+      {
+        phaseNumber: 2,
+        title: `Phase 2: Core Execution & In-Depth Build`,
+        duration: 'Weeks 3–4',
+        checkpoint: `Develop your comprehensive, full-scale project in ${simTopic}.`
+      },
+      {
+        phaseNumber: 3,
+        title: `Phase 3: Polish, Launch & Real-World Results`,
+        duration: 'Weeks 5–6',
+        checkpoint: `Publish or demonstrate your finished masterwork deliverable in ${simTopic}.`
+      }
+    ],
     cutList: [
       `Skip introductory fluff and passive video bingeing on ${simTopic}.`,
       `Avoid memorizing isolated trivia without hands-on application.`,
       `Cut outdated manuals and non-essential edge-case distractions.`
-    ],
-    phase1: `Phase 1: Core Foundations & First Principles of ${simTopic} (Weeks 1–2)`,
-    checkpoint: `Complete and showcase your first tangible milestone project in ${simTopic}.`
+    ]
   };
 
   const handleSelectSuggestion = (topic: string) => {
@@ -609,16 +792,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-l-2 border-[var(--hairline)] border-l-[var(--advisor)]">
-                <div className="text-[11px] font-mono uppercase text-[var(--advisor)] tracking-wider mb-1 font-semibold">
-                  2. Step-by-Step Chronological Phase
+              {/* 3-PHASE STEP-BY-STEP LEARNING ROADMAP */}
+              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-l-2 border-[var(--hairline)] border-l-[var(--advisor)] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-mono uppercase text-[var(--advisor)] tracking-wider font-semibold">
+                    2. Your Complete 3-Phase Roadmap (What You'll Actually Build &amp; Why)
+                  </div>
                 </div>
-                <h4 className="text-sm font-semibold text-[var(--ink)] m-0 mb-1.5">
-                  {currentSim.phase1}
-                </h4>
-                <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
-                  <strong className="text-[var(--ink)]">What You Build (Proof of Work):</strong> {currentSim.checkpoint}
-                </p>
+
+                <div className="space-y-2">
+                  {currentSim.phases.map((ph, idx) => (
+                    <div key={idx} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-xs text-[var(--ink)] font-sans">
+                          Phase {ph.phaseNumber}: {ph.title}
+                        </span>
+                        <span className="font-mono text-[10px] text-[var(--advisor)] font-bold px-2 py-0.5 rounded bg-[var(--surface-1)]">
+                          {ph.duration}
+                        </span>
+                      </div>
+                      <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-relaxed">
+                        🎯 <strong className="text-[var(--ink)]">What You Build (Real-World Proof):</strong> {ph.checkpoint}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Why this sequence explanation */}
+                <div className="p-2.5 rounded-lg bg-[var(--advisor)]/10 border border-[var(--advisor)]/20 text-[11px] text-[var(--ink-2)] font-sans leading-relaxed">
+                  💡 <strong className="text-[var(--advisor)]">Why this specific sequence?</strong> {currentSim.whyThisOrder}
+                </div>
               </div>
             </div>
 
@@ -629,7 +832,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   <span>3. The Sandeep Swadia "Cut List" (What to Skip)</span>
                 </div>
                 <p className="text-[11px] text-[var(--ink-3)] m-0">
-                  Save 40+ hours by ignoring generic tutorials and non-essential fluff:
+                  Save 40+ hours by ignoring generic tutorials, dry theory, and non-essential fluff:
                 </p>
                 <div className="space-y-1.5 text-[11.5px] text-[var(--ink-2)] pl-2">
                   {currentSim.cutList.map((cut, idx) => (
@@ -651,7 +854,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                   className="flex-1 py-3 px-4 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
                 >
                   <Target size={14} />
-                  <span>🎯 Grill Me &amp; Calibrate Baseline (Recommended) →</span>
+                  <span>🎓 Chat with Advisor to Personalize Roadmap (Recommended) →</span>
                 </button>
 
                 <button

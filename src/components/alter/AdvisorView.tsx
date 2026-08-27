@@ -206,7 +206,7 @@ export const AdvisorView: React.FC = () => {
                 Phase {activePhase.phaseNumber}: {activePhase.title}
               </h3>
               <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed max-w-xl font-sans">
-                Next goal: Master <strong>{activePhase.coreConcepts?.[0] || 'core foundations'}</strong> &amp; build the <em>{activePhase.checkpoint?.title || 'Proof-of-Work deliverable'}</em>.
+                Next goal: Master <strong>{activePhase.coreConcepts?.[0] || 'core foundations'}</strong> &amp; complete the <em>{activePhase.checkpoint?.title || 'project milestone deliverable'}</em>.
               </p>
             </div>
 
@@ -430,7 +430,7 @@ export const AdvisorView: React.FC = () => {
                           <span className="text-[11px] font-mono text-[var(--advisor)] font-medium">
                             {phase.checkpoint.completed
                               ? 'Deliverable verified! Click to uncheck if revising.'
-                              : '👉 Click here to verify proof of work when finished.'}
+                              : '👉 Click here to mark deliverable complete when finished.'}
                           </span>
                         </div>
                       </div>
@@ -444,7 +444,7 @@ export const AdvisorView: React.FC = () => {
                       className="text-xs font-semibold text-[var(--editor)] hover:underline flex items-center gap-1.5"
                     >
                       <FileEdit size={13} />
-                      <span>4. Pressure-test your Phase {phase.phaseNumber} thesis with the Analytical Editor →</span>
+                      <span>4. Review and polish your Phase {phase.phaseNumber} project with the Editor →</span>
                     </button>
                   </div>
                 </div>
