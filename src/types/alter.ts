@@ -255,12 +255,44 @@ export interface RoommateData {
   personaVibe: 'curious_nerd' | 'contrarian_philosopher' | 'hyper_pragmatist' | 'future_visionary';
 }
 
+export interface DiagnosticQuestion {
+  id: string;
+  question: string;
+  type: 'clarification' | 'claimed_baseline' | 'technical_probe';
+  contextReason: string;
+  suggestedOptions?: string[];
+}
+
+export interface DiagnosticAssessment {
+  refinedTopic: string;
+  refinedDestination: string;
+  actualBaselineAssessment: string;
+  masteredStrengths: string[];
+  criticalGapsToFill: string[];
+  recommendedStartingPhase: number;
+  recommendedCutList: string[];
+  diagnosticScore?: number;
+}
+
+export interface LiveClassroomTurn {
+  id: string;
+  speaker: 'tutor' | 'student';
+  content: string;
+  stageName: string; // e.g. "Level 1: Plain Metaphor", "Level 2: Architecture Flow", "Level 3: Code Implementation"
+  checkInQuestion?: string;
+  studentAnswer?: string;
+  tutorFeedback?: string;
+  isCompleted?: boolean;
+  timestamp: string;
+}
+
 export interface LearningJourney {
   id: string;
   title: string;
   topic: string;
   destination: string; // Target outcome / mastery goal
   baseline: string; // Current knowledge level
+  diagnosticAssessment?: DiagnosticAssessment;
   hoursPerWeek: number;
   depth: 'survey' | 'applied' | 'expert' | 'researcher' | 'foundational' | 'practitioner';
   createdAt: string;

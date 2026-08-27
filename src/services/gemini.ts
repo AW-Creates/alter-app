@@ -3,6 +3,8 @@ import {
   AdvisorData,
   CuratedSource,
   DiagnosticQuiz,
+  DiagnosticQuestion,
+  DiagnosticAssessment,
   DomainCollision,
   EditorReview,
   FeynmanSession,
@@ -193,17 +195,18 @@ export async function generateCurriculumWithAI(
   destination: string,
   baseline: string,
   hoursPerWeek: number,
-  depth: string
+  depth: string,
+  diagnostic?: DiagnosticAssessment
 ): Promise<AdvisorData> {
   const apiKey = getStoredApiKey();
   const perplexityKey = getStoredPerplexityKey();
 
   if (!apiKey && !perplexityKey) {
     await new Promise((r) => setTimeout(r, 1000));
-    return getSimulatedCurriculum(topic, destination);
+    return getSimulatedCurriculum(topic, destination, diagnostic);
   }
 
-  const prompt = GENERATOR_PROMPTS.generateCurriculum(topic, destination, baseline, hoursPerWeek, depth);
+  const prompt = GENERATOR_PROMPTS.generateCurriculum(topic, destination, baseline, hoursPerWeek, depth, diagnostic);
   
   let raw = '';
   try {
@@ -536,6 +539,92 @@ export async function evaluateLessonResponseWithAI(
   };
 }
 
+export async function generateDiagnosticQuestionsWithAI(
+  topic: string,
+  destination: string,
+  baseline: string
+): Promise<DiagnosticQuestion[]> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 600));
+    return getSimulatedDiagnosticQuestions(topic, destination);
+  }
+
+  const prompt = GENERATOR_PROMPTS.generateDiagnosticQuestions(topic, destination, baseline);
+  const raw = await callGemini(prompt, 'You are an elite Socratic intake professor grilling a prospective student.');
+  const parsed = extractJsonFromResponse<any[]>(raw);
+
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    return parsed.map((q, idx) => ({
+      id: q.id || `diag-${idx + 1}`,
+      type: q.type || (idx === 0 ? 'clarification' : idx === 1 ? 'claimed_baseline' : 'technical_probe'),
+      question: q.question,
+      contextReason: q.contextReason || 'Calibrates curriculum to your exact frontier of competence',
+      suggestedOptions: q.suggestedOptions || []
+    }));
+  }
+
+  return getSimulatedDiagnosticQuestions(topic, destination);
+}
+
+export async function evaluateDiagnosticAnswersWithAI(
+  topic: string,
+  qaPairs: Array<{ question: string; answer: string; type?: string }>
+): Promise<DiagnosticAssessment> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 800));
+    return getSimulatedDiagnosticEvaluation(topic, qaPairs);
+  }
+
+  const prompt = GENERATOR_PROMPTS.evaluateDiagnosticAnswers(topic, qaPairs);
+  const raw = await callGemini(prompt, 'You are a master diagnostic professor assessing student competence.');
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    refinedTopic: parsed.refinedTopic || topic,
+    refinedDestination: parsed.refinedDestination || `Master ${topic} with verified proof-of-work`,
+    actualBaselineAssessment: parsed.actualBaselineAssessment || 'Foundational knowledge with targeted gaps to fill',
+    masteredStrengths: parsed.masteredStrengths || ['Foundational syntax', 'Core motivation'],
+    criticalGapsToFill: parsed.criticalGapsToFill || ['State transition invariants', 'Execution error boundaries'],
+    recommendedStartingPhase: parsed.recommendedStartingPhase || 1,
+    recommendedCutList: parsed.recommendedCutList || ['Skip generic introductory tutorials', 'Cut passive video consumption'],
+    diagnosticScore: parsed.diagnosticScore || 82
+  };
+}
+
+export async function converseSocraticLessonWithAI(
+  topic: string,
+  concept: string,
+  currentStage: string,
+  history: Array<{ speaker: string; content: string }>,
+  studentInput?: string
+): Promise<{
+  tutorSpeech: string;
+  stageName: string;
+  tutorFeedbackOnStudent?: string;
+  checkInQuestion: string;
+  isConceptMastered: boolean;
+}> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 700));
+    return getSimulatedSocraticTurn(concept, currentStage, studentInput);
+  }
+
+  const prompt = GENERATOR_PROMPTS.converseSocraticLesson(topic, concept, currentStage, history, studentInput);
+  const raw = await callGemini(prompt, 'You are a lively, interactive Socratic master professor in a 1-on-1 private lesson.');
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    tutorSpeech: parsed.tutorSpeech || `Let's break down ${concept} from first principles.`,
+    stageName: parsed.stageName || currentStage,
+    tutorFeedbackOnStudent: parsed.tutorFeedbackOnStudent || undefined,
+    checkInQuestion: parsed.checkInQuestion || 'How would you apply this invariant in a live failure scenario?',
+    isConceptMastered: parsed.isConceptMastered ?? false
+  };
+}
+
 export async function synthesizeSourceWithAI(
   sourceTitle: string,
   author: string,
@@ -645,7 +734,261 @@ export async function triageStuckStudentWithAI(
 // Simulation Engines (for offline / instant demo mode)
 // ----------------------------------------------------
 
-function getSimulatedCurriculum(topic: string, destination: string): AdvisorData {
+function getSimulatedDiagnosticQuestions(topic: string, destination: string): DiagnosticQuestion[] {
+  const isDigitalProduct = topic.toLowerCase().includes('digital product') || topic.toLowerCase().includes('saas') || topic.toLowerCase().includes('app');
+  const isTrading = topic.toLowerCase().includes('trade') || topic.toLowerCase().includes('forex') || topic.toLowerCase().includes('future');
+  
+  if (isDigitalProduct) {
+    return [
+      {
+        id: 'diag-1',
+        type: 'clarification',
+        question: 'What exact format of digital product are you aiming to build?',
+        contextReason: 'Different digital products require completely different tech stacks and execution loops.',
+        suggestedOptions: [
+          'A paid B2B SaaS web app with Stripe subscriptions',
+          'A digital template & workflow pack (Notion, Figma, Airtable)',
+          'A paid developer API or data pipeline service',
+          'A high-ticket video cohort or interactive digital workshop'
+        ]
+      },
+      {
+        id: 'diag-2',
+        type: 'claimed_baseline',
+        question: 'What is your current hands-on development and deployment experience?',
+        contextReason: 'Ensures we start at your exact technical frontier without skipping essential prerequisites.',
+        suggestedOptions: [
+          'Complete beginner — I have never written code or deployed a database',
+          'Familiar with HTML/CSS/React frontend, but new to backend databases & Stripe billing',
+          'Experienced developer — I want to ship fast and focus on conversion architectures'
+        ]
+      },
+      {
+        id: 'diag-3',
+        type: 'technical_probe',
+        question: 'Quick technical dilemma: When a customer pays via Stripe, what security measure ensures an attacker cannot spoof the payment webhook event to grant themselves free access?',
+        contextReason: 'Tests your practical understanding of secure payment architecture vs. surface-level tutorial knowledge.',
+        suggestedOptions: [
+          'Verify the Stripe-Signature header using the endpoint signing secret before processing the event payload',
+          'Check if the customer email exists in the local database query',
+          'Use a simple shared API token in the query params'
+        ]
+      }
+    ];
+  }
+
+  if (isTrading) {
+    return [
+      {
+        id: 'diag-1',
+        type: 'clarification',
+        question: 'What specific instrument and time horizon are you planning to trade?',
+        contextReason: 'Futures, Forex, and Options operate with radically different margin rules and tick values.',
+        suggestedOptions: [
+          'Index Futures (ES / NQ / MES / MNQ) intraday scalping',
+          'Forex Major Currency Pairs (EUR/USD, GBP/USD) swing trading',
+          'Automated algorithmic trading strategies in Python'
+        ]
+      },
+      {
+        id: 'diag-2',
+        type: 'claimed_baseline',
+        question: 'How would you honestly rate your live execution and risk management background?',
+        contextReason: 'Separates theoretical chart reading from real order book execution competence.',
+        suggestedOptions: [
+          'I have read books on candlestick patterns, but have never traded live order flow',
+          'I trade with real capital but struggle with position sizing and drawdowns',
+          'I have a profitable mechanical strategy and want to scale account size'
+        ]
+      },
+      {
+        id: 'diag-3',
+        type: 'technical_probe',
+        question: 'Quick diagnostic check: If ES Futures are quoted at Bid: 5200.00 / Ask: 5200.25 and you submit a Market Buy, at what price will you be filled, and what is your slippage risk during high-volatility news?',
+        contextReason: 'Tests whether you understand order book liquidity and market vs limit mechanics.',
+        suggestedOptions: [
+          'Filled immediately at 5200.25 (the Ask), with high slippage risk if the Ask book thins out',
+          'Filled at 5200.00 (the Bid) with guaranteed zero slippage',
+          'Filled at the midpoint 5200.125 automatically'
+        ]
+      }
+    ];
+  }
+
+  return [
+    {
+      id: 'diag-1',
+      type: 'clarification',
+      question: `What specific high-leverage project or outcome do you want to build in ${topic}?`,
+      contextReason: 'Translates broad interests into an exact, tangible target artifact.',
+      suggestedOptions: [
+        `Build and deploy a complete production-grade system in ${topic}`,
+        `Master first-principles concepts to lead technical teams`,
+        `Create a commercial MVP or client deliverable in ${topic}`
+      ]
+    },
+    {
+      id: 'diag-2',
+      type: 'claimed_baseline',
+      question: `What is your current background or hands-on experience with ${topic}?`,
+      contextReason: 'Establishes your self-assessed starting point.',
+      suggestedOptions: [
+        'Complete novice — starting from zero',
+        'Familiar with basic concepts, but lacking end-to-end execution confidence',
+        'Intermediate practitioner looking for advanced master-level polish'
+      ]
+    },
+    {
+      id: 'diag-3',
+      type: 'technical_probe',
+      question: `When executing a project in ${topic}, what is the single most common failure mode or hidden bottleneck that beginners overlook?`,
+      contextReason: 'Probes your actual first-principles mental models vs. textbook definitions.',
+      suggestedOptions: [
+        'Premature optimization and lack of error-recovery boundaries',
+        'Choosing the wrong framework before validating core constraints',
+        'Not having clear quantitative metrics for success'
+      ]
+    }
+  ];
+}
+
+function getSimulatedDiagnosticEvaluation(
+  topic: string,
+  qaPairs: Array<{ question: string; answer: string; type?: string }>
+): DiagnosticAssessment {
+  const answerSummary = qaPairs.map((q) => q.answer).join(' ');
+  const isBeginner = answerSummary.toLowerCase().includes('beginner') || answerSummary.toLowerCase().includes('never') || answerSummary.toLowerCase().includes('zero');
+  
+  return {
+    refinedTopic: topic,
+    refinedDestination: `Ship a production-grade, validated deliverable in ${topic}`,
+    actualBaselineAssessment: isBeginner 
+      ? `Foundational interest with critical gaps in practical execution and architectural invariants.`
+      : `Solid conceptual awareness with specific blindspots in edge-case resilience and backend error handling.`,
+    masteredStrengths: [
+      'High motivation and clear strategic vision',
+      'Familiarity with high-level terminology and use-cases'
+    ],
+    criticalGapsToFill: [
+      'Core invariant and state transition mechanics',
+      'End-to-end security, error recovery, and failure boundaries'
+    ],
+    recommendedStartingPhase: 1,
+    diagnosticScore: isBeginner ? 65 : 84,
+    recommendedCutList: [
+      'Skip generic superficial video tutorials that copy-paste pre-built templates',
+      'Avoid theoretical rabbit holes that delay hands-on building'
+    ]
+  };
+}
+
+function getSimulatedSocraticTurn(
+  concept: string,
+  currentStage: string,
+  studentInput?: string
+): {
+  tutorSpeech: string;
+  stageName: string;
+  tutorFeedbackOnStudent?: string;
+  checkInQuestion: string;
+  isConceptMastered: boolean;
+} {
+  if (!studentInput) {
+    return {
+      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${concept}**! Let's start with first principles.\n\nImagine you are building a physical bridge. Before you pick what color to paint the railings, you must calculate the load-bearing stress points. In **${concept}**, the load-bearing stress point is our **state transition invariant**: every action must have an explicit verification check before moving to the next step.`,
+      stageName: 'Level 1: Intuition & Invariants',
+      checkInQuestion: `In your own words: If our system encounters an unexpected error from an external tool, what should happen to our state loop instead of crashing?`,
+      isConceptMastered: false
+    };
+  }
+
+  return {
+    tutorSpeech: `🎯 **Excellent deduction!** You correctly identified that errors must be captured as **observations** in the context window so the system can self-correct.\n\nNow let's look at the mechanics: When writing the execution loop, we always establish a **hard recursion limit** (e.g. max 5 iterations) and validate the schema of incoming tool payloads. This prevents infinite loops and token blowouts.`,
+    stageName: 'Level 2: Mechanics & Error Boundaries',
+    tutorFeedbackOnStudent: `Strong first-principles reasoning! You grasped the error-as-observation paradigm immediately.`,
+    checkInQuestion: `Now let's test a real scenario: If an upstream API returns HTTP 429 (Rate Limit), how would you structure the retry backoff without burning through your iteration ceiling?`,
+    isConceptMastered: true
+  };
+}
+
+function getSimulatedCurriculum(topic: string, destination: string, diagnostic?: DiagnosticAssessment): AdvisorData {
+  const isAgent = topic.toLowerCase().includes('agent') || topic.toLowerCase().includes('autonomous');
+  const isDigitalProduct = topic.toLowerCase().includes('digital product') || topic.toLowerCase().includes('saas');
+  
+  if (isDigitalProduct) {
+    return {
+      overview: `A tailored 6-week roadmap engineered to build, secure, and launch a commercial digital product with automated billing and customer onboarding.`,
+      estimatedWeeks: 6,
+      phases: [
+        {
+          id: `phase-1-${Date.now()}`,
+          phaseNumber: 1,
+          title: 'Product Architecture, Database Schemas & Core Invariants',
+          duration: 'Weeks 1-2',
+          objective: 'Build the foundational database models, authentication, and core application loop.',
+          tangibleAsset: 'Working local MVP with authenticated user state and database CRUD.',
+          coreConcepts: ['Data Modeling & Relations', 'User Session Auth & JWTs', 'Core Application State Machine'],
+          checkpoint: {
+            id: 'cp-1',
+            title: 'Functional Local MVP',
+            description: 'Deploy local database with user login, protected routes, and core feature CRUD.',
+            tangibleAsset: 'Working Local Fullstack Application',
+            completed: false
+          },
+          completed: false
+        },
+        {
+          id: `phase-2-${Date.now()}`,
+          phaseNumber: 2,
+          title: 'Stripe Billing Integration & Webhook Security (Critical Gap-Filler)',
+          duration: 'Weeks 3-4',
+          objective: 'Implement end-to-end subscription billing with signature-verified webhooks.',
+          tangibleAsset: 'Live Stripe Checkout flow with automated customer provisioning and tier limits.',
+          coreConcepts: ['Stripe Checkout & Customer Portal', 'Webhook Signature Verification', 'Subscription Lifecycle State Management'],
+          checkpoint: {
+            id: 'cp-2',
+            title: 'Stripe Billing & Webhook Engine',
+            description: 'Execute test payments and verify that webhooks update user tiers idempotently.',
+            tangibleAsset: 'Verified Stripe Webhook & Billing Engine',
+            completed: false
+          },
+          completed: false
+        },
+        {
+          id: `phase-3-${Date.now()}`,
+          phaseNumber: 3,
+          title: 'Production Deployment, Landing Page & Customer Launch',
+          duration: 'Weeks 5-6',
+          objective: 'Deploy to live production domain, configure SEO/analytics, and onboard first 5 paying users.',
+          tangibleAsset: 'Live deployed web application accepting real customer payments.',
+          coreConcepts: ['Production Edge Deployment', 'Error Monitoring & Telemetry', 'High-Converting Onboarding Funnels'],
+          checkpoint: {
+            id: 'cp-3',
+            title: 'Live Commercial Launch',
+            description: 'Ship live on custom domain with working payment processing and onboarding tour.',
+            tangibleAsset: 'Live Commercial Web App with Real Payments',
+            completed: false
+          },
+          completed: false
+        }
+      ],
+      cutList: [
+        {
+          id: 'cut-1',
+          topic: 'Premature Microservices & Kubernetes',
+          reasonToSkip: 'Massive operational complexity with zero customer benefit at MVP stage.',
+          alternativeFocus: 'Deploy on a modern serverless edge platform (e.g. Vercel, Supabase, Cloudflare).'
+        },
+        {
+          id: 'cut-2',
+          topic: 'Building Custom Auth from Scratch',
+          reasonToSkip: 'Security risk and time sink.',
+          alternativeFocus: 'Use battle-tested auth (NextAuth, Supabase Auth, Clerk).'
+        }
+      ],
+      chatHistory: []
+    };
+  }
   return {
     overview: `A razor-sharp 8-week immersion roadmap engineered to take you from foundational concepts to building real-world proof-of-work in ${topic}.`,
     estimatedWeeks: 8,

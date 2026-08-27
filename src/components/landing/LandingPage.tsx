@@ -43,10 +43,12 @@ import {
   MessageSquare,
   Award,
   Coffee,
+  HelpCircle,
   CheckCircle
 } from 'lucide-react';
 import { AlterPersona } from '../../types/alter';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { DiagnosticIntakeModal } from '../common/DiagnosticIntakeModal';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -66,6 +68,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   const [customGoalInput, setCustomGoalInput] = useState('');
   const [simTopic, setSimTopic] = useState('Publishing & Selling My First E-Book');
   const [isSimulating, setIsSimulating] = useState(false);
+  const [isDiagnosticModalOpen, setIsDiagnosticModalOpen] = useState(false);
+  const [diagnosticTopic, setDiagnosticTopic] = useState('');
 
   const heroSuggestions = [
     { label: '📚 E-Book Empire', value: 'Publishing & Selling My First E-Book' },
@@ -637,12 +641,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleLaunchWithTopic()}
-                className="w-full py-3 rounded-xl bg-[var(--surface-3)] hover:border-[var(--advisor)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-2 transition"
-              >
-                <span>Enter Altor Academy with this Syllabus →</span>
-              </button>
+              <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDiagnosticTopic(customGoalInput.trim() || simTopic);
+                    setIsDiagnosticModalOpen(true);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
+                >
+                  <Target size={14} />
+                  <span>🎯 Grill Me &amp; Calibrate Baseline (Recommended) →</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleLaunchWithTopic()}
+                  className="py-3 px-4 rounded-xl bg-[var(--surface-3)] hover:border-[var(--advisor)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  <span>Quick Launch →</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1463,6 +1482,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
       </footer>
 
+      {/* Socratic Diagnostic Intake & Baseline Calibration Modal */}
+      <DiagnosticIntakeModal
+        isOpen={isDiagnosticModalOpen}
+        initialTopic={diagnosticTopic || simTopic}
+        onClose={() => setIsDiagnosticModalOpen(false)}
+        onLaunchJourney={onEnterApp}
+      />
     </div>
   );
 };

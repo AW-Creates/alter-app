@@ -33,11 +33,12 @@ import {
   evaluateFeynmanWithAI,
   generateQuizWithAI,
   teachConceptWithAI,
-  evaluateLessonResponseWithAI
+  evaluateLessonResponseWithAI,
+  converseSocraticLessonWithAI
 } from '../../services/gemini';
 import { VoiceInputButton } from '../common/VoiceInputButton';
 import { dispatchWebhookEvent } from '../../services/webhooks';
-import { FeynmanEvaluation, QuizQuestion, InteractiveLesson } from '../../types/alter';
+import { FeynmanEvaluation, QuizQuestion, InteractiveLesson, LiveClassroomTurn } from '../../types/alter';
 
 export const TutorView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage, targetTutorConcept, sendToEditor } = useJourney();
@@ -58,9 +59,14 @@ export const TutorView: React.FC = () => {
   const [draftCode, setDraftCode] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Socratic chat state
+  // Socratic chat / live classroom state
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [classroomTurns, setClassroomTurns] = useState<LiveClassroomTurn[]>([]);
+  const [classroomAnswer, setClassroomAnswer] = useState('');
+  const [isClassroomLoading, setIsClassroomLoading] = useState(false);
+  const [isClassroomMastered, setIsClassroomMastered] = useState(false);
+  const [activeCheckInQuestion, setActiveCheckInQuestion] = useState('');
 
   // Feynman drill state
   const [feynmanConcept, setFeynmanConcept] = useState('');
@@ -220,6 +226,149 @@ export const TutorView: React.FC = () => {
     const payload = draftCode || activeLesson?.codeOrTemplate || '';
     if (!payload.trim()) return;
     sendToEditor(payload);
+  };
+
+  const handleInitClassroom = async (conceptToTeach: string) => {
+    setIsClassroomLoading(true);
+    setIsClassroomMastered(false);
+    setClassroomAnswer('');
+
+    try {
+      const initialTurn = await converseSocraticLessonWithAI(
+        activeJourney.topic,
+        conceptToTeach,
+        'Level 1: Intuition & Everyday Metaphor',
+        []
+      );
+
+      setClassroomTurns([
+        {
+          id: `turn-0-${Date.now()}`,
+          speaker: 'tutor',
+          content: initialTurn.tutorSpeech,
+          stageName: initialTurn.stageName || 'Level 1: Intuition & Everyday Metaphor',
+          checkInQuestion: initialTurn.checkInQuestion,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+      setActiveCheckInQuestion(initialTurn.checkInQuestion || '');
+    } catch (err) {
+      console.error('Failed to init live classroom', err);
+    } finally {
+      setIsClassroomLoading(false);
+    }
+  };
+
+  const handleSubmitClassroomAnswer = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!classroomAnswer.trim() || isClassroomLoading) return;
+
+    const studentAnswerText = classroomAnswer.trim();
+    setClassroomAnswer('');
+    setIsClassroomLoading(true);
+
+    // 1. Append student turn
+    const studentTurn: LiveClassroomTurn = {
+      id: `turn-${Date.now()}`,
+      speaker: 'student',
+      content: studentAnswerText,
+      stageName: classroomTurns[classroomTurns.length - 1]?.stageName || 'Check-In',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const updatedHistory = [...classroomTurns, studentTurn];
+    setClassroomTurns(updatedHistory);
+
+    try {
+      const convHistory = updatedHistory.map((t) => ({
+        speaker: t.speaker,
+        content: t.content
+      }));
+
+      const currentStage = classroomTurns.length <= 2 
+        ? 'Level 2: First-Principles Mechanics & Loop Flow'
+        : classroomTurns.length <= 4
+        ? 'Level 3: Implementation Blueprint & Live Code'
+        : 'Level 4: Edge-Case Failure Recovery & Sparring';
+
+      const tutorResponse = await converseSocraticLessonWithAI(
+        activeJourney.topic,
+        selectedConcept,
+        currentStage,
+        convHistory,
+        studentAnswerText
+      );
+
+      const nextTutorTurn: LiveClassroomTurn = {
+        id: `turn-tutor-${Date.now()}`,
+        speaker: 'tutor',
+        content: tutorResponse.tutorSpeech,
+        stageName: tutorResponse.stageName || currentStage,
+        tutorFeedback: tutorResponse.tutorFeedbackOnStudent,
+        checkInQuestion: tutorResponse.checkInQuestion,
+        isCompleted: tutorResponse.isConceptMastered,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setClassroomTurns((prev) => [...prev, nextTutorTurn]);
+      setActiveCheckInQuestion(tutorResponse.checkInQuestion || '');
+
+      if (tutorResponse.isConceptMastered) {
+        setIsClassroomMastered(true);
+        // Mark concept mastered in Journey
+        updateActiveJourney((prev) => {
+          const currentLessons = prev.tutorData.lessons || [];
+          const existing = currentLessons.find((l) => l.concept === selectedConcept);
+          const updatedLesson: InteractiveLesson = existing
+            ? { ...existing, mastered: true, userScore: 95 }
+            : {
+                id: `lesson-${Date.now()}`,
+                concept: selectedConcept,
+                lessonTitle: selectedConcept,
+                estimatedReadTime: '15 min',
+                plainEnglishAnalogy: tutorResponse.tutorSpeech,
+                coreExplanation: tutorResponse.tutorSpeech,
+                keyTakeaways: ['Understood from first principles in live 1-on-1 dialogue.'],
+                mastered: true,
+                userScore: 95,
+                whyNovicesGetConfused: 'Grasped through live Socratic dialogue.',
+                laymanExplanation: tutorResponse.tutorSpeech,
+                architecturalDiagramOrFlow: '',
+                mechanicsMarkdown: '',
+                corePrimitives: [],
+                implementationGuide: [],
+                codeOrTemplate: '',
+                howMastersUseIt: '',
+                commonPitfalls: [],
+                cutListFluff: '',
+                socraticChallenge: tutorResponse.checkInQuestion || '',
+                practiceTask: 'Live session completed',
+                createdAt: new Date().toISOString()
+              };
+
+          return {
+            ...prev,
+            tutorData: {
+              ...prev.tutorData,
+              lessons: [
+                ...currentLessons.filter((l) => l.concept !== selectedConcept),
+                updatedLesson
+              ]
+            }
+          };
+        });
+
+        dispatchWebhookEvent('lesson_mastered', activeJourney.topic, {
+          concept: selectedConcept,
+          mode: 'live_socratic_classroom',
+          score: 95
+        });
+      }
+    } catch (err) {
+      console.error('Failed to converse with live tutor', err);
+    } finally {
+      setIsClassroomLoading(false);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -889,86 +1038,274 @@ export const TutorView: React.FC = () => {
         </div>
       )}
 
-      {/* Mode 2: Socratic Chat */}
+      {/* Mode 2: Live 1-on-1 Socratic Classroom */}
       {tutorMode === 'socratic' && (
-        <div className="layout-2col">
-          <div className="chat-panel" style={{ gridColumn: '1 / -1' }}>
-            <div className="chat-head">
+        <div className="space-y-6">
+          {/* Concept Selector Bar */}
+          <div className="card space-y-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[var(--tutor)] animate-pulse" />
-                <h3 className="font-display font-semibold text-sm text-[var(--ink)] m-0">
-                  Live Socratic Dialogue
+                <GraduationCap size={16} className="text-[var(--tutor)]" />
+                <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">
+                  Select a Concept for Live 1-on-1 Socratic Lesson:
                 </h3>
               </div>
-              <span className="text-[11px] font-mono text-[var(--ink-3)]">First-Principles Questioning</span>
+              <span className="text-xs font-mono text-[var(--ink-3)]">
+                {(tutorData.lessons || []).filter((l) => l.mastered).length} / {allConcepts.length} Mastered
+              </span>
             </div>
 
-            <div className="chat-body" style={{ minHeight: '320px' }}>
-              {tutorData.chatHistory.length === 0 ? (
-                <div className="text-center py-10 space-y-3 text-xs text-[var(--ink-3)]">
-                  <Lightbulb size={28} className="mx-auto text-[var(--tutor)] opacity-50" />
-                  <p className="font-medium text-[var(--ink-2)]">
-                    Ask me any question or test your mental model.
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto pt-2">
-                    {starters.map((s, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setInputText(s)}
-                        className="px-2.5 py-1 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[11px] text-[var(--ink-2)] transition"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                tutorData.chatHistory.map((msg, idx) => (
-                  <div
+            <div className="flex flex-wrap gap-2 pt-1">
+              {allConcepts.map((concept, idx) => {
+                const isMastered = (tutorData.lessons || []).some(
+                  (l) => l.concept === concept && l.mastered
+                );
+                const isSelected = selectedConcept === concept;
+
+                return (
+                  <button
                     key={idx}
-                    className={`flex gap-3 text-xs leading-relaxed ${
-                      msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                    onClick={() => {
+                      setSelectedConcept(concept);
+                      handleInitClassroom(concept);
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-2 border ${
+                      isSelected
+                        ? 'bg-[var(--surface-3)] text-[var(--tutor)] border-[var(--tutor)] shadow-sm font-bold'
+                        : isMastered
+                        ? 'bg-[var(--surface-1)] text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-[var(--surface-1)] text-[var(--ink-2)] border-[var(--hairline)] hover:border-[var(--hairline-strong)] hover:text-[var(--ink)]'
                     }`}
                   >
-                    <div
-                      className={`max-w-[85%] p-3.5 rounded-2xl ${
-                        msg.sender === 'user'
-                          ? 'bg-[var(--tutor)] text-[#04050a] font-medium'
-                          : 'bg-[var(--surface-2)] text-[var(--ink)] border border-[var(--hairline)]'
-                      }`}
-                    >
-                      <MarkdownRenderer content={msg.content} />
-                    </div>
+                    <span>{concept}</span>
+                    {isMastered && (
+                      <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px] font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Live Classroom Dialogue Container */}
+          <div className="card p-0 overflow-hidden border-2 border-[var(--tutor)]/40 bg-[var(--surface-1)] shadow-xl flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-[var(--hairline)] bg-[var(--surface-2)]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                <div>
+                  <div className="text-[10px] font-mono text-[var(--tutor)] uppercase font-bold tracking-wider">
+                    LIVE SOCRATIC CLASSROOM (1-ON-1 INTERACTIVE)
+                  </div>
+                  <h3 className="font-display text-sm sm:text-base font-bold text-[var(--ink)] m-0">
+                    Teaching: {selectedConcept || 'First Principles'}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isClassroomMastered && (
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-xs font-bold font-mono flex items-center gap-1">
+                    <CheckCircle2 size={13} />
+                    <span>✓ Concept Mastered</span>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleInitClassroom(selectedConcept)}
+                  disabled={isClassroomLoading}
+                  className="ghost-btn text-xs"
+                >
+                  <RotateCcw size={12} />
+                  <span>Restart Lesson</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Dialogue Turns Stream */}
+            <div className="p-5 space-y-4 max-h-[550px] overflow-y-auto bg-[var(--surface-1)]">
+              {classroomTurns.length === 0 && !isClassroomLoading ? (
+                <div className="text-center py-12 space-y-3">
+                  <Lightbulb size={32} className="text-[var(--tutor)] mx-auto opacity-60" />
+                  <p className="font-bold text-sm text-[var(--ink)]">
+                    Ready to start your 1-on-1 Socratic lesson on "{selectedConcept}"?
+                  </p>
+                  <p className="text-xs text-[var(--ink-3)] max-w-md mx-auto">
+                    The Socratic Tutor will teach you turn-by-turn with plain analogies, live code blueprints, and interactive check-in probes.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleInitClassroom(selectedConcept)}
+                    className="accent-btn mx-auto"
+                    style={{ padding: '8px 20px', borderRadius: '10px' }}
+                  >
+                    <Play size={13} />
+                    <span>Start Live Lesson →</span>
+                  </button>
+                </div>
+              ) : (
+                classroomTurns.map((turn, tIdx) => (
+                  <div key={turn.id || tIdx} className="space-y-2.5 animate-fade-in">
+                    {turn.speaker === 'tutor' ? (
+                      <div className="space-y-2">
+                        {/* Stage Tag */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-md bg-[var(--tutor)]/20 text-[var(--tutor)] flex items-center justify-center text-[10px] font-bold font-mono">
+                            T
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[var(--tutor)] uppercase tracking-wider">
+                            {turn.stageName || 'Socratic Professor'}
+                          </span>
+                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
+                            {turn.timestamp}
+                          </span>
+                        </div>
+
+                        {/* Optional Tutor Feedback on previous student answer */}
+                        {turn.tutorFeedback && (
+                          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-[var(--ink)] space-y-1">
+                            <div className="font-mono text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1">
+                              <Sparkles size={11} />
+                              <span>Socratic Evaluation of Your Previous Response:</span>
+                            </div>
+                            <p className="m-0 leading-relaxed font-sans">{turn.tutorFeedback}</p>
+                          </div>
+                        )}
+
+                        {/* Tutor Main Content */}
+                        <div className="p-4 rounded-2xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink)] leading-relaxed space-y-2 shadow-xs">
+                          <MarkdownRenderer content={turn.content} />
+                        </div>
+
+                        {/* Active Check-In Question container */}
+                        {turn.checkInQuestion && tIdx === classroomTurns.length - 1 && !isClassroomMastered && (
+                          <div className="p-4 rounded-xl bg-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-2))] border-2 border-[var(--tutor)] space-y-2 shadow-sm animate-pulse-subtle">
+                            <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase font-bold text-[var(--tutor)]">
+                              <HelpCircle size={14} />
+                              <span>Socratic Check-In Probe (Your Turn):</span>
+                            </div>
+                            <p className="font-bold text-xs sm:text-sm text-[var(--ink)] m-0 leading-relaxed font-sans">
+                              {turn.checkInQuestion}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Student Response Bubble */
+                      <div className="flex flex-col items-end space-y-1 pl-8">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
+                            {turn.timestamp}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-[var(--ink-2)]">
+                            You (Scholar)
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[var(--tutor)] text-[#04050a] font-medium text-xs max-w-[90%] shadow-xs leading-relaxed">
+                          {turn.content}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
 
-              {isLoading && (
-                <div className="flex items-center gap-2 text-xs text-[var(--ink-3)] font-mono p-2">
-                  <Loader2 size={13} className="animate-spin text-[var(--tutor)]" />
-                  <span>Tutor is formulating Socratic inquiry...</span>
+              {isClassroomLoading && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] font-mono animate-pulse">
+                  <Loader2 size={14} className="animate-spin text-[var(--tutor)]" />
+                  <span>Socratic Professor is listening &amp; formulating next pedagogical stage...</span>
+                </div>
+              )}
+
+              {/* Mastered Banner */}
+              {isClassroomMastered && (
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-[var(--tutor)]/20 border-2 border-emerald-500 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Award size={20} className="text-emerald-500" />
+                      <span className="font-bold text-sm text-[var(--ink)]">
+                        🏆 Concept Mastered &amp; Verified by Socratic Professor!
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                      Score: 95/100
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
+                    You have successfully reasoned through the first-principles invariants, mechanics, and failure modes of <strong>{selectedConcept}</strong>.
+                  </p>
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextIdx = allConcepts.indexOf(selectedConcept) + 1;
+                        if (nextIdx < allConcepts.length) {
+                          const nextConcept = allConcepts[nextIdx];
+                          setSelectedConcept(nextConcept);
+                          handleInitClassroom(nextConcept);
+                        }
+                      }}
+                      disabled={allConcepts.indexOf(selectedConcept) >= allConcepts.length - 1}
+                      className="accent-btn text-xs"
+                      style={{ padding: '8px 18px', borderRadius: '10px' }}
+                    >
+                      <span>Next Concept in Curriculum →</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="chat-footer">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask a question or explain your deduction..."
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  className="flex-1 bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs rounded-xl px-3.5 py-2.5 outline-none transition"
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !inputText.trim()}
-                  className="p-2.5 rounded-xl bg-[var(--tutor)] text-[#04050a] hover:brightness-110 disabled:opacity-50 transition"
-                >
-                  <Send size={13} />
-                </button>
-              </form>
-            </div>
+            {/* Interactive Bottom Response Footer */}
+            {!isClassroomMastered && classroomTurns.length > 0 && (
+              <div className="p-4 border-t border-[var(--hairline)] bg-[var(--surface-2)] space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-mono text-[var(--ink-3)] font-semibold">
+                    💡 Respond to the Professor (Type or click microphone to speak):
+                  </label>
+                  <VoiceInputButton
+                    onTranscript={(t) =>
+                      setClassroomAnswer((prev) => (prev ? `${prev} ${t}` : t))
+                    }
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <textarea
+                    placeholder="Explain your deduction or reasoning to the Socratic Professor..."
+                    value={classroomAnswer}
+                    onChange={(e) => setClassroomAnswer(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitClassroomAnswer();
+                      }
+                    }}
+                    rows={2}
+                    className="flex-1 bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none resize-none font-sans leading-relaxed"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => handleSubmitClassroomAnswer()}
+                    disabled={!classroomAnswer.trim() || isClassroomLoading}
+                    className="px-4 py-2 rounded-xl bg-[var(--tutor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-1.5 transition disabled:opacity-50 shadow-sm cursor-pointer self-end h-[58px]"
+                  >
+                    {isClassroomLoading ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <>
+                        <Send size={14} />
+                        <span className="hidden sm:inline">Submit →</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

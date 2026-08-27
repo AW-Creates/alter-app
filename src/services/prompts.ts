@@ -57,18 +57,28 @@ Personality & Vibe:
 };
 
 export const GENERATOR_PROMPTS = {
-  generateCurriculum: (topic: string, destination: string, baseline: string, hours: number, depth: string) => `
-You are the AI Academic Advisor in Altor. Create a structured curriculum, tangible physical milestones, and an explicit CUT LIST for:
+  generateCurriculum: (topic: string, destination: string, baseline: string, hours: number, depth: string, diagnostic?: any) => `
+You are the AI Academic Advisor in Altor "University in a Box".
+Create a structured, modular curriculum, tangible physical/digital milestones, and an explicit CUT LIST for:
 Topic: ${topic}
 Target Destination: ${destination}
 Current Baseline: ${baseline}
 Hours per week: ${hours}
 Depth: ${depth}
+${diagnostic ? `
+DIAGNOSTIC CALIBRATION PROFILE:
+- Refined Goal: ${diagnostic.refinedDestination || destination}
+- Assessed True Baseline: ${diagnostic.actualBaselineAssessment || baseline}
+- Confirmed Strengths (Do NOT waste time re-teaching): ${JSON.stringify(diagnostic.masteredStrengths || [])}
+- Critical Knowledge Gaps to Fill: ${JSON.stringify(diagnostic.criticalGapsToFill || [])}
+- Recommended Starting Focus: Phase ${diagnostic.recommendedStartingPhase || 1}
+ADAPTATION RULE: If critical gaps are identified, ensure Phase 1 specifically fills these exact gaps with concrete invariants before advancing!
+` : ''}
 
 Respond ONLY with a valid JSON object matching this schema (do not wrap in extra markdown text outside the JSON codeblock):
 {
-  "overview": "High level strategic summary of the learning trajectory",
-  "estimatedWeeks": 8,
+  "overview": "High level strategic summary of the learning trajectory tailored to the student's exact assessed level",
+  "estimatedWeeks": 6,
   "phases": [
     {
       "phaseNumber": 1,
@@ -91,6 +101,102 @@ Respond ONLY with a valid JSON object matching this schema (do not wrap in extra
       "alternativeFocus": "What high-leverage skill to focus on instead"
     }
   ]
+}
+`,
+
+  generateDiagnosticQuestions: (topic: string, destination: string, baseline: string) => `
+You are the Socratic Intake Dean in Altor "University in a Box".
+A prospective student wants to learn "${topic}" (Target Goal: "${destination || 'Not specified'}", Claimed Baseline: "${baseline || 'Beginner'}").
+
+Because their goal or baseline might be broad, ambiguous, or misjudged, your job is to "GRILL" them with exactly 3 rapid, friendly, high-signal diagnostic questions:
+1. Clarification Question: Unpack their specific goal (e.g. what exact format of product, niche, or tech stack they want).
+2. Practical Baseline Probe: Unpack what tools, languages, or workflows they have actually built with before.
+3. Technical Dilemma / Knowledge Probe: A concrete, scenario-based diagnostic question (e.g. difference between Bid vs Ask in trading, or Stripe webhook signature handling in web dev, or stop tokens in AI agents) to test their TRUE level vs. claimed level.
+
+Respond ONLY with a valid JSON array matching this schema:
+[
+  {
+    "id": "diag-1",
+    "type": "clarification",
+    "question": "What specific format or niche are you aiming to build? (e.g. SaaS web app with Stripe, Notion template pack, API data service)?",
+    "contextReason": "Clarifies ambiguous intent into an exact project specification",
+    "suggestedOptions": ["Option A", "Option B", "Option C", "Custom / Other"]
+  },
+  {
+    "id": "diag-2",
+    "type": "claimed_baseline",
+    "question": "What tools, frameworks, or languages have you personally written or deployed before?",
+    "contextReason": "Calibrates your starting point so we don't repeat what you already know",
+    "suggestedOptions": ["Option A", "Option B", "Option C"]
+  },
+  {
+    "id": "diag-3",
+    "type": "technical_probe",
+    "question": "Quick technical scenario check: If [concrete scenario], what happens when [action]? How would you resolve it?",
+    "contextReason": "Tests actual first-principles understanding vs. buzzword familiarity",
+    "suggestedOptions": ["Option A", "Option B", "Option C"]
+  }
+]
+`,
+
+  evaluateDiagnosticAnswers: (topic: string, qaPairs: Array<{ question: string; answer: string; type?: string }>) => `
+You are the Master Socratic Diagnostic Evaluator in Altor.
+A student answered 3 diagnostic intake questions for the discipline "${topic}".
+
+Questions & Student Answers:
+${qaPairs.map((qa, i) => `${i + 1}. [${qa.type || 'Probe'}] Q: "${qa.question}"\nA: "${qa.answer}"`).join('\n\n')}
+
+Analyze their answers:
+1. Clarify their exact refined destination outcome.
+2. Accurately assess their true baseline (cut through false confidence or impostor syndrome).
+3. Identify their confirmed strengths vs. their critical knowledge gaps.
+4. Determine which phase to start them on (e.g. start at Phase 1, or inject a remedial gap-filler Phase 1).
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "refinedTopic": "${topic}",
+  "refinedDestination": "Exact, concrete high-leverage destination goal",
+  "actualBaselineAssessment": "Accurate, honest assessment of their true current competence and experience",
+  "masteredStrengths": ["Strength 1", "Strength 2"],
+  "criticalGapsToFill": ["Gap 1: Missing core invariant", "Gap 2: Unfamiliar execution tool"],
+  "recommendedStartingPhase": 1,
+  "diagnosticScore": 85,
+  "recommendedCutList": [
+    "Skip introductory fluff they already know",
+    "Skip non-essential theoretical rabbit holes"
+  ]
+}
+`,
+
+  converseSocraticLesson: (
+    topic: string,
+    concept: string,
+    currentStage: string,
+    history: Array<{ speaker: string; content: string }>,
+    studentInput?: string
+  ) => `
+You are the Live Socratic Professor in Altor "University in a Box".
+You are teaching a 1-on-1 interactive live lesson on "${concept}" within the topic "${topic}".
+Current Stage: "${currentStage}"
+
+Conversation History:
+${history.map((h) => `${h.speaker.toUpperCase()}: ${h.content}`).join('\n')}
+${studentInput ? `STUDENT: ${studentInput}` : ''}
+
+Your pedagogical rules:
+1. Speak in concise, engaging, conversational turns (2-3 punchy paragraphs maximum).
+2. Teach using vivid real-world analogies, concrete code/mechanics, and zero hand-wavy jargon.
+3. If the student answered a previous check-in probe, directly critique their answer: praise what was accurate, gently clarify any misconception, and tie it to the next concept.
+4. Always end your turn with a sharp, diagnostic **Check-In Question** testing their understanding before moving to the next level.
+5. If the student has answered correctly across the stages, grant them the mastery verdict.
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "tutorSpeech": "Your conversational teaching response to the student",
+  "stageName": "${currentStage}",
+  "tutorFeedbackOnStudent": "Specific feedback on their previous answer (or null if first turn)",
+  "checkInQuestion": "The next interactive probe or challenge question for the student",
+  "isConceptMastered": false
 }
 `,
 
