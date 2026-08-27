@@ -148,10 +148,43 @@ export interface SourceDeepDive {
   id: string;
   sourceTitle: string;
   author: string;
+  topic?: string;
+  estimatedTime?: string;
   bigIdea: string;
   topMentalModels: { model: string; explanation: string }[];
   practicalApplication: string;
   cutListFluff: string;
+
+  // Progressive Zero-to-Hero Masterclass Modules
+  plainEnglishIntuition?: {
+    coreMetaphor: string;
+    whyNovicesGetConfused: string;
+    laymanExplanation: string;
+  };
+  mechanicsAndAnatomy?: {
+    architecturalDiagramOrFlow: string;
+    deepExplanationMarkdown: string;
+    corePrimitives: { name: string; role: string; explanation: string }[];
+  };
+  implementationBlueprint?: {
+    stepByStepGuide: string[];
+    codeOrTemplate: string;
+    howMastersUseIt: string;
+  };
+  trapsAndCutList?: {
+    commonPitfalls: string[];
+    cutListFluff: string;
+  };
+  socraticSparring?: {
+    realWorldScenario: string;
+    challengeQuestion: string;
+    sampleStrongAnswer: string;
+  };
+
+  mastered?: boolean;
+  userScore?: number;
+  userSparringResponse?: string;
+  tutorEvaluationFeedback?: string;
 }
 
 export interface TutorData {

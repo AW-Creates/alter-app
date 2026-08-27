@@ -501,19 +501,59 @@ export async function synthesizeSourceWithAI(
   }
 
   const prompt = GENERATOR_PROMPTS.synthesizeSource(sourceTitle, author, topic);
-  const raw = await callGemini(prompt, 'You are an executive research librarian extracting high-signal knowledge.');
+  const raw = await callGemini(
+    prompt,
+    'You are a world-class university professor directly teaching seminal concepts from zero to hero.'
+  );
   const parsed = extractJsonFromResponse<any>(raw);
 
   return {
     id: `dive-${Date.now()}`,
     sourceTitle: parsed.sourceTitle || sourceTitle,
     author: parsed.author || author,
+    topic: parsed.topic || topic,
+    estimatedTime: parsed.estimatedTime || '8 min masterclass',
     bigIdea: parsed.bigIdea || 'Central thesis and paradigm shift.',
     topMentalModels: parsed.topMentalModels || [
-      { model: 'Core Axiom', explanation: 'First-principles baseline.' }
+      { model: 'First-Principles Deconstruction', explanation: 'Break down complex problems into basic truths that cannot be deduced any further.' }
     ],
     practicalApplication: parsed.practicalApplication || 'How to apply this in your project.',
-    cutListFluff: parsed.cutListFluff || 'Historical background chapters can be skipped.'
+    cutListFluff: parsed.cutListFluff || 'Historical background chapters can be skipped.',
+    plainEnglishIntuition: parsed.plainEnglishIntuition || {
+      coreMetaphor: `Think of ${sourceTitle} like building a sturdy suspension bridge: before decorating the towers, you must anchor the bedrock cables.`,
+      whyNovicesGetConfused: 'Beginners focus on superficial tools rather than understanding the underlying system constraint.',
+      laymanExplanation: `To master ${sourceTitle}, you must start with the simplest possible invariant and build upward without unnecessary jargon.`
+    },
+    mechanicsAndAnatomy: parsed.mechanicsAndAnatomy || {
+      architecturalDiagramOrFlow: `[ Input ] ──► [ Core Mechanism ] ──► [ Output Feedback Loop ]`,
+      deepExplanationMarkdown: `### How It Works Under the Hood\n\nThe fundamental breakthrough of ${sourceTitle} is organizing execution into structured, self-correcting feedback loops.`,
+      corePrimitives: [
+        { name: 'Core Primitive 1', role: 'Input Processing', explanation: 'Decomposes the incoming objective into discrete actionable units.' },
+        { name: 'Core Primitive 2', role: 'Execution Engine', explanation: 'Runs the primary operation against real-world constraints.' },
+        { name: 'Core Primitive 3', role: 'Observation Loop', explanation: 'Inspects feedback and updates state before proceeding.' }
+      ]
+    },
+    implementationBlueprint: parsed.implementationBlueprint || {
+      stepByStepGuide: [
+        'Step 1: Isolate the core invariant and define your input/output schema.',
+        'Step 2: Implement the minimal viable loop without premature optimization.',
+        'Step 3: Test failure boundaries and edge cases before scaling.'
+      ],
+      codeOrTemplate: `// Minimal Tactical Implementation of ${sourceTitle}\nfunction executeConcept(input) {\n  const state = initializeState(input);\n  return processLoop(state);\n}`,
+      howMastersUseIt: 'Top practitioners automate feedback validation and decouple state management from business logic.'
+    },
+    trapsAndCutList: parsed.trapsAndCutList || {
+      commonPitfalls: [
+        'Prematurely adding secondary features before the core loop is proven.',
+        'Ignoring failure feedback and letting errors compound silently.'
+      ],
+      cutListFluff: parsed.cutListFluff || 'Skip historical anecdotes and outdated legacy benchmarks.'
+    },
+    socraticSparring: parsed.socraticSparring || {
+      realWorldScenario: `You are building a mission-critical system in ${topic} with strict latency and zero tolerance for hallucinations.`,
+      challengeQuestion: `How would you apply the core lessons of ${sourceTitle} to guarantee that unexpected errors trigger immediate self-correction rather than crashing the system?`,
+      sampleStrongAnswer: 'By wrapping execution in an explicit Thought-Action-Observation loop with state checkpointing.'
+    }
   };
 }
 
@@ -835,27 +875,209 @@ In top-tier practice, masters of ${concept} don't rely on guesswork. They system
 }
 
 function getSimulatedSourceDeepDive(sourceTitle: string, author: string, topic: string): any {
+  const isReAct = sourceTitle.toLowerCase().includes('react') || sourceTitle.toLowerCase().includes('reasoning');
+
+  if (isReAct) {
+    return {
+      id: `dive-${Date.now()}`,
+      sourceTitle: "ReAct: Synergizing Reasoning and Acting in Language Models",
+      author: "Shunyu Yao et al. (Princeton & Google Brain)",
+      topic: topic || "Autonomous AI Agents",
+      estimatedTime: "8 min masterclass",
+      bigIdea: "AI models fail when they only reason (hallucinations) or only act (mindless execution). ReAct interleaves internal reasoning traces ('Thoughts') with external tool execution ('Actions') and sensory feedback ('Observations') to create self-correcting autonomous agents.",
+      topMentalModels: [
+        {
+          model: "The Thought-Action-Observation Triad",
+          explanation: "Never execute an action without first explaining WHY (Thought), and never take a second action without first inspecting what the previous action returned (Observation)."
+        },
+        {
+          model: "Working Memory as Context Accumulation",
+          explanation: "The agent's state isn't hidden in black-box weights; it is an open transcript where past errors become visible clues for the next step."
+        },
+        {
+          model: "Reality-Grounded Error Recovery",
+          explanation: "When a tool throws an error (e.g. 404 or syntax bug), a ReAct agent treats the error message as an Observation, reasons about what went wrong, and tries an alternative path."
+        }
+      ],
+      practicalApplication: "Use ReAct to build agents that connect to real APIs, SQL databases, and search engines with guaranteed error recovery loops instead of one-shot prompt guessing.",
+      cutListFluff: "You can safely skip Section 4's academic HotpotQA and ALFWorld benchmark comparison tables unless you are publishing a research paper.",
+      
+      // Level 0: Plain-English Intuition
+      plainEnglishIntuition: {
+        coreMetaphor: "Imagine trying to solve a complex murder mystery completely with your eyes closed and zero notes vs. having a detective's evidence board. If you do it in your head, you forget details and invent false memories. ReAct gives the AI that evidence board: it thinks ('Thought: I need to check the suspect's alibi'), walks over to check the phone logs ('Action: QueryDatabase'), reads what was found ('Observation: Call made at 9 PM'), and updates its theory ('Thought: Alibi is broken, let's arrest!') until the case is solved.",
+        whyNovicesGetConfused: "Most beginners think AI agents just need longer prompts or bigger models. But pure thinking (Chain-of-Thought) is blind to live data, and pure tool-calling (Function Calling) has no multi-step strategy. ReAct binds them into an interleaved loop.",
+        laymanExplanation: "Before ReAct was introduced in late 2022, AI systems suffered from two massive failure modes:\n\n1. **The Hallucination Trap (Pure Reasoning)**: The AI thought deeply in a closed bubble, but because it had no live connection to reality, when it hit a missing fact, it confidently fabricated plausible lies.\n\n2. **The Mindless Execution Trap (Pure Acting)**: The AI executed API calls or search queries without strategic reasoning, getting trapped in dumb repetitive loops when an error occurred.\n\nReAct's paradigm shift was dead simple: **Alternate between thinking and doing.** The AI writes an explicit thought, runs one action, reads the environment's observation, and uses that observation to formulate its next thought."
+      },
+
+      // Level 1: First-Principles Mechanics & Under-the-Hood
+      mechanicsAndAnatomy: {
+        architecturalDiagramOrFlow: `┌────────────────────────────────────────────────────────────┐
+│                    THE REACT ENGINE LOOP                   │
+│                                                            │
+│   1. [ USER GOAL ]: "Find current price of stock ABC"      │
+│                │                                           │
+│                ▼                                           │
+│   2. [ THOUGHT 1 ]: "I need to query the market API"       │
+│                │                                           │
+│                ▼                                           │
+│   3. [ ACTION 1 ]: SearchTicker["ABC"]                     │
+│                │                                           │
+│                ▼                                           │
+│   4. [ OBSERVATION 1 ]: "Ticker ABC = $142.50 (+3.2%)"     │
+│                │                                           │
+│                ▼                                           │
+│   5. [ THOUGHT 2 ]: "I have the verified price."           │
+│                │                                           │
+│                ▼                                           │
+│   6. [ FINISH ]: "ABC is currently trading at $142.50."    │
+└────────────────────────────────────────────────────────────┘`,
+        deepExplanationMarkdown: "### Under the Hood: The 4 Core Invariants of ReAct\n\n#### 1. Stop Tokens & Control Handoff\nThe LLM is prompted to generate text only up to the 'Action:' line. Once it outputs the action name and arguments, the system halts LLM generation, parses the action, executes it in a sandbox (Python/API), and appends the result as 'Observation:'.\n\n#### 2. Dynamic Working Memory\nThe LLM context window acts as the dynamic blackboard. Every step accumulates Thought 1, Action 1, Observation 1, Thought 2...\n\n#### 3. Self-Correction on Exceptions\nIf Action 1 returns an error (e.g. Observation 1: API Error 401 Unauthorized), the model sees that failure in its history, generates Thought 2: The API token failed, let me fall back to web scraping, and gracefully recovers.",
+        corePrimitives: [
+          {
+            name: "Thought (Reasoning Trace)",
+            role: "Decomposes sub-goals and plans next step",
+            explanation: "Allows the model to reflect, track what has been accomplished so far, and determine which tool is best suited."
+          },
+          {
+            name: "Action (Execution Vector)",
+            role: "Interacts with the external environment",
+            explanation: "Specifies the exact tool name and parameter payload to execute in the host environment."
+          },
+          {
+            name: "Observation (Reality Anchor)",
+            role: "Captures environment feedback",
+            explanation: "Raw strings, API payloads, or errors returned by tools and injected back into the prompt context."
+          }
+        ]
+      },
+
+      // Level 2: Tactical Code Implementation
+      implementationBlueprint: {
+        stepByStepGuide: [
+          "Step 1: Write a System Prompt declaring available tools with JSON/regex parameter schemas.",
+          "Step 2: Initialize an empty history transcript with the user prompt.",
+          "Step 3: Call the LLM with stop token set to ['Observation:', '\\nObservation'].",
+          "Step 4: Parse the 'Action: ToolName[Args]' string and invoke your local Python/JS tool function.",
+          "Step 5: Append 'Observation: <result>' to the transcript and loop until 'Action: Finish[...]'"
+        ],
+        codeOrTemplate: `# Minimal 30-Line ReAct Agent in Python
+import re
+
+TOOLS = {
+    "Search": lambda q: f"Result for {q}: Founded in 1976 by Steve Jobs.",
+    "Calculate": lambda expr: str(eval(expr))
+}
+
+SYSTEM_PROMPT = """Answer questions using Thought, Action, Observation steps.
+Available Tools:
+- Search[query]
+- Calculate[expression]
+- Finish[final answer]
+"""
+
+def run_react_agent(query, llm_fn, max_steps=5):
+    transcript = f"{SYSTEM_PROMPT}\\nQuestion: {query}\\n"
+    
+    for step in range(max_steps):
+        response = llm_fn(transcript, stop=["Observation:"])
+        transcript += response + "\\n"
+        
+        # Check for completion
+        if "Finish[" in response:
+            return re.search(r"Finish\\[(.*)\\]", response).group(1)
+            
+        # Parse Action
+        match = re.search(r"Action:\\s*(\\w+)\\[(.*)\\]", response)
+        if match:
+            tool_name, tool_arg = match.groups()
+            tool_fn = TOOLS.get(tool_name, lambda x: "Error: Tool not found")
+            obs = tool_fn(tool_arg)
+            transcript += f"Observation: {obs}\\n"
+            
+    return "Error: Max steps exceeded."`,
+        howMastersUseIt: "Top production frameworks (LangGraph, Google Antigravity SDK, CrewAI) use typed Pydantic models for Actions and apply Context Compression to prevent Observation token bloat."
+      },
+
+      // Level 3: Traps & Cut-List
+      trapsAndCutList: {
+        commonPitfalls: [
+          "1. Infinite Action Loops: The agent repeats the exact same failed tool query over and over. Fix: Add cycle-detection and inject a warning thought.",
+          "2. Context Window Exhaustion: Injecting 20,000-word raw JSON responses into Observation. Fix: Truncate or summarize all tool outputs to under 500 tokens before feeding back.",
+          "3. Lack of Fallback Paths: If the LLM generates a malformed action syntax, the parser crashes. Fix: Return a syntax correction error inside the Observation so the agent fixes its formatting."
+        ],
+        cutListFluff: "Ignore academic benchmark tables and synthetic QA dataset evaluations in Section 4. Focus 100% on the core loop algorithm in Section 3."
+      },
+
+      // Level 4: Socratic Sparring Check
+      socraticSparring: {
+        realWorldScenario: "You are deploying an autonomous ReAct assistant for an e-commerce platform. A user asks: 'Where is my order #9921 and can you expedite delivery to tomorrow?'",
+        challengeQuestion: "Write out the exact Thought 1 -> Action 1 -> Observation 1 -> Thought 2 -> Action 2 sequence your agent should generate to safely check the warehouse tracking system and policy rules before promising expedited delivery.",
+        sampleStrongAnswer: "Thought 1: I need to query the order tracking database for order #9921 to find its current status and carrier.\\nAction 1: LookupOrder[9921]\\nObservation 1: Order #9921 is in transit via FedEx Ground, scheduled for Friday. Expedited air upgrade is eligible for $15.\\nThought 2: The order is eligible for upgrade, but it incurs a $15 fee. I must not charge the user automatically without confirmation. I will explain the status and ask for confirmation.\\nAction 2: Finish[Your order #9921 is currently in transit for Friday delivery. We can expedite it to tomorrow for a $15 fee. Would you like me to process this upgrade?]"
+      }
+    };
+  }
+
+  // General Zero-to-Hero Masterclass Fallback
   return {
     id: `dive-${Date.now()}`,
     sourceTitle,
     author,
+    topic: topic || "First-Principles Mastery",
+    estimatedTime: "7 min masterclass",
     bigIdea: `The central premise of "${sourceTitle}" is that mastery in ${topic} comes from understanding foundational system dynamics rather than memorizing transient rules.`,
     topMentalModels: [
       {
-        model: 'First-Principles Deconstruction',
-        explanation: 'Break down complex problems into basic truths that cannot be deduced any further, then build reasoned solutions upward.'
+        model: "First-Principles Deconstruction",
+        explanation: "Break down complex problems into basic truths that cannot be deduced any further, then build reasoned solutions upward."
       },
       {
-        model: 'Signal vs. Noise Filtering',
-        explanation: 'Ignore 90% of surface chatter and focus exclusively on the 10% of variables that determine 90% of outcomes.'
+        model: "Signal vs. Noise Filtering",
+        explanation: "Ignore 90% of surface chatter and focus exclusively on the 10% of variables that determine 90% of outcomes."
       },
       {
-        model: 'Antifragile Feedback Loops',
-        explanation: 'Design your learning and execution so that unexpected errors make your understanding stronger rather than shattering your progress.'
+        model: "Antifragile Feedback Loops",
+        explanation: "Design your learning and execution so that unexpected errors make your understanding stronger rather than shattering your progress."
       }
     ],
     practicalApplication: `Apply these insights by building minimal testable prototypes in ${topic} every week, ruthlessly cutting low-signal tutorials.`,
-    cutListFluff: `You can safely skip the introductory historical anecdotes in Chapters 1-2 and the outdated appendix case studies.`
+    cutListFluff: `You can safely skip the introductory historical anecdotes in Chapters 1-2 and the outdated appendix case studies.`,
+    
+    plainEnglishIntuition: {
+      coreMetaphor: `Think of ${sourceTitle} like the structural skeleton of a skyscraper: if you only focus on the paint and windows (surface tricks) before the steel beams are bolted, the whole building collapses under stress.`,
+      whyNovicesGetConfused: "Novices try to memorize every specific rule rather than grasping the single constraint that governs all of them.",
+      laymanExplanation: `To truly master the lessons of ${sourceTitle}, you don't need encyclopedic memorization. You need to understand the fundamental tension: how to trade off speed, certainty, and resources to achieve a reliable outcome in ${topic}.`
+    },
+    mechanicsAndAnatomy: {
+      architecturalDiagramOrFlow: `[ Objective / Constraint ] ──► [ First-Principles Analysis ] ──► [ Tactical Execution ] ──► [ Error Verification ]`,
+      deepExplanationMarkdown: `### The Deep Anatomy of ${sourceTitle}\n\n1. **The Invariant Primitive**: Every system has 1-2 core variables that dictate 80% of its performance.\n2. **The Feedback Mechanism**: High performers construct tight loops where mistakes are caught within minutes rather than weeks.\n3. **De-risking Assumptions**: Systematically isolate what you don't know and run lightweight stress-tests.`,
+      corePrimitives: [
+        { name: "Primitive 1: Core Constraint", role: "Boundary Condition", explanation: "Defines the physical or logical limit of what is possible." },
+        { name: "Primitive 2: Execution Engine", role: "Workhorse", explanation: "Transforms inputs into verifiable deliverables." },
+        { name: "Primitive 3: Error Loop", role: "Quality Guardrail", explanation: "Catches failure modes before they propagate downstream." }
+      ]
+    },
+    implementationBlueprint: {
+      stepByStepGuide: [
+        "Step 1: Isolate the core problem statement into a single testable sentence.",
+        "Step 2: Build the minimal viable prototype or thesis in under 2 hours.",
+        "Step 3: Pressure-test your output against extreme edge cases.",
+        "Step 4: Refactor and optimize only after the baseline works flawlessly."
+      ],
+      codeOrTemplate: `// Tactical Execution Blueprint for ${sourceTitle}\nfunction executeStrategy(inputData) {\n  const baseline = validatePrimitives(inputData);\n  const output = runCorePipeline(baseline);\n  return verifyIntegrity(output);\n}`,
+      howMastersUseIt: "Top 1% practitioners apply this by ruthlessly prioritizing the bottleneck constraint before optimizing non-essential parts."
+    },
+    trapsAndCutList: {
+      commonPitfalls: [
+        "Premature optimization: Trying to solve edge cases before the basic flow works.",
+        "Tutorial hell: Reading 10 variations of the same advice instead of building one working artifact."
+      ],
+      cutListFluff: "Skip the generic motivational preamble in Chapter 1 and the outdated case studies in the appendix."
+    },
+    socraticSparring: {
+      realWorldScenario: `You are leading a project in ${topic} with a tight deadline and unexpected setbacks.`,
+      challengeQuestion: `How would you apply the primary mental model of "${sourceTitle}" to decide what 80% of tasks to immediately cut while guaranteeing the final deliverable succeeds?`,
+      sampleStrongAnswer: "Identify the critical path invariant that directly delivers value to the end user and eliminate all secondary polish until the core loop is validated."
+    }
   };
 }
 

@@ -232,14 +232,23 @@ Respond ONLY with a valid JSON object matching this schema:
 `,
 
   synthesizeSource: (sourceTitle: string, author: string, topic: string) => `
-You are the Master Knowledge Librarian in Altor.
-Synthesize the seminal work: "${sourceTitle}" by ${author} within the domain of "${topic}".
-Teach the student the top 1% highest-leverage insights and actionable mental models directly, so they learn the essence without fluff.
+You are the World-Class Professor and Master Research Librarian in Altor "University in a Box".
+Your job is to directly TEACH a complete novice student the seminal work: "${sourceTitle}" by ${author} in the field of "${topic}".
+
+Do NOT just provide a high-level summary or surface-level bullet points. 
+You must TEACH them step-by-step from ZERO to HERO across 5 progressive modules:
+Level 0: Plain-English Metaphor & Zero-Jargon Intuition
+Level 1: First-Principles Mechanics & Under-the-Hood Anatomy (with Markdown diagrams/flowcharts)
+Level 2: Step-by-Step Tactical Implementation & Real-World Code Blueprint
+Level 3: Beginner Traps, Common Mistakes & What to Cut
+Level 4: Real-World Socratic Sparring Dilemma to test true comprehension
 
 Respond ONLY with a valid JSON object matching this schema:
 {
   "sourceTitle": "${sourceTitle}",
   "author": "${author}",
+  "topic": "${topic}",
+  "estimatedTime": "8 min masterclass",
   "bigIdea": "The central thesis and paradigm shift in 2 clear sentences",
   "topMentalModels": [
     {
@@ -256,7 +265,55 @@ Respond ONLY with a valid JSON object matching this schema:
     }
   ],
   "practicalApplication": "Concrete, step-by-step guidance on how to apply these insights to build projects in ${topic}",
-  "cutListFluff": "What outdated, academic, or non-essential parts of this book/paper the student can safely ignore"
+  "cutListFluff": "What outdated, academic, or non-essential parts of this book/paper the student can safely ignore",
+  "plainEnglishIntuition": {
+    "coreMetaphor": "A vivid, relatable everyday metaphor explaining the concept to someone with zero technical background",
+    "whyNovicesGetConfused": "Why traditional explanations fail and what confuses beginners",
+    "laymanExplanation": "Multi-paragraph explanation breaking down the fundamental intuition without jargon"
+  },
+  "mechanicsAndAnatomy": {
+    "architecturalDiagramOrFlow": "Detailed ASCII or Markdown flowchart showing the exact step-by-step process loop",
+    "deepExplanationMarkdown": "Comprehensive breakdown of how the mechanism functions under the hood",
+    "corePrimitives": [
+      {
+        "name": "Primitive / Core Step 1",
+        "role": "What it does in the architecture",
+        "explanation": "Deep dive into how it works"
+      },
+      {
+        "name": "Primitive / Core Step 2",
+        "role": "What it does in the architecture",
+        "explanation": "Deep dive into how it works"
+      },
+      {
+        "name": "Primitive / Core Step 3",
+        "role": "What it does in the architecture",
+        "explanation": "Deep dive into how it works"
+      }
+    ]
+  },
+  "implementationBlueprint": {
+    "stepByStepGuide": [
+      "Step 1: Exact tactical action to take",
+      "Step 2: Exact tactical action to take",
+      "Step 3: Exact tactical action to take",
+      "Step 4: Exact tactical action to take"
+    ],
+    "codeOrTemplate": "A complete, real-world, executable code snippet, prompt template, or implementation blueprint",
+    "howMastersUseIt": "How top 1% industry practitioners and researchers apply this in production"
+  },
+  "trapsAndCutList": {
+    "commonPitfalls": [
+      "Mistake 1: Why beginners fail and how to avoid it",
+      "Mistake 2: Why beginners fail and how to avoid it"
+    ],
+    "cutListFluff": "What outdated, academic, or non-essential parts of this source the student can safely ignore"
+  },
+  "socraticSparring": {
+    "realWorldScenario": "A realistic, high-stakes project scenario where the student must apply this source's lessons",
+    "challengeQuestion": "A probing Socratic question testing if they truly understand the trade-offs and mechanics",
+    "sampleStrongAnswer": "The ideal mental model answer"
+  }
 }
 `,
 
