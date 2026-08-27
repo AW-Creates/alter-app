@@ -13,6 +13,7 @@ import { LibrarianView } from './components/alter/LibrarianView';
 import { TutorView } from './components/alter/TutorView';
 import { EditorView } from './components/alter/EditorView';
 import { RoommateView } from './components/alter/RoommateView';
+import { MomentumHUD } from './components/common/MomentumHUD';
 import {
   GraduationCap,
   BookOpen,
@@ -98,6 +99,9 @@ export const AppContent: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Tangible Milestone Momentum HUD */}
+      {activeJourney && <MomentumHUD />}
 
       {/* Main Screen Content */}
       <main className="screen active">

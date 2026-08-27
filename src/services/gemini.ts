@@ -9,7 +9,8 @@ import {
   LearningJourney,
   AlterPersona,
   InteractiveLesson,
-  SourceDeepDive
+  SourceDeepDive,
+  StuckTriageResult
 } from '../types/alter';
 import { queryGroundedAI, getStoredPerplexityKey } from './grounding';
 import { getStoredOpenRouterKey, callOpenRouter, getRecommendedModelForPersona } from './openrouter';
@@ -516,6 +517,43 @@ export async function synthesizeSourceWithAI(
   };
 }
 
+export async function triageStuckStudentWithAI(
+  topic: string,
+  phaseTitle: string,
+  currentConcept: string,
+  blockerType: string,
+  blockerDetails: string
+): Promise<StuckTriageResult> {
+  const apiKey = getStoredApiKey();
+  if (!apiKey) {
+    await new Promise((r) => setTimeout(r, 900));
+    return getSimulatedStuckTriage(topic, blockerType, blockerDetails);
+  }
+
+  const prompt = GENERATOR_PROMPTS.triageStuckStudent(
+    topic,
+    phaseTitle,
+    currentConcept,
+    blockerType,
+    blockerDetails
+  );
+  const raw = await callGemini(
+    prompt,
+    'You are an empathetic, ultra-pragmatic Dean of Momentum & Acceleration in an elite autodidactic academy.'
+  );
+  const parsed = extractJsonFromResponse<any>(raw);
+
+  return {
+    id: `triage-${Date.now()}`,
+    blockerSummary: parsed.blockerSummary || 'Overwhelm caused by trying to solve too many variables simultaneously.',
+    microAction5Min: parsed.microAction5Min || 'Write down the single input and single expected output of your next step.',
+    starterScaffold: parsed.starterScaffold || '// Minimal Starter Scaffold\nfunction executeStep() {\n  // 1. Fill in basic variable\n  const input = "test";\n  return input;\n}',
+    complexityReductionCut: parsed.complexityReductionCut || 'Ignore styling, edge cases, and scalability. Focus only on the happy path.',
+    mindsetReframing: parsed.mindsetReframing || 'Make it work before you make it good. Make it good before you make it fast.',
+    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  };
+}
+
 // ----------------------------------------------------
 // Simulation Engines (for offline / instant demo mode)
 // ----------------------------------------------------
@@ -531,11 +569,13 @@ function getSimulatedCurriculum(topic: string, destination: string): AdvisorData
         title: 'First-Principles Foundations & Mental Models',
         duration: 'Weeks 1-2',
         objective: 'Master the immutable primitives and mathematical/structural grammar of the field.',
+        tangibleAsset: 'A 2-page first-principles architectural blueprint and validated problem brief.',
         coreConcepts: ['Core Primitives', 'System Constraints', 'Key Abstraction Layers'],
         checkpoint: {
           id: `cp-1`,
           title: 'Foundational Synthesis Document',
           description: 'Explain the core mechanics from zero assumptions in a 2-page first-principles brief.',
+          tangibleAsset: '2-Page First-Principles Architectural Brief',
           completed: false
         },
         completed: false
@@ -546,11 +586,13 @@ function getSimulatedCurriculum(topic: string, destination: string): AdvisorData
         title: 'Mechanics, Architectures & Edge-Case Dynamics',
         duration: 'Weeks 3-5',
         objective: 'Deconstruct real-world implementations and stress-test failure modes.',
+        tangibleAsset: 'A functioning MVP prototype or verified system build deployed live.',
         coreConcepts: ['State Management & Flows', 'Bottlenecks & Optimization', 'Trade-off Analysis'],
         checkpoint: {
           id: `cp-2`,
           title: 'Working Prototype / Deconstructed Case Study',
           description: 'Build a functioning minimal viable implementation or complete a deep autopsy of a benchmark system.',
+          tangibleAsset: 'Working Minimal Viable Prototype Deployed Live',
           completed: false
         },
         completed: false
@@ -561,11 +603,13 @@ function getSimulatedCurriculum(topic: string, destination: string): AdvisorData
         title: 'Mastery Capstone & Novel Application',
         duration: 'Weeks 6-8',
         objective: `Achieve the target destination: "${destination}".`,
+        tangibleAsset: 'A published public portfolio masterwork (open-source tool, live product, or published article).',
         coreConcepts: ['End-to-End Orchestration', 'Production Hardening', 'Original Synthesis'],
         checkpoint: {
           id: `cp-3`,
           title: 'Public Capstone Artifact',
           description: 'Publish a tangible, public asset (open-source tool, published essay, or interactive system).',
+          tangibleAsset: 'Public Masterwork Artifact & Portfolio Showcase',
           completed: false
         },
         completed: false
@@ -812,5 +856,27 @@ function getSimulatedSourceDeepDive(sourceTitle: string, author: string, topic: 
     ],
     practicalApplication: `Apply these insights by building minimal testable prototypes in ${topic} every week, ruthlessly cutting low-signal tutorials.`,
     cutListFluff: `You can safely skip the introductory historical anecdotes in Chapters 1-2 and the outdated appendix case studies.`
+  };
+}
+
+function getSimulatedStuckTriage(topic: string, blockerType: string, blockerDetails: string): StuckTriageResult {
+  return {
+    id: `triage-${Date.now()}`,
+    blockerSummary: `You are facing ${blockerType.toLowerCase().replace(/_/g, ' ')} in ${topic}: feeling friction on "${blockerDetails.slice(0, 40) || 'next step'}".`,
+    microAction5Min: `Set a timer for 5 minutes. Do NOT try to build the whole feature. Just open a blank scratch file and write the 3 plain-English bullet points of what your function/deliverable should return.`,
+    starterScaffold: `// 5-Minute Minimal Scaffold for ${topic}
+// Step 1: Input variable
+const projectInput = "Core deliverable draft";
+
+// Step 2: Simplest possible execution
+function executeMinimalPass() {
+  console.log("Momentum restored: shipping step 1 of ${topic}");
+  return { status: "progressing", readyForNext: true };
+}
+
+executeMinimalPass();`,
+    complexityReductionCut: `Cut out all edge-case error handling, responsiveness polish, and secondary features. Get the simplest happy path working first.`,
+    mindsetReframing: `Remember: Done is infinitely better than perfect. A messy working draft gives you something to refine; a blank page gives you nothing.`,
+    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   };
 }

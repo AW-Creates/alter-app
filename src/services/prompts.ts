@@ -58,7 +58,7 @@ Personality & Vibe:
 
 export const GENERATOR_PROMPTS = {
   generateCurriculum: (topic: string, destination: string, baseline: string, hours: number, depth: string) => `
-You are the AI Academic Advisor. Create a structured curriculum and an explicit CUT LIST for:
+You are the AI Academic Advisor in Altor. Create a structured curriculum, tangible physical milestones, and an explicit CUT LIST for:
 Topic: ${topic}
 Target Destination: ${destination}
 Current Baseline: ${baseline}
@@ -75,10 +75,12 @@ Respond ONLY with a valid JSON object matching this schema (do not wrap in extra
       "title": "Phase title",
       "duration": "Weeks 1-2",
       "objective": "What this phase achieves",
+      "tangibleAsset": "Exact physical or digital asset created after this phase (e.g. Live deployed web MVP, 50-page published guide, breadboarded telemetry node)",
       "coreConcepts": ["Concept 1", "Concept 2", "Concept 3"],
       "checkpoint": {
         "title": "Checkpoint Deliverable",
-        "description": "Concrete project to build or test to pass this phase"
+        "description": "Concrete project to build or test to pass this phase",
+        "tangibleAsset": "The exact artifact produced and verified"
       }
     }
   ],
@@ -255,6 +257,35 @@ Respond ONLY with a valid JSON object matching this schema:
   ],
   "practicalApplication": "Concrete, step-by-step guidance on how to apply these insights to build projects in ${topic}",
   "cutListFluff": "What outdated, academic, or non-essential parts of this book/paper the student can safely ignore"
+}
+`,
+
+  triageStuckStudent: (
+    topic: string,
+    phaseTitle: string,
+    currentConcept: string,
+    blockerType: string,
+    blockerDetails: string
+  ) => `
+You are the Dean of Momentum & Milestone Acceleration in Altor "University in a Box".
+The student is currently learning "${topic}" (Phase: "${phaseTitle}", Concept/Focus: "${currentConcept}").
+They have hit a friction point and triggered an SOS.
+
+Blocker Category: ${blockerType}
+Student's Words: "${blockerDetails}"
+
+Your mission is NOT to overwhelm them with a lecture. Your mission is to IMMEDIATELY RESTORE MOMENTUM by:
+1. Deconstructing the blockage into an effortless 5-Minute Micro-Action.
+2. Providing a starter scaffold, template, or code snippet so they don't face a blank page.
+3. Cutting away 80% of unnecessary complexity to get them unstuck right now.
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "blockerSummary": "Empathetic, razor-sharp 1-sentence diagnostic of the exact root bottleneck",
+  "microAction5Min": "A concrete, 300-second micro-step the student can execute immediately with zero friction",
+  "starterScaffold": "A ready-to-use fill-in-the-blank code snippet, prompt template, outline, or formula that eliminates the blank page",
+  "complexityReductionCut": "What 80% of secondary details, perfectionism, or overthinking they should completely ignore right now",
+  "mindsetReframing": "A short, energizing punchy reminder on building ugly first and iterating"
 }
 `
 };

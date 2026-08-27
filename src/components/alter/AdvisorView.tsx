@@ -21,7 +21,8 @@ import {
   FileEdit,
   Play,
   Flame,
-  Check
+  Check,
+  Package
 } from 'lucide-react';
 import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini';
 import { dispatchWebhookEvent } from '../../services/webhooks';
@@ -306,9 +307,26 @@ export const AdvisorView: React.FC = () => {
                   </button>
                 </div>
 
-                <p className="source-row" style={{ marginTop: '2px', marginBottom: '10px' }}>
+                <p className="source-row" style={{ marginTop: '2px', marginBottom: '8px' }}>
                   ⏱️ {phase.duration} · {phase.objective}
                 </p>
+
+                {/* Tangible Asset Preview */}
+                {(phase.tangibleAsset || phase.checkpoint?.tangibleAsset) && (
+                  <div className="mb-3 p-2.5 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-2))] border border-[color-mix(in_srgb,var(--advisor)_22%,transparent)] flex items-center gap-2.5 text-xs text-[var(--ink)]">
+                    <div className="w-6 h-6 rounded-lg bg-[var(--advisor)]/20 text-[var(--advisor)] flex items-center justify-center flex-shrink-0">
+                      <Package size={13} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-mono uppercase font-bold text-[var(--advisor)] block">
+                        Tangible Proof-of-Work Asset Created in this Phase:
+                      </span>
+                      <span className="font-semibold text-[var(--ink)]">
+                        {phase.tangibleAsset || phase.checkpoint?.tangibleAsset}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* 4-Step Action Playbook */}
                 <div className="mt-4 pt-4 border-t border-[var(--hairline)] space-y-3">

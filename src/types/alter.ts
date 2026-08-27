@@ -19,6 +19,7 @@ export interface CheckpointProject {
   id: string;
   title: string;
   description: string;
+  tangibleAsset?: string; // e.g. "Live deployed landing page with waitlist form"
   completed: boolean;
 }
 
@@ -28,9 +29,20 @@ export interface CurriculumPhase {
   title: string;
   duration: string;
   objective: string;
+  tangibleAsset?: string; // What physical/digital artifact exists after this phase
   coreConcepts: string[];
   checkpoint: CheckpointProject;
   completed: boolean;
+}
+
+export interface StuckTriageResult {
+  id: string;
+  blockerSummary: string;
+  microAction5Min: string;
+  starterScaffold: string;
+  complexityReductionCut: string;
+  mindsetReframing: string;
+  createdAt: string;
 }
 
 export interface AdvisorData {
