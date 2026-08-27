@@ -447,13 +447,60 @@ export async function teachConceptWithAI(
   return {
     id: `lesson-${Date.now()}`,
     concept,
-    lessonTitle: parsed.lessonTitle || `Mastering ${concept}`,
-    estimatedReadTime: parsed.estimatedReadTime || '7 min read',
-    plainEnglishAnalogy: parsed.plainEnglishAnalogy || 'Think of it like building with modular blocks...',
-    coreExplanation: parsed.coreExplanation || 'Core mechanics breakdown...',
-    keyTakeaways: parsed.keyTakeaways || ['Foundational principle 1', 'Tactical application 2'],
-    socraticChallenge: parsed.socraticChallenge || 'How would you apply this in a resource-constrained scenario?',
-    practiceTask: parsed.practiceTask || 'Draft a 1-page action plan applying this concept.',
+    lessonTitle: parsed.lessonTitle || `Mastering ${concept}: Zero-to-Hero Blueprint`,
+    estimatedReadTime: parsed.estimatedReadTime || '8 min masterclass',
+    plainEnglishAnalogy: parsed.plainEnglishAnalogy || `Think of ${concept} like a load-bearing foundation in a skyscraper...`,
+    whyNovicesGetConfused: parsed.whyNovicesGetConfused || 'Most beginners get confused by surface syntax before understanding the underlying state machine and feedback loop.',
+    laymanExplanation: parsed.laymanExplanation || parsed.coreExplanation || 'Core foundational breakdown...',
+    architecturalDiagramOrFlow: parsed.architecturalDiagramOrFlow || '┌──────────┐\n│  Input   │ ──► [ Process ] ──► [ Output ]\n└──────────┘',
+    mechanicsMarkdown: parsed.mechanicsMarkdown || parsed.coreExplanation || 'Deep first-principles technical breakdown...',
+    corePrimitives: parsed.corePrimitives || [
+      { name: 'Control Loop', role: 'Manages step execution and termination criteria', explanation: 'Orchestrates the active state transitions and decides when the final goal is met.' },
+      { name: 'State Context', role: 'Maintains running history and observations', explanation: 'Accumulates previous actions and results so the system does not repeat mistakes.' },
+      { name: 'Execution Vector', role: 'Interacts with tools and environment', explanation: 'Safely executes side-effects with timeout and exception boundaries.' }
+    ],
+    implementationGuide: parsed.implementationGuide || [
+      'Step 1: Define strict input and output type interfaces.',
+      'Step 2: Establish the loop termination condition to prevent infinite recursion.',
+      'Step 3: Implement tool calling with schema validation.',
+      'Step 4: Catch and format runtime errors as observation state for self-correction.'
+    ],
+    codeOrTemplate: parsed.codeOrTemplate || `// First-Principles Implementation Blueprint
+export async function runAgentLoop(task: string, maxIterations = 5) {
+  let state = { task, history: [], isFinished: false };
+  
+  for (let i = 0; i < maxIterations; i++) {
+    // 1. Reason / Plan
+    const plan = await reasonNextStep(state);
+    if (plan.action === 'FINISH') {
+      state.isFinished = true;
+      return plan.finalAnswer;
+    }
+    
+    // 2. Execute Action
+    try {
+      const observation = await executeTool(plan.action, plan.args);
+      state.history.push({ plan, observation });
+    } catch (err: any) {
+      state.history.push({ plan, observation: \`Error: \${err.message}\` });
+    }
+  }
+  return state;
+}`,
+    howMastersUseIt: parsed.howMastersUseIt || 'Top 1% engineers avoid heavy magic abstractions; they write clean, deterministic state loops with explicit observability.',
+    commonPitfalls: parsed.commonPitfalls || [
+      'Infinite Loops: Forgetting a hard iteration limit or token ceiling.',
+      'Unchecked Tool Output: Passing massive 100KB raw API payloads into the prompt context window.'
+    ],
+    cutListFluff: parsed.cutListFluff || 'Skip superficial tutorials that hide the loop behind black-box wrappers without teaching state handling.',
+    coreExplanation: parsed.coreExplanation || parsed.mechanicsMarkdown || 'Comprehensive masterclass synthesis.',
+    keyTakeaways: parsed.keyTakeaways || [
+      '1. Explicit state transitions beat opaque prompts every time.',
+      '2. Errors from tools must be fed back as observations for self-healing.',
+      '3. Always bound iterations and validate schema contracts.'
+    ],
+    socraticChallenge: parsed.socraticChallenge || 'How would you adapt this architecture to recover when an external API times out after 3 retries?',
+    practiceTask: parsed.practiceTask || 'Write a 20-line working prototype of this loop in the scratchpad below and click "Send to Editor" for redline review.',
     mastered: false,
     createdAt: new Date().toLocaleDateString()
   };
@@ -469,10 +516,10 @@ export async function evaluateLessonResponseWithAI(
     await new Promise((r) => setTimeout(r, 900));
     return {
       mastered: true,
-      score: 92,
-      strengths: 'Excellent first-principles intuition! You correctly identified the core bottleneck and applied the concept accurately.',
-      nuanceOrGap: 'To reach absolute mastery, consider what happens when load scales 10x or during unexpected failure conditions.',
-      coachingVerdict: 'Concept Verified & Mastered. You are ready to advance to the next milestone deliverable!'
+      score: 94,
+      strengths: 'Outstanding first-principles deduction! You clearly identified the state transition invariant and designed an explicit error-recovery boundary.',
+      nuanceOrGap: 'In production systems, consider adding exponential backoff jitter to prevent thundering herd problems during upstream outages.',
+      coachingVerdict: 'Concept Verified & Mastered! You have demonstrated true applied architectural understanding.'
     };
   }
 
@@ -482,10 +529,10 @@ export async function evaluateLessonResponseWithAI(
 
   return {
     mastered: parsed.mastered ?? true,
-    score: parsed.score || 88,
-    strengths: parsed.strengths || 'Strong grasp of core concepts.',
-    nuanceOrGap: parsed.nuanceOrGap || 'Consider edge-case behavior.',
-    coachingVerdict: parsed.coachingVerdict || 'Verified understanding.'
+    score: parsed.score ?? 90,
+    strengths: parsed.strengths || 'Strong conceptual logic demonstrated.',
+    nuanceOrGap: parsed.nuanceOrGap || 'Consider stress-testing under extreme load.',
+    coachingVerdict: parsed.coachingVerdict || 'Concept Verified & Mastered.'
   };
 }
 
@@ -845,30 +892,109 @@ function getSimulatedLesson(topic: string, concept: string): any {
   return {
     id: `lesson-${Date.now()}`,
     concept,
-    lessonTitle: `Masterclass: ${concept}`,
-    estimatedReadTime: '6 min read',
-    plainEnglishAnalogy: `Think of ${concept} like the load-bearing foundation of a skyscraper. If you focus only on interior decoration (surface tricks) before the foundation is poured, the entire structure collapses under real-world weight.`,
-    coreExplanation: `### The Core Mechanism of ${concept}
+    lessonTitle: `Masterclass: ${concept} (Zero-to-Hero)`,
+    estimatedReadTime: '8 min masterclass',
+    plainEnglishAnalogy: `Think of ${concept} like a load-bearing foundation in civil engineering. If you focus only on interior decoration (surface tricks) before the foundation is poured, the entire structure collapses under real-world load.`,
+    whyNovicesGetConfused: `Most beginners try to memorize framework syntax or copy-paste high-level wrappers before understanding the underlying state machine, control flow, and error-recovery boundaries.`,
+    laymanExplanation: `To master **${concept}** in **${topic}**, you must decouple the immutable core principles from transient library code.\n\nEvery production system boils down to three sequential phases: **State Perception**, **Deterministic Action Selection**, and **Closed-Loop Feedback Integration**. When you master this cycle, you can build original architectures without getting trapped in tutorial hell.`,
+    architecturalDiagramOrFlow: `┌───────────────────────────────────────────────────────────┐
+│              FIRST-PRINCIPLES CYCLE OF ${concept.toUpperCase()}
+│
+│   1. [ INPUT STATE ]: Incoming goal payload + Context
+│            │
+│            ▼
+│   2. [ EVALUATE ]: Invariants & Schema Verification
+│            │
+│            ▼
+│   3. [ EXECUTE ]: Deterministic Action Vector
+│            │
+│            ▼
+│   4. [ OBSERVE ]: Environment Feedback / Error Intercept
+│            │
+│            ▼
+│   5. [ RECOVER / FINISH ]: State Update & Next Iteration
+└───────────────────────────────────────────────────────────┘`,
+    mechanicsMarkdown: `### Under the Hood: The 3 Non-Negotiable Invariants of ${concept}
 
-To master **${concept}** in the context of **${topic}**, you must decouple the immutable principles from transient tools.
+#### 1. Explicit State Transitions
+State must never be implicitly hidden inside callback closures. Maintain an immutable event log so every decision can be inspected, replayed, and debugged.
 
-#### 1. Why Most Beginners Fail
-Most people jump straight into advanced execution without understanding the baseline constraint. In ${concept}, the fundamental invariant is that every action must generate immediate feedback or reduce systemic risk.
+#### 2. Exception & Error Isolation
+External environments fail constantly (rate limits, network timeouts, invalid JSON). A master architecture intercepts every error and feeds it back into the decision loop rather than crashing.
 
-#### 2. Tactical Step-by-Step Execution
-1. **Isolate the Core Axiom**: Define the single metric or condition that makes your implementation true.
-2. **Eliminate Non-Essential Friction**: Remove unnecessary layers and avoid premature optimization.
-3. **Test the Failure Boundary**: Force the system or concept to its extreme limits to see where it breaks.
-
-#### 3. Real-World Case Example
-In top-tier practice, masters of ${concept} don't rely on guesswork. They systematically validate their assumptions through small, rapid iterations before scaling up investment.`,
-    keyTakeaways: [
-      `1. Focus on the core invariant before touching complex tools.`,
-      `2. Test failure modes early: observe where the concept breaks under stress.`,
-      `3. Simplicity and direct feedback always outperform bloated complexity.`
+#### 3. Bounded Recursion & Safeguards
+Always enforce a strict iteration ceiling (e.g. \`maxSteps = 5\`) and schema validation to guarantee the system terminates safely.`,
+    corePrimitives: [
+      {
+        name: 'Controller / State Engine',
+        role: 'Directs the active execution cycle and transition conditions',
+        explanation: 'Maintains running history and determines whether the objective has been achieved or requires another step.'
+      },
+      {
+        name: 'Execution Vector (Tool/Action)',
+        role: 'Executes side-effects and interfaces with reality',
+        explanation: 'Enforces timeout limits, authentication headers, and schema validation before touching external systems.'
+      },
+      {
+        name: 'Feedback Interceptor',
+        role: 'Catches and structures environmental responses',
+        explanation: 'Formats raw stdout, API status codes, and error traces into clean observations for subsequent cycles.'
+      }
     ],
-    socraticChallenge: `Imagine you are executing a real project in ${topic} and hit a bottleneck where resources are limited and time is cut in half. How would you apply ${concept} to decide what 80% of work to strip away while keeping the core result intact?`,
-    practiceTask: `Draft a 3-bullet action plan applying ${concept} to your current project and submit it below for Socratic verification.`,
+    implementationGuide: [
+      'Step 1: Define explicit TypeScript interfaces for State, Action, and Observation.',
+      'Step 2: Build a deterministic for-loop with a hard max-iteration ceiling.',
+      'Step 3: Implement tool calling with schema validation.',
+      'Step 4: Catch exceptions and route error messages back into the observation log.',
+      'Step 5: Write unit tests verifying recovery from 404 and 500 error scenarios.'
+    ],
+    codeOrTemplate: `// Production Implementation Blueprint: ${concept}
+export interface SystemState {
+  task: string;
+  stepCount: number;
+  history: Array<{ action: string; result: string }>;
+  isComplete: boolean;
+}
+
+export async function executeMasteryLoop(task: string, maxSteps = 5): Promise<string> {
+  const state: SystemState = { task, stepCount: 0, history: [], isComplete: false };
+  
+  while (state.stepCount < maxSteps && !state.isComplete) {
+    state.stepCount++;
+    
+    // 1. Determine next action
+    const nextAction = await planStep(state);
+    if (nextAction.type === 'COMPLETE') {
+      state.isComplete = true;
+      return nextAction.output;
+    }
+    
+    // 2. Execute safely with error boundary
+    try {
+      const output = await executeAction(nextAction);
+      state.history.push({ action: nextAction.name, result: output });
+    } catch (err: any) {
+      state.history.push({ action: nextAction.name, result: \`Exception: \${err.message}\` });
+    }
+  }
+  
+  return \`Completed \${state.stepCount} steps with final state verified.\`;
+}`,
+    howMastersUseIt: `Top 1% engineers avoid heavy magic abstractions; they write clean, deterministic loops with explicit observability and comprehensive error handling.`,
+    commonPitfalls: [
+      'Infinite Loops: Forgetting to decrement counters or set a hard iteration boundary.',
+      'Unchecked Context Accumulation: Passing multi-megabyte payloads directly into the prompt buffer.',
+      'Silent Failures: Swallowing catch block errors instead of providing them to the decision engine.'
+    ],
+    cutListFluff: `Skip superficial tutorials that hide the loop behind black-box framework wrappers without teaching fundamental state handling.`,
+    coreExplanation: `Comprehensive first-principles masterclass on ${concept}.`,
+    keyTakeaways: [
+      `1. Explicit state transitions beat opaque prompts every single time.`,
+      `2. Errors from external tools must be treated as valuable observation state for self-healing.`,
+      `3. Always bound iterations and enforce strict schema boundaries.`
+    ],
+    socraticChallenge: `Imagine you deployed this ${concept} architecture in production and an upstream service suddenly returns HTTP 429 Rate Limits. How would you design the loop to handle backoff and jitter without blowing through your maximum step budget?`,
+    practiceTask: `Write a 20-line working prototype of this loop in the scratchpad below and click "Send to Editor" for redline review.`,
     mastered: false,
     createdAt: new Date().toLocaleDateString()
   };

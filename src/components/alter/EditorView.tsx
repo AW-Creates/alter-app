@@ -16,11 +16,18 @@ import { chatWithPersona, critiqueTextWithAI } from '../../services/gemini';
 import { TextCritique } from '../../types/alter';
 
 export const EditorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, editorDraftPayload } = useJourney();
   const [draftText, setDraftText] = useState('');
   const [critiqueMode, setCritiqueMode] = useState<'logic' | 'clarity' | 'steelman' | 'first_principles'>('logic');
   const [isCritiquing, setIsCritiquing] = useState(false);
   const [critiqueResult, setCritiqueResult] = useState<TextCritique | null>(null);
+
+  React.useEffect(() => {
+    if (editorDraftPayload && editorDraftPayload !== draftText) {
+      setDraftText(editorDraftPayload);
+      setCritiqueMode('first_principles');
+    }
+  }, [editorDraftPayload]);
 
   // Chat state
   const [chatInput, setChatInput] = useState('');

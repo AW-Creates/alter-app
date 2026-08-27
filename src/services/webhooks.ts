@@ -28,6 +28,7 @@ export const isWebhookEnabled = (): boolean => {
 export type WebhookEvent =
   | 'checkpoint_completed'
   | 'feynman_mastered'
+  | 'lesson_mastered'
   | 'source_mastered'
   | 'streak_incremented'
   | 'curriculum_generated';

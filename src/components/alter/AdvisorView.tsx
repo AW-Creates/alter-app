@@ -28,7 +28,7 @@ import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini
 import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona, navigateToTutorConcept } = useJourney();
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -356,19 +356,25 @@ export const AdvisorView: React.FC = () => {
 
                     {/* Action 2: Practice Concepts */}
                     <button
-                      onClick={() => setActivePersona('tutor')}
-                      className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)] text-left transition flex items-start gap-2.5 group"
+                      onClick={() => {
+                        if (phase.coreConcepts?.[0]) {
+                          navigateToTutorConcept(phase.coreConcepts[0]);
+                        } else {
+                          setActivePersona('tutor');
+                        }
+                      }}
+                      className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)] text-left transition flex items-start gap-2.5 group cursor-pointer"
                     >
                       <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--tutor)_12%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_25%,transparent)] text-[var(--tutor)] flex items-center justify-center flex-shrink-0 mt-0.5">
                         <GraduationCap size={14} />
                       </div>
                       <div className="flex-1">
                         <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
-                          <span>2. Interactive Masterclass Lessons</span>
+                          <span>2. Zero-to-Hero Masterclass</span>
                           <ArrowRight size={12} className="text-[var(--tutor)] group-hover:translate-x-0.5 transition-transform" />
                         </div>
                         <p className="text-[11px] text-[var(--ink-2)] m-0 mt-0.5 truncate max-w-[200px]">
-                          Let Professor teach: {phase.coreConcepts?.[0] || 'Core concepts'}
+                          Master: {phase.coreConcepts?.[0] || 'Core concepts'}
                         </p>
                       </div>
                     </button>
@@ -381,14 +387,14 @@ export const AdvisorView: React.FC = () => {
                       <button
                         key={idx}
                         onClick={() => {
-                          setActivePersona('tutor');
+                          navigateToTutorConcept(concept);
                         }}
-                        className="px-2.5 py-1 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] hover:border-[var(--tutor)] border border-[var(--hairline)] text-[var(--ink)] rounded-lg text-[11px] font-mono transition flex items-center gap-1.5 font-medium shadow-2xs"
+                        className="px-2.5 py-1 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] hover:border-[var(--tutor)] border border-[var(--hairline)] text-[var(--ink)] rounded-lg text-[11px] font-mono transition flex items-center gap-1.5 font-medium shadow-2xs cursor-pointer group"
                         title={`Click to have Professor teach you "${concept}" from first principles`}
                       >
-                        <GraduationCap size={11} className="text-[var(--tutor)]" />
+                        <GraduationCap size={11} className="text-[var(--tutor)] group-hover:scale-110 transition-transform" />
                         <span>Teach Me: {concept}</span>
-                        <ArrowRight size={10} className="opacity-60" />
+                        <ArrowRight size={10} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     ))}
                   </div>

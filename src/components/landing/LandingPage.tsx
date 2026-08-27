@@ -208,6 +208,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     });
 
     // 2. Populate the Advisor roadmap and Sandeep Swadia cut list
+    const isAgent = topicToUse.toLowerCase().includes('agent') || topicToUse.toLowerCase().includes('autonomous');
+    
+    const initialSources = isAgent ? [
+      {
+        id: `source-1-${Date.now()}`,
+        type: 'paper' as const,
+        title: "ReAct: Synergizing Reasoning and Acting in Language Models",
+        authorOrCreator: "Shunyu Yao et al. (Princeton & Google Brain)",
+        status: 'reading' as const,
+        whyEssential: "Introduces the seminal Thought-Action-Observation loop that underpins modern autonomous agent architectures.",
+        keyTakeaway: "Interleave internal reasoning traces with external tool executions to reduce hallucinations and enable dynamic error recovery.",
+        signalScore: 10,
+        url: "https://arxiv.org/abs/2210.03629"
+      },
+      {
+        id: `source-2-${Date.now()}`,
+        type: 'paper' as const,
+        title: "Reflexion: Language Agents with Verbal Reinforcement Learning",
+        authorOrCreator: "Noah Shinn et al. (MIT & Northeastern)",
+        status: 'unread' as const,
+        whyEssential: "Teaches how agents can inspect their own errors and store self-reflections in memory to self-correct on subsequent attempts.",
+        keyTakeaway: "Verbal reflection stored in working memory achieves higher task completion than naive prompt retries.",
+        signalScore: 10,
+        url: "https://arxiv.org/abs/2303.11366"
+      },
+      {
+        id: `source-3-${Date.now()}`,
+        type: 'paper' as const,
+        title: "Generative Agents: Interactive Simulacra of Human Behavior",
+        authorOrCreator: "Joon Sung Park et al. (Stanford & Google)",
+        status: 'unread' as const,
+        whyEssential: "Defines memory streams, reflection heuristics, and hierarchical planning over extended time horizons.",
+        keyTakeaway: "Decouple immediate working memory from long-term associative memory retrieval with importance scoring.",
+        signalScore: 9,
+        url: "https://arxiv.org/abs/2304.03442"
+      }
+    ] : [
+      {
+        id: `source-1-${Date.now()}`,
+        type: 'book' as const,
+        title: `First Principles of ${topicToUse}`,
+        authorOrCreator: "Canonical Field Authority",
+        status: 'reading' as const,
+        whyEssential: `Foundational canonical work providing the core invariants and architecture for ${topicToUse}.`,
+        keyTakeaway: "Master the irreducible baseline principles before adding complex tooling layers.",
+        signalScore: 10
+      }
+    ];
+
     updateActiveJourney((prev) => ({
       ...prev,
       advisorData: {
@@ -221,7 +270,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             title: (simDataToUse.phase1 || 'Core Foundations').replace(/^Phase 1:\s*/i, ''),
             duration: '2 weeks',
             objective: simDataToUse.brief,
-            coreConcepts: ['First-Principles Foundations', 'Core Mental Models', 'Tactical Implementation'],
+            tangibleAsset: simDataToUse.checkpoint || 'Working MVP Prototype',
+            coreConcepts: isAgent 
+              ? ['ReAct Cognitive Loop & Stop Tokens', 'Dynamic Tool Schemas & Error Recovery', 'Deterministic State Graphs & Memory']
+              : ['First-Principles Foundations', 'Core Mental Models', 'Tactical Implementation'],
             checkpoint: {
               id: `cp-1-${Date.now()}`,
               title: 'Phase 1 Proof of Work',
@@ -236,7 +288,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             title: 'Core Execution & High-Leverage Architecture',
             duration: '2 weeks',
             objective: 'Build and test the primary system under real-world conditions.',
-            coreConcepts: ['Intermediate Mechanics', 'Error Handling & Edge Cases', 'Optimization'],
+            tangibleAsset: 'Production-Ready Architecture Engine',
+            coreConcepts: isAgent 
+              ? ['Memory Architectures & Vector Stores', 'Multi-Agent Routing & Handoffs', 'Evaluation Harnesses & Benchmarks']
+              : ['Intermediate Mechanics', 'Error Handling & Edge Cases', 'Optimization'],
             checkpoint: {
               id: `cp-2-${Date.now()}`,
               title: 'Phase 2 Deliverable',
@@ -251,7 +306,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             title: 'Mastery, Synthesis & Capstone Launch',
             duration: '2 weeks',
             objective: 'Complete autonomous mastery and publish tangible proof-of-work.',
-            coreConcepts: ['Lateral Synthesis', 'Antifragility', 'Publishing / Shipping'],
+            tangibleAsset: 'Live Published Capstone System',
+            coreConcepts: isAgent
+              ? ['Autonomous Swarm Coordination', 'Security & Prompt Injection Defenses', 'Production Deployment & Monitoring']
+              : ['Lateral Synthesis', 'Antifragility', 'Publishing / Shipping'],
             checkpoint: {
               id: `cp-3-${Date.now()}`,
               title: 'Capstone Masterwork',
@@ -276,6 +334,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }
         ]
+      },
+      librarianData: {
+        ...prev.librarianData,
+        sources: initialSources,
+        flashcards: isAgent ? [
+          {
+            id: `fc-1-${Date.now()}`,
+            front: "ReAct Pattern (Reasoning + Acting)",
+            back: "Interleaving internal reasoning traces ('Thought') with external tool execution ('Action') and sensory feedback ('Observation') to prevent hallucinations and enable error recovery."
+          },
+          {
+            id: `fc-2-${Date.now()}`,
+            front: "Stop Token in Agent Loops",
+            back: "Instructing the LLM to generate text only up to 'Action:' so the runtime engine can pause generation, execute the tool in a sandbox, and feed the output back as 'Observation:'."
+          }
+        ] : prev.librarianData.flashcards
       }
     }));
 

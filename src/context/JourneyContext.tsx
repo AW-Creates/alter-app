@@ -15,11 +15,15 @@ interface JourneyContextType {
   apiKey: string;
   isApiKeyModalOpen: boolean;
   isCreateModalOpen: boolean;
+  targetTutorConcept: string | null;
+  editorDraftPayload: string | null;
   setActiveJourneyId: (id: string) => void;
   setActivePersona: (persona: AlterPersona) => void;
   setApiKey: (key: string) => void;
   setIsApiKeyModalOpen: (open: boolean) => void;
   setIsCreateModalOpen: (open: boolean) => void;
+  navigateToTutorConcept: (concept: string) => void;
+  sendToEditor: (draft: string) => void;
   createJourney: (journey: Omit<LearningJourney, 'id' | 'createdAt' | 'lastActive' | 'streakDays' | 'advisorData' | 'librarianData' | 'tutorData' | 'editorData' | 'roommateData'>) => LearningJourney;
   updateActiveJourney: (updater: (prev: LearningJourney) => LearningJourney) => void;
   deleteJourney: (id: string) => void;
@@ -35,6 +39,8 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [apiKey, setApiKeyState] = useState<string>('');
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [targetTutorConcept, setTargetTutorConcept] = useState<string | null>(null);
+  const [editorDraftPayload, setEditorDraftPayload] = useState<string | null>(null);
 
   useEffect(() => {
     const loadedJourneys = getStoredJourneys();
@@ -163,6 +169,16 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
+  const navigateToTutorConcept = (concept: string) => {
+    setTargetTutorConcept(concept);
+    setActivePersona('tutor');
+  };
+
+  const sendToEditor = (draft: string) => {
+    setEditorDraftPayload(draft);
+    setActivePersona('editor');
+  };
+
   return (
     <JourneyContext.Provider
       value={{
@@ -172,11 +188,15 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         apiKey,
         isApiKeyModalOpen,
         isCreateModalOpen,
+        targetTutorConcept,
+        editorDraftPayload,
         setActiveJourneyId,
         setActivePersona,
         setApiKey,
         setIsApiKeyModalOpen,
         setIsCreateModalOpen,
+        navigateToTutorConcept,
+        sendToEditor,
         createJourney,
         updateActiveJourney,
         deleteJourney,

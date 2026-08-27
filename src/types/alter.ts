@@ -102,6 +102,8 @@ export interface FeynmanEvaluation {
   blindSpots: string[];
   simplifiedAnalogy: string;
   tutorFeedback: string;
+  jargonUsed?: string[];
+  simplifiedAnalogySuggestion?: string;
 }
 
 export interface FeynmanSession extends FeynmanEvaluation {
@@ -138,9 +140,24 @@ export interface InteractiveLesson {
   keyTakeaways: string[];
   socraticChallenge: string;
   practiceTask: string;
+  
+  // Progressive Zero-to-Hero Masterclass Modules
+  whyNovicesGetConfused?: string;
+  laymanExplanation?: string;
+  architecturalDiagramOrFlow?: string;
+  mechanicsMarkdown?: string;
+  corePrimitives?: { name: string; role: string; explanation: string }[];
+  implementationGuide?: string[];
+  codeOrTemplate?: string;
+  howMastersUseIt?: string;
+  commonPitfalls?: string[];
+  cutListFluff?: string;
+
   mastered?: boolean;
   studentResponse?: string;
   tutorEvaluation?: string;
+  userScore?: number;
+  userDraftCode?: string;
   createdAt: string;
 }
 
