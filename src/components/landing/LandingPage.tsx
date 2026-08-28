@@ -438,7 +438,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         title: `First Principles of ${topicToUse}`,
         authorOrCreator: "Canonical Field Authority",
         status: 'reading' as const,
-        whyEssential: `Foundational canonical work providing the core invariants and architecture for ${topicToUse}.`,
+        whyEssential: `Foundational work providing the core principles and proven practical framework for ${topicToUse}.`,
         keyTakeaway: "Master the irreducible baseline principles before adding complex tooling layers.",
         signalScore: 10
       }

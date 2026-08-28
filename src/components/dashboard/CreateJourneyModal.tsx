@@ -327,10 +327,10 @@ export const CreateJourneyModal: React.FC = () => {
           <div className="py-16 text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-[var(--advisor)] mx-auto" />
             <p className="font-bold text-sm text-[var(--ink)]">
-              Formulating Socratic Diagnostic Probes...
+              Formulating Friendly Diagnostic Questions...
             </p>
             <p className="text-xs text-[var(--ink-3)] max-w-md mx-auto">
-              Analyzing core invariants and real-world edge cases to test your exact frontier of competence.
+              Preparing thoughtful questions to understand your vision, hands-on background, and starting level.
             </p>
           </div>
         )}
@@ -442,10 +442,10 @@ export const CreateJourneyModal: React.FC = () => {
           <div className="py-16 text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-[var(--advisor)] mx-auto" />
             <p className="font-bold text-sm text-[var(--ink)]">
-              Synthesizing Your Competence Profile...
+              Personalizing Your 3-Phase Roadmap...
             </p>
             <p className="text-xs text-[var(--ink-3)] max-w-md mx-auto">
-              Calibrating your true baseline, separating buzzwords from core invariants, and mapping gap-filling modules.
+              Analyzing your answers, adding starter modules to bridge knowledge gaps, and cutting out low-value distractions.
             </p>
           </div>
         )}

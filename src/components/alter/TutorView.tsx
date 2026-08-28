@@ -428,7 +428,7 @@ export const TutorView: React.FC = () => {
     setUserAnswers({});
     setShowResults(false);
     try {
-      const quiz = await generateQuizWithAI(activeJourney.topic, 'Core First Principles & Tactical Invariants');
+      const quiz = await generateQuizWithAI(activeJourney.topic, 'Core Fundamentals & Practical Problem Solving');
       setQuizQuestions(quiz.questions || []);
     } catch (err) {
       console.error('Quiz generation failed', err);
@@ -443,10 +443,10 @@ export const TutorView: React.FC = () => {
   };
 
   const starters = [
-    'Quiz me on the core invariant of Phase 1',
-    'Give me a real-world edge case scenario to solve',
-    'What is the fundamental flaw in naive implementations?',
-    'Walk me through the derivation from first principles'
+    'Quiz me on the most important rule of Phase 1',
+    'Give me a real-world scenario to solve',
+    'What is the fundamental mistake beginners make?',
+    'Walk me through how this works step-by-step'
   ];
 
   return (
@@ -1234,7 +1234,7 @@ export const TutorView: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
-                    You have successfully reasoned through the first-principles invariants, mechanics, and failure modes of <strong>{selectedConcept}</strong>.
+                    You have successfully mastered the core fundamentals, practical steps, and troubleshooting for <strong>{selectedConcept}</strong>.
                   </p>
                   <div className="pt-2 flex justify-end">
                     <button

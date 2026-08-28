@@ -72,7 +72,7 @@ DIAGNOSTIC CALIBRATION PROFILE:
 - Confirmed Strengths (Do NOT waste time re-teaching): ${JSON.stringify(diagnostic.masteredStrengths || [])}
 - Critical Knowledge Gaps to Fill: ${JSON.stringify(diagnostic.criticalGapsToFill || [])}
 - Recommended Starting Focus: Phase ${diagnostic.recommendedStartingPhase || 1}
-ADAPTATION RULE: If critical gaps are identified, ensure Phase 1 specifically fills these exact gaps with concrete invariants before advancing!
+ADAPTATION RULE: If critical gaps are identified, ensure Phase 1 specifically fills these exact gaps with essential core building blocks before advancing!
 ` : ''}
 
 Respond ONLY with a valid JSON object matching this schema (do not wrap in extra markdown text outside the JSON codeblock):
@@ -359,34 +359,34 @@ Your mission is to directly TEACH a student "${concept}" within the field of "${
 
 Do NOT provide a superficial high-level overview. You must TEACH them step-by-step from ZERO to HERO across 5 progressive modules:
 Level 0: Plain-English Metaphor & Zero-Jargon Intuition (Everyday analogy, why beginners get confused, foundational explanation).
-Level 1: First-Principles Mechanics & Under-the-Hood Anatomy (ASCII/Markdown flowchart loop diagram, core invariants, 3 primitives).
-Level 2: Step-by-Step Tactical Implementation & Real-World Code Blueprint (5-step build guide, complete copyable executable code/template, production patterns).
+Level 1: Core Mechanics & Step-by-Step Anatomy (Clear visual process flow or diagram, 3 essential pillars).
+Level 2: Step-by-Step Tactical Implementation & Practical Blueprint (5-step build guide, complete copyable executable code, recipe, checklist, script, or template).
 Level 3: Beginner Traps, Common Failure Modes & What to Cut (Top 3 mistakes + fixes, non-essential fluff to skip).
 Level 4: Real-World Socratic Sparring Dilemma & Concrete Practice Task.
 
 Respond ONLY with a valid JSON object matching this schema:
 {
-  "lessonTitle": "Mastering ${concept}: Zero-to-Hero Blueprint",
+  "lessonTitle": "Mastering \${concept}: Zero-to-Hero Blueprint",
   "estimatedReadTime": "8 min masterclass",
   "plainEnglishAnalogy": "A vivid, unforgettable real-world metaphor explaining the fundamental intuition to someone new",
   "whyNovicesGetConfused": "Why traditional explanations fail and what common misconceptions mislead beginners",
   "laymanExplanation": "Multi-paragraph explanation breaking down the core mechanism in clear, jargon-free language",
-  "architecturalDiagramOrFlow": "ASCII or Markdown flowchart showing the step-by-step process loop or architecture",
-  "mechanicsMarkdown": "Deep first-principles technical breakdown of the under-the-hood state transitions and control flow",
+  "architecturalDiagramOrFlow": "ASCII or Markdown flowchart showing the step-by-step process loop or flow",
+  "mechanicsMarkdown": "Deep breakdown of how the core process works step-by-step from cause to effect without unnecessary jargon",
   "corePrimitives": [
     {
-      "name": "Primitive 1",
-      "role": "What it does in the architecture",
+      "name": "Pillar / Core Element 1",
+      "role": "What it does in the system / process",
       "explanation": "Deep dive into how it works"
     },
     {
-      "name": "Primitive 2",
-      "role": "What it does in the architecture",
+      "name": "Pillar / Core Element 2",
+      "role": "What it does in the system / process",
       "explanation": "Deep dive into how it works"
     },
     {
-      "name": "Primitive 3",
-      "role": "What it does in the architecture",
+      "name": "Pillar / Core Element 3",
+      "role": "What it does in the system / process",
       "explanation": "Deep dive into how it works"
     }
   ],
@@ -396,8 +396,8 @@ Respond ONLY with a valid JSON object matching this schema:
     "Step 3: Exact tactical action to take",
     "Step 4: Exact tactical action to take"
   ],
-  "codeOrTemplate": "A complete, real-world, executable code snippet, prompt template, or implementation blueprint",
-  "howMastersUseIt": "How top 1% industry practitioners and production teams apply this",
+  "codeOrTemplate": "A complete, real-world, executable code snippet, prompt template, recipe, checklist, or action plan",
+  "howMastersUseIt": "How world-class experts and master practitioners apply this in practice",
   "commonPitfalls": [
     "Mistake 1: Why beginners fail and how to fix it",
     "Mistake 2: Why beginners fail and how to fix it"
@@ -405,8 +405,8 @@ Respond ONLY with a valid JSON object matching this schema:
   "cutListFluff": "What non-essential complexity, premature optimization, or outdated tutorials to skip",
   "coreExplanation": "Comprehensive synthesis of the entire lesson",
   "keyTakeaways": [
-    "Takeaway 1: Essential invariant",
-    "Takeaway 2: Tactical execution rule",
+    "Takeaway 1: Essential core rule",
+    "Takeaway 2: Tactical execution habit",
     "Takeaway 3: Failure mode to avoid"
   ],
   "socraticChallenge": "A sharp, diagnostic Socratic sparring question or scenario where the student must apply this concept to solve a real dilemma",
