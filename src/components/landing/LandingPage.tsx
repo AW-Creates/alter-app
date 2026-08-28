@@ -450,62 +450,83 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         ...prev.advisorData,
         overview: simDataToUse.brief || `Master ${topicToUse} with clear milestone deliverables and ruthless Cut-List filtering.`,
         estimatedWeeks: 6,
-        phases: [
-          {
-            id: `phase-1-${Date.now()}`,
-            phaseNumber: 1,
-            title: (simDataToUse.phase1 || 'Core Foundations').replace(/^Phase 1:\s*/i, ''),
-            duration: '2 weeks',
-            objective: simDataToUse.brief,
-            tangibleAsset: simDataToUse.checkpoint || 'Working MVP Prototype',
-            coreConcepts: isAgent 
-              ? ['ReAct Cognitive Loop & Stop Tokens', 'Dynamic Tool Schemas & Error Recovery', 'Deterministic State Graphs & Memory']
-              : ['First-Principles Foundations', 'Core Mental Models', 'Tactical Implementation'],
-            checkpoint: {
-              id: `cp-1-${Date.now()}`,
-              title: 'Phase 1 Proof of Work',
-              description: simDataToUse.checkpoint || 'Build and validate your first working milestone.',
+        phases: (simDataToUse.phases && simDataToUse.phases.length > 0)
+          ? simDataToUse.phases.map((ph: any, idx: number) => ({
+              id: `phase-${idx + 1}-${Date.now()}`,
+              phaseNumber: ph.phaseNumber || idx + 1,
+              title: ph.title.replace(/^Phase\s*\d+:\s*/i, ''),
+              duration: ph.duration || '2 weeks',
+              objective: ph.checkpoint,
+              tangibleAsset: ph.checkpoint,
+              coreConcepts: isAgent
+                ? (idx === 0 
+                    ? ['ReAct Cognitive Loop & Stop Tokens', 'Dynamic Tool Schemas & Error Recovery', 'Deterministic State Graphs & Memory']
+                    : idx === 1
+                    ? ['Memory Architectures & Vector Stores', 'Multi-Agent Routing & Handoffs', 'Evaluation Harnesses & Benchmarks']
+                    : ['Autonomous Swarm Coordination', 'Security & Prompt Injection Defenses', 'Production Deployment & Monitoring'])
+                : [
+                    `${ph.title.split('&')[0]?.trim() || 'Core Foundations'} Setup`,
+                    `Practical Execution & Troubleshooting`,
+                    `Milestone Project Build & Validation`
+                  ],
+              checkpoint: {
+                id: `cp-${idx + 1}-${Date.now()}`,
+                title: `Phase ${idx + 1} Milestone Deliverable`,
+                description: ph.checkpoint || 'Build and validate your working milestone.',
+                completed: false
+              },
               completed: false
-            },
-            completed: false
-          },
-          {
-            id: `phase-2-${Date.now()}`,
-            phaseNumber: 2,
-            title: 'Core Execution & High-Leverage Architecture',
-            duration: '2 weeks',
-            objective: 'Build and test the primary system under real-world conditions.',
-            tangibleAsset: 'Production-Ready Architecture Engine',
-            coreConcepts: isAgent 
-              ? ['Memory Architectures & Vector Stores', 'Multi-Agent Routing & Handoffs', 'Evaluation Harnesses & Benchmarks']
-              : ['Intermediate Mechanics', 'Error Handling & Edge Cases', 'Optimization'],
-            checkpoint: {
-              id: `cp-2-${Date.now()}`,
-              title: 'Phase 2 Deliverable',
-              description: 'Deploy real-world system or execute second complete case study.',
-              completed: false
-            },
-            completed: false
-          },
-          {
-            id: `phase-3-${Date.now()}`,
-            phaseNumber: 3,
-            title: 'Mastery, Synthesis & Capstone Launch',
-            duration: '2 weeks',
-            objective: 'Complete autonomous mastery and publish tangible proof-of-work.',
-            tangibleAsset: 'Live Published Capstone System',
-            coreConcepts: isAgent
-              ? ['Autonomous Swarm Coordination', 'Security & Prompt Injection Defenses', 'Production Deployment & Monitoring']
-              : ['Lateral Synthesis', 'Antifragility', 'Publishing / Shipping'],
-            checkpoint: {
-              id: `cp-3-${Date.now()}`,
-              title: 'Capstone Masterwork',
-              description: 'Launch publicly or conduct capstone peer critique.',
-              completed: false
-            },
-            completed: false
-          }
-        ],
+            }))
+          : [
+              {
+                id: `phase-1-${Date.now()}`,
+                phaseNumber: 1,
+                title: 'Core Foundations & Starter Project',
+                duration: '2 weeks',
+                objective: simDataToUse.brief,
+                tangibleAsset: 'First Working Prototype or Draft Deliverable',
+                coreConcepts: ['First-Principles Foundations', 'Core Mental Models', 'Tactical Implementation'],
+                checkpoint: {
+                  id: `cp-1-${Date.now()}`,
+                  title: 'Phase 1 Milestone',
+                  description: 'Build and validate your first working milestone.',
+                  completed: false
+                },
+                completed: false
+              },
+              {
+                id: `phase-2-${Date.now()}`,
+                phaseNumber: 2,
+                title: 'Core Execution & System Build',
+                duration: '2 weeks',
+                objective: 'Build and test the primary system under real-world conditions.',
+                tangibleAsset: 'Complete Milestone Project',
+                coreConcepts: ['Intermediate Mechanics', 'Error Handling & Edge Cases', 'Optimization'],
+                checkpoint: {
+                  id: `cp-2-${Date.now()}`,
+                  title: 'Phase 2 Deliverable',
+                  description: 'Deploy real-world system or execute second complete case study.',
+                  completed: false
+                },
+                completed: false
+              },
+              {
+                id: `phase-3-${Date.now()}`,
+                phaseNumber: 3,
+                title: 'Polish, Launch & Real-World Results',
+                duration: '2 weeks',
+                objective: 'Complete autonomous mastery and publish tangible proof-of-work.',
+                tangibleAsset: 'Live Published Deliverable',
+                coreConcepts: ['Synthesis & Polish', 'Real-World Launch', 'Mastery Showcase'],
+                checkpoint: {
+                  id: `cp-3-${Date.now()}`,
+                  title: 'Capstone Masterwork',
+                  description: 'Launch publicly or conduct capstone peer critique.',
+                  completed: false
+                },
+                completed: false
+              }
+            ],
         cutList: (simDataToUse.cutList || []).map((cut: string, idx: number) => ({
           id: `cut-${idx + 1}-${Date.now()}`,
           topic: cut.replace(/^Skip\s+/i, '').replace(/^Avoid\s+/i, ''),

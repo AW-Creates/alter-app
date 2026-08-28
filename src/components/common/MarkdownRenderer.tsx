@@ -8,8 +8,8 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className = '' }) => {
   // Simple, robust, lightweight markdown parser for formatting responses
   const renderFormatted = (text: string) => {
-    // Split into paragraphs / lines
-    const lines = text.split('\n');
+    // Split into paragraphs / lines safely
+    const lines = (text || '').split('\n');
 
     return lines.map((line, idx) => {
       // Headers

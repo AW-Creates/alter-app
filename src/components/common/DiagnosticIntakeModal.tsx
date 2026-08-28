@@ -202,12 +202,36 @@ export const DiagnosticIntakeModal: React.FC<DiagnosticIntakeModalProps> = ({
         assessment.actualBaselineAssessment
       );
 
-      // 4. Update the newly created journey
+      // 4. Update the newly created journey with calibrated phases if present
+      const finalPhases = (assessment.phasesSummary && assessment.phasesSummary.length > 0)
+        ? assessment.phasesSummary.map((p, idx) => ({
+            id: `phase-${idx + 1}-${Date.now()}`,
+            phaseNumber: p.phaseNumber || idx + 1,
+            title: p.title.replace(/^Phase\s*\d+:\s*/i, ''),
+            duration: p.duration || '2 weeks',
+            objective: p.tangibleAsset,
+            tangibleAsset: p.tangibleAsset,
+            coreConcepts: advisorData.phases[idx]?.coreConcepts || [
+              `${p.title.split('&')[0]?.trim() || 'Core'} Fundamentals`,
+              'Practical Execution & Troubleshooting',
+              'Milestone Project Validation'
+            ],
+            checkpoint: {
+              id: `cp-${idx + 1}-${Date.now()}`,
+              title: `Phase ${idx + 1} Deliverable`,
+              description: p.tangibleAsset,
+              completed: false
+            },
+            completed: false
+          }))
+        : advisorData.phases;
+
       updateActiveJourney((prev) => ({
         ...prev,
         diagnosticAssessment: assessment,
         advisorData: {
           ...advisorData,
+          phases: finalPhases,
           chatHistory: [
             {
               id: `msg-${Date.now()}`,

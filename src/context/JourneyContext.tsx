@@ -68,12 +68,21 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateActiveJourney = (updater: (prev: LearningJourney) => LearningJourney) => {
-    if (!activeJourney) return;
-    const updated = updater(activeJourney);
-    updated.lastActive = new Date().toISOString();
-    const newJourneys = journeys.map((j) => (j.id === updated.id ? updated : j));
-    setJourneys(newJourneys);
-    saveJourneys(newJourneys);
+    setJourneys((prevJourneys) => {
+      const currentTargetId = activeJourneyId || (prevJourneys.length > 0 ? prevJourneys[0].id : null);
+      if (!currentTargetId) return prevJourneys;
+      const targetIndex = prevJourneys.findIndex((j) => j.id === currentTargetId);
+      if (targetIndex === -1) return prevJourneys;
+
+      const targetJourney = prevJourneys[targetIndex];
+      const updated = updater(targetJourney);
+      updated.lastActive = new Date().toISOString();
+
+      const newJourneys = [...prevJourneys];
+      newJourneys[targetIndex] = updated;
+      saveJourneys(newJourneys);
+      return newJourneys;
+    });
   };
 
   const createJourney = (data: Omit<LearningJourney, 'id' | 'createdAt' | 'lastActive' | 'streakDays' | 'advisorData' | 'librarianData' | 'tutorData' | 'editorData' | 'roommateData'>): LearningJourney => {
@@ -121,22 +130,32 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     };
 
-    const nextJourneys = [newJourney, ...journeys];
-    setJourneys(nextJourneys);
-    saveJourneys(nextJourneys);
+    setJourneys((prevJourneys) => {
+      const nextJourneys = [newJourney, ...prevJourneys];
+      saveJourneys(nextJourneys);
+      return nextJourneys;
+    });
     setActiveJourneyId(newId);
     return newJourney;
   };
 
   const deleteJourney = (id: string) => {
-    const remaining = journeys.filter((j) => j.id !== id);
-    setJourneys(remaining);
-    saveJourneys(remaining);
-    if (activeJourneyId === id) {
-      const nextId = remaining.length > 0 ? remaining[0].id : null;
-      setActiveJourneyIdState(nextId);
-      if (nextId) setStoredActiveJourneyId(nextId);
-    }
+    setJourneys((prevJourneys) => {
+      const remaining = prevJourneys.filter((j) => j.id !== id);
+      saveJourneys(remaining);
+      if (activeJourneyId === id) {
+        const nextId = remaining.length > 0 ? remaining[0].id : null;
+        setActiveJourneyIdState(nextId);
+        if (nextId) {
+          setStoredActiveJourneyId(nextId);
+        } else {
+          try {
+            localStorage.removeItem('alter_active_journey_id_v1');
+          } catch {}
+        }
+      }
+      return remaining;
+    });
   };
 
   const addChatMessage = (persona: AlterPersona, message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
@@ -147,25 +166,50 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      const clone = { ...prev };
       switch (persona) {
         case 'advisor':
-          clone.advisorData.chatHistory = [...clone.advisorData.chatHistory, newMessage];
-          break;
+          return {
+            ...prev,
+            advisorData: {
+              ...prev.advisorData,
+              chatHistory: [...(prev.advisorData?.chatHistory || []), newMessage]
+            }
+          };
         case 'librarian':
-          clone.librarianData.chatHistory = [...clone.librarianData.chatHistory, newMessage];
-          break;
+          return {
+            ...prev,
+            librarianData: {
+              ...prev.librarianData,
+              chatHistory: [...(prev.librarianData?.chatHistory || []), newMessage]
+            }
+          };
         case 'tutor':
-          clone.tutorData.chatHistory = [...clone.tutorData.chatHistory, newMessage];
-          break;
+          return {
+            ...prev,
+            tutorData: {
+              ...prev.tutorData,
+              chatHistory: [...(prev.tutorData?.chatHistory || []), newMessage]
+            }
+          };
         case 'editor':
-          clone.editorData.chatHistory = [...clone.editorData.chatHistory, newMessage];
-          break;
+          return {
+            ...prev,
+            editorData: {
+              ...prev.editorData,
+              chatHistory: [...(prev.editorData?.chatHistory || []), newMessage]
+            }
+          };
         case 'roommate':
-          clone.roommateData.chatHistory = [...clone.roommateData.chatHistory, newMessage];
-          break;
+          return {
+            ...prev,
+            roommateData: {
+              ...prev.roommateData,
+              chatHistory: [...(prev.roommateData?.chatHistory || []), newMessage]
+            }
+          };
+        default:
+          return prev;
       }
-      return clone;
     });
   };
 

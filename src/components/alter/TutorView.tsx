@@ -25,7 +25,8 @@ import {
   Layers,
   Flame,
   Terminal,
-  Bookmark
+  Bookmark,
+  FileText
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import {
@@ -592,13 +593,27 @@ export const TutorView: React.FC = () => {
 
               {/* 5-Level Progress Stepper */}
               <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-3 overflow-x-auto gap-1">
-                {[
-                  { id: 'intuition', num: '1', label: 'Plain Intuition', icon: '🐣' },
-                  { id: 'mechanics', num: '2', label: 'Mechanics & Flow', icon: '⚙️' },
-                  { id: 'code', num: '3', label: 'Code Blueprint', icon: '💻' },
-                  { id: 'traps', num: '4', label: 'Traps & Cuts', icon: '⚠️' },
-                  { id: 'sparring', num: '5', label: 'Socratic Sparring', icon: '🥊' }
-                ].map((step) => (
+                {(() => {
+                  const isTech = activeJourney.topic.toLowerCase().includes('agent') ||
+                    activeJourney.topic.toLowerCase().includes('code') ||
+                    activeJourney.topic.toLowerCase().includes('program') ||
+                    activeJourney.topic.toLowerCase().includes('software') ||
+                    activeJourney.topic.toLowerCase().includes('python') ||
+                    activeJourney.topic.toLowerCase().includes('rust') ||
+                    activeJourney.topic.toLowerCase().includes('electron') ||
+                    activeJourney.topic.toLowerCase().includes('system') ||
+                    activeJourney.topic.toLowerCase().includes('saas') ||
+                    activeJourney.topic.toLowerCase().includes('data') ||
+                    activeJourney.topic.toLowerCase().includes('ai');
+
+                  return [
+                    { id: 'intuition', num: '1', label: 'Plain Intuition', icon: '🐣' },
+                    { id: 'mechanics', num: '2', label: 'Mechanics & Flow', icon: '⚙️' },
+                    { id: 'code', num: '3', label: isTech ? 'Code Blueprint' : 'Action Blueprint & Template', icon: isTech ? '💻' : '📋' },
+                    { id: 'traps', num: '4', label: 'Traps & Cuts', icon: '⚠️' },
+                    { id: 'sparring', num: '5', label: 'Socratic Sparring', icon: '🥊' }
+                  ];
+                })().map((step) => (
                   <button
                     key={step.id}
                     onClick={() => setMasterclassTab(step.id as any)}
@@ -791,73 +806,103 @@ export const TutorView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Executable Code Template */}
-                  {activeLesson.codeOrTemplate && (
-                    <div className="p-4 rounded-xl bg-[var(--void)] border border-[var(--hairline-strong)] space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--tutor)] flex items-center gap-1.5">
-                          <Code2 size={13} />
-                          <span>Production Implementation Blueprint:</span>
+                  {/* Executable Code or Action Template */}
+                  {activeLesson.codeOrTemplate && (() => {
+                    const isTech = activeJourney.topic.toLowerCase().includes('agent') ||
+                      activeJourney.topic.toLowerCase().includes('code') ||
+                      activeJourney.topic.toLowerCase().includes('program') ||
+                      activeJourney.topic.toLowerCase().includes('software') ||
+                      activeJourney.topic.toLowerCase().includes('python') ||
+                      activeJourney.topic.toLowerCase().includes('rust') ||
+                      activeJourney.topic.toLowerCase().includes('electron') ||
+                      activeJourney.topic.toLowerCase().includes('system') ||
+                      activeJourney.topic.toLowerCase().includes('saas') ||
+                      activeJourney.topic.toLowerCase().includes('data') ||
+                      activeJourney.topic.toLowerCase().includes('ai');
+
+                    return (
+                      <div className="p-4 rounded-xl bg-[var(--void)] border border-[var(--hairline-strong)] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="font-mono text-[11px] uppercase font-bold text-[var(--tutor)] flex items-center gap-1.5">
+                            {isTech ? <Code2 size={13} /> : <FileText size={13} />}
+                            <span>{isTech ? 'Production Implementation Blueprint:' : 'Step-by-Step Action Blueprint & Template:'}</span>
+                          </div>
+                          <button
+                            onClick={handleCopyCode}
+                            className="px-2.5 py-1 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[11px] font-mono text-[var(--ink)] transition flex items-center gap-1"
+                          >
+                            {copiedCode ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                            <span>{copiedCode ? 'Copied!' : (isTech ? 'Copy Code' : 'Copy Template')}</span>
+                          </button>
                         </div>
-                        <button
-                          onClick={handleCopyCode}
-                          className="px-2.5 py-1 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[11px] font-mono text-[var(--ink)] transition flex items-center gap-1"
-                        >
-                          {copiedCode ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                          <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
-                        </button>
+                        <pre className="p-3 bg-[var(--surface-1)] rounded-lg text-[11px] font-mono text-[var(--ink-2)] overflow-x-auto leading-relaxed border border-[var(--hairline)] m-0">
+                          {activeLesson.codeOrTemplate}
+                        </pre>
                       </div>
-                      <pre className="p-3 bg-[var(--surface-1)] rounded-lg text-[11px] font-mono text-[var(--ink-2)] overflow-x-auto leading-relaxed border border-[var(--hairline)] m-0">
-                        {activeLesson.codeOrTemplate}
-                      </pre>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Interactive Practice Sandbox / Scratchpad */}
-                  <div className="p-4 rounded-xl bg-[var(--surface-2)] border-2 border-[var(--tutor)]/40 space-y-3 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Terminal size={15} className="text-[var(--tutor)]" />
-                        <span className="font-bold text-xs text-[var(--ink)]">
-                          🛠️ Live Practice Sandbox / Code Scratchpad
-                        </span>
+                  {(() => {
+                    const isTech = activeJourney.topic.toLowerCase().includes('agent') ||
+                      activeJourney.topic.toLowerCase().includes('code') ||
+                      activeJourney.topic.toLowerCase().includes('program') ||
+                      activeJourney.topic.toLowerCase().includes('software') ||
+                      activeJourney.topic.toLowerCase().includes('python') ||
+                      activeJourney.topic.toLowerCase().includes('rust') ||
+                      activeJourney.topic.toLowerCase().includes('electron') ||
+                      activeJourney.topic.toLowerCase().includes('system') ||
+                      activeJourney.topic.toLowerCase().includes('saas') ||
+                      activeJourney.topic.toLowerCase().includes('data') ||
+                      activeJourney.topic.toLowerCase().includes('ai');
+
+                    return (
+                      <div className="p-4 rounded-xl bg-[var(--surface-2)] border-2 border-[var(--tutor)]/40 space-y-3 shadow-xs">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Terminal size={15} className="text-[var(--tutor)]" />
+                            <span className="font-bold text-xs text-[var(--ink)]">
+                              {isTech ? '🛠️ Live Practice Sandbox / Code Scratchpad' : '🛠️ Live Practice Sandbox / Draft Scratchpad'}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
+                            {activeLesson.practiceTask || (isTech ? 'Write your code and send to Editor for review' : 'Write your draft steps and send to Editor for review')}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-[var(--ink-2)] m-0">
+                          👉 <strong>Task:</strong> {activeLesson.practiceTask || (isTech ? 'Write a working prototype of this loop and test your assumptions.' : 'Draft your action plan or sample outline and test your assumptions.')}
+                        </p>
+
+                        <textarea
+                          placeholder={isTech ? '// Write your code prototype or implementation plan here...' : '// Write your draft outline, action steps, recipe notes, or pitch script here...'}
+                          value={draftCode}
+                          onChange={(e) => setDraftCode(e.target.value)}
+                          rows={5}
+                          className="w-full bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none font-mono leading-relaxed"
+                        />
+
+                        <div className="flex items-center justify-between pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setDraftCode(activeLesson.codeOrTemplate || '')}
+                            className="ghost-btn text-xs"
+                          >
+                            <span>Reset to Blueprint Template</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleSendDraftToEditor}
+                            className="px-3.5 py-1.5 rounded-xl bg-[var(--editor)] hover:brightness-110 text-[#04050a] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                          >
+                            <FileEdit size={13} />
+                            <span>🔍 Send Draft to Analytical Editor for Redline Critique →</span>
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-[10px] font-mono text-[var(--ink-3)]">
-                        {activeLesson.practiceTask || 'Write your code and send to Editor for review'}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-[var(--ink-2)] m-0">
-                      👉 <strong>Task:</strong> {activeLesson.practiceTask || 'Write a working prototype of this loop and test your assumptions.'}
-                    </p>
-
-                    <textarea
-                      placeholder="// Write your code prototype or implementation plan here..."
-                      value={draftCode}
-                      onChange={(e) => setDraftCode(e.target.value)}
-                      rows={5}
-                      className="w-full bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none font-mono leading-relaxed"
-                    />
-
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setDraftCode(activeLesson.codeOrTemplate || '')}
-                        className="ghost-btn text-xs"
-                      >
-                        <span>Reset to Blueprint Template</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleSendDraftToEditor}
-                        className="px-3.5 py-1.5 rounded-xl bg-[var(--editor)] hover:brightness-110 text-[#04050a] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                      >
-                        <FileEdit size={13} />
-                        <span>🔍 Send Draft to Analytical Editor for Redline Critique →</span>
-                      </button>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* Navigation */}
                   <div className="pt-3 flex justify-between items-center">

@@ -1654,6 +1654,110 @@ function getSimulatedPersonaResponse(
 }
 
 function getSimulatedLesson(topic: string, concept: string): any {
+  const isTech = topic.toLowerCase().includes('agent') ||
+    topic.toLowerCase().includes('code') ||
+    topic.toLowerCase().includes('program') ||
+    topic.toLowerCase().includes('software') ||
+    topic.toLowerCase().includes('python') ||
+    topic.toLowerCase().includes('rust') ||
+    topic.toLowerCase().includes('electron') ||
+    topic.toLowerCase().includes('system') ||
+    topic.toLowerCase().includes('saas') ||
+    topic.toLowerCase().includes('data') ||
+    topic.toLowerCase().includes('ai');
+
+  if (!isTech) {
+    return {
+      id: `lesson-${Date.now()}`,
+      concept,
+      lessonTitle: `Masterclass: ${concept} (Step-by-Step Blueprint)`,
+      estimatedReadTime: '8 min masterclass',
+      plainEnglishAnalogy: `Think of ${concept} like preparing a recipe or laying a foundation. If you rush ahead to the final presentation before getting the core ingredients and timing right, the final result will fall flat.`,
+      whyNovicesGetConfused: `Most beginners try to jump straight to complicated techniques or expensive gear before understanding the basic, reliable step-by-step process.`,
+      laymanExplanation: `To master **${concept}** in **${topic}**, you must focus on the essential principles that produce 80% of the results.\n\nEvery successful execution follows three simple steps: **Preparation & Setup**, **Clear Execution**, and **Verification & Fine-Tuning**. By sticking to this structure, you avoid overwhelm and build real, lasting competence.`,
+      architecturalDiagramOrFlow: `┌───────────────────────────────────────────────────────────┐
+│              STEP-BY-STEP EXECUTION FLOW: ${concept.toUpperCase()}
+│
+│   1. [ PREPARATION ]: Setup Workspace & Gather Essentials
+│            │
+│            ▼
+│   2. [ CORE EXECUTION ]: Carry Out the Primary Action
+│            │
+│            ▼
+│   3. [ VERIFICATION ]: Check Quality Against Target Standard
+│            │
+│            ▼
+│   4. [ REFINEMENT ]: Adjust & Document Key Takeaways
+└───────────────────────────────────────────────────────────┘`,
+      mechanicsMarkdown: `### The 3 Core Pillars of ${concept}
+
+#### 1. Clear Preparation
+Before starting, ensure all prerequisites and conditions are met. Rushing the setup is the #1 cause of beginner frustration.
+
+#### 2. Deliberate Execution
+Follow the proven steps methodically. Do not attempt advanced shortcuts until the standard routine becomes second nature.
+
+#### 3. Continuous Feedback
+Observe the results of each step immediately. Catching small variations early prevents major errors later.`,
+      corePrimitives: [
+        {
+          name: 'Preparation Protocol',
+          role: 'Ensures optimal initial conditions and materials',
+          explanation: 'Eliminates friction before execution begins and guarantees repeatable results.'
+        },
+        {
+          name: 'Core Action Step',
+          role: 'The primary value-generating action',
+          explanation: 'Focuses energy strictly on high-impact execution rather than unnecessary distractions.'
+        },
+        {
+          name: 'Quality Verification',
+          role: 'Inspects and validates the output',
+          explanation: 'Provides immediate feedback so you can course-correct before moving forward.'
+        }
+      ],
+      implementationGuide: [
+        'Step 1: Set up your workspace and organize your core materials.',
+        'Step 2: Follow the foundational protocol step-by-step without skipping ahead.',
+        'Step 3: Perform an immediate quality check against the target outcome.',
+        'Step 4: Troubleshoot any minor discrepancies using the checklist below.',
+        'Step 5: Record your observations to build consistency.'
+      ],
+      codeOrTemplate: `### Practical Execution Sheet & Action Checklist: ${concept}
+
+1. Objective:
+   - Primary Goal: Master the essential practical deliverable for ${concept}.
+   - Success Metric: Tangible output ready for verification.
+
+2. Step-by-Step Action Steps:
+   [ ] Step 1: Complete setup & verify conditions
+   [ ] Step 2: Execute core process according to instructions
+   [ ] Step 3: Run quality review against standards
+   [ ] Step 4: Refine and record final output
+
+3. Troubleshooting & Notes:
+   - If output differs from expectations, review step 1 setup conditions first.
+   - Keep notes on what worked best for future repetitions.`,
+      howMastersUseIt: `World-class practitioners focus obsessively on mastering the fundamentals with consistent discipline rather than relying on gimmicks.`,
+      commonPitfalls: [
+        'Rushing the Setup: Skipping preparation steps in an effort to finish quickly.',
+        'Overcomplicating: Adding unnecessary complexity before mastering the baseline protocol.',
+        'Ignoring Feedback: Failing to inspect work after each step.'
+      ],
+      cutListFluff: `Skip generic lifestyle blogs and theoretical manuals that add unnecessary fluff without actionable steps.`,
+      coreExplanation: `Comprehensive, practical masterclass on ${concept}.`,
+      keyTakeaways: [
+        `1. Preparation dictates 80% of your final quality.`,
+        `2. Keep the process simple and repeatable before adding variations.`,
+        `3. Verify each step before moving on to the next.`
+      ],
+      socraticChallenge: `If unexpected conditions arise during your execution of ${concept}, what is the first check you should perform to get back on track?`,
+      practiceTask: `Complete the action checklist above and write your 1-paragraph summary in the scratchpad to review with the Editor.`,
+      mastered: false,
+      createdAt: new Date().toLocaleDateString()
+    };
+  }
+
   return {
     id: `lesson-${Date.now()}`,
     concept,
@@ -1668,7 +1772,7 @@ function getSimulatedLesson(topic: string, concept: string): any {
 │   1. [ INPUT STATE ]: Incoming goal payload + Context
 │            │
 │            ▼
-│   2. [ EVALUATE ]: Invariants & Schema Verification
+│   2. [ EVALUATE ]: Rules & Schema Verification
 │            │
 │            ▼
 │   3. [ EXECUTE ]: Deterministic Action Vector
@@ -1679,7 +1783,7 @@ function getSimulatedLesson(topic: string, concept: string): any {
 │            ▼
 │   5. [ RECOVER / FINISH ]: State Update & Next Iteration
 └───────────────────────────────────────────────────────────┘`,
-    mechanicsMarkdown: `### Under the Hood: The 3 Non-Negotiable Invariants of ${concept}
+    mechanicsMarkdown: `### Under the Hood: The 3 Core Pillars of ${concept}
 
 #### 1. Explicit State Transitions
 State must never be implicitly hidden inside callback closures. Maintain an immutable event log so every decision can be inspected, replayed, and debugged.
@@ -1939,35 +2043,45 @@ def run_react_agent(query, llm_fn, max_steps=5):
       laymanExplanation: `To truly master the lessons of ${sourceTitle}, you don't need encyclopedic memorization. You need to understand the fundamental tension: how to trade off speed, certainty, and resources to achieve a reliable outcome in ${topic}.`
     },
     mechanicsAndAnatomy: {
-      architecturalDiagramOrFlow: `[ Objective / Constraint ] ──► [ First-Principles Analysis ] ──► [ Tactical Execution ] ──► [ Error Verification ]`,
-      deepExplanationMarkdown: `### The Deep Anatomy of ${sourceTitle}\n\n1. **The Invariant Primitive**: Every system has 1-2 core variables that dictate 80% of its performance.\n2. **The Feedback Mechanism**: High performers construct tight loops where mistakes are caught within minutes rather than weeks.\n3. **De-risking Assumptions**: Systematically isolate what you don't know and run lightweight stress-tests.`,
+      architecturalDiagramOrFlow: `[ Clear Starter Goal ] ──► [ Practical Execution ] ──► [ Quality Check ] ──► [ Refinement & Result ]`,
+      deepExplanationMarkdown: `### The Core Anatomy of ${sourceTitle}\n\n1. **The Core Pillar**: Every field has 1-2 essential foundations that dictate 80% of real-world results.\n2. **The Feedback Loop**: Master practitioners construct tight routines where mistakes are caught immediately.\n3. **De-risking Assumptions**: Systematically test your understanding with real practice rather than passive reading.`,
       corePrimitives: [
-        { name: "Primitive 1: Core Constraint", role: "Boundary Condition", explanation: "Defines the physical or logical limit of what is possible." },
-        { name: "Primitive 2: Execution Engine", role: "Workhorse", explanation: "Transforms inputs into verifiable deliverables." },
-        { name: "Primitive 3: Error Loop", role: "Quality Guardrail", explanation: "Catches failure modes before they propagate downstream." }
+        { name: "Pillar 1: Core Foundation", role: "Essential Basis", explanation: "Defines the fundamental rules and baseline setup." },
+        { name: "Pillar 2: Action Engine", role: "Primary Execution", explanation: "Transforms plans into tangible, verified deliverables." },
+        { name: "Pillar 3: Feedback Loop", role: "Quality Guardrail", explanation: "Catches mistakes early before they compound." }
       ]
     },
     implementationBlueprint: {
       stepByStepGuide: [
-        "Step 1: Isolate the core problem statement into a single testable sentence.",
-        "Step 2: Build the minimal viable prototype or thesis in under 2 hours.",
-        "Step 3: Pressure-test your output against extreme edge cases.",
-        "Step 4: Refactor and optimize only after the baseline works flawlessly."
+        "Step 1: Isolate your immediate goal into a single clear milestone.",
+        "Step 2: Build the minimal working prototype, outline, or draft in under 2 hours.",
+        "Step 3: Test your output against real-world standards.",
+        "Step 4: Refine and polish only after the baseline works reliably."
       ],
-      codeOrTemplate: `// Tactical Execution Blueprint for ${sourceTitle}\nfunction executeStrategy(inputData) {\n  const baseline = validatePrimitives(inputData);\n  const output = runCorePipeline(baseline);\n  return verifyIntegrity(output);\n}`,
-      howMastersUseIt: "Top 1% practitioners apply this by ruthlessly prioritizing the bottleneck constraint before optimizing non-essential parts."
+      codeOrTemplate: `### Practical Execution Blueprint for ${sourceTitle}
+
+1. Action Plan:
+   - Primary Goal: Deliver the core milestone for ${topic}.
+   - Standard: Clean, tested, and verified.
+
+2. Step-by-Step Execution:
+   [ ] Step 1: Set up core parameters and requirements
+   [ ] Step 2: Carry out primary execution flow
+   [ ] Step 3: Verify output against quality criteria
+   [ ] Step 4: Polish deliverable and document learnings`,
+      howMastersUseIt: "Top practitioners apply this by ruthlessly prioritizing the core value deliverable before getting distracted by non-essential polish."
     },
     trapsAndCutList: {
       commonPitfalls: [
-        "Premature optimization: Trying to solve edge cases before the basic flow works.",
-        "Tutorial hell: Reading 10 variations of the same advice instead of building one working artifact."
+        "Premature polish: Spending hours on styling or decoration before the core function works.",
+        "Tutorial overwhelm: Reading 10 variations of the same advice instead of building one tangible project."
       ],
-      cutListFluff: "Skip the generic motivational preamble in Chapter 1 and the outdated case studies in the appendix."
+      cutListFluff: "Skip generic introductory fluff and outdated case studies that add no direct execution value."
     },
     socraticSparring: {
-      realWorldScenario: `You are leading a project in ${topic} with a tight deadline and unexpected setbacks.`,
-      challengeQuestion: `How would you apply the primary mental model of "${sourceTitle}" to decide what 80% of tasks to immediately cut while guaranteeing the final deliverable succeeds?`,
-      sampleStrongAnswer: "Identify the critical path invariant that directly delivers value to the end user and eliminate all secondary polish until the core loop is validated."
+      realWorldScenario: `You are working on a project in ${topic} with a tight timeline and unexpected challenges.`,
+      challengeQuestion: `How would you apply the primary lesson of "${sourceTitle}" to decide what 80% of non-essential tasks to cut while guaranteeing your final deliverable succeeds?`,
+      sampleStrongAnswer: "Identify the single highest-value action that directly creates tangible progress and cut all secondary distractions until the core outcome is proven."
     }
   };
 }

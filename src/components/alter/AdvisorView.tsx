@@ -22,7 +22,8 @@ import {
   Play,
   Flame,
   Check,
-  Package
+  Package,
+  Target
 } from 'lucide-react';
 import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini';
 import { dispatchWebhookEvent } from '../../services/webhooks';
@@ -190,8 +191,57 @@ export const AdvisorView: React.FC = () => {
           </p>
         </div>
 
+        {/* All Phases Mastered Capstone Banner */}
+        {advisorData.phases.length > 0 && advisorData.phases.every((p) => p.completed) && (
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-amber-500/15 to-[var(--surface-2)] border-2 border-emerald-500/50 shadow-md space-y-2 animate-fade-in">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+              <span>🎓</span>
+              <span>Curriculum Mastered! Capstone Milestone Complete</span>
+            </div>
+            <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+              You have completed all {advisorData.phases.length} phases of <strong>{activeJourney.topic}</strong>, validated your milestone deliverables, and mastered the core principles. Ready to publish your capstone project or begin a new domain mastery!
+            </p>
+          </div>
+        )}
+
+        {/* Diagnostic Calibration Profile Card */}
+        {activeJourney.diagnosticAssessment && (
+          <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target size={15} className="text-[var(--advisor)]" />
+                <span className="font-bold text-xs text-[var(--ink)]">
+                  🎯 Your Calibrated Learning Strategy &amp; Starting Level
+                </span>
+              </div>
+              <span className="text-[10px] font-mono uppercase bg-[var(--advisor)]/20 text-[var(--advisor)] px-2 py-0.5 rounded font-bold">
+                {activeJourney.diagnosticAssessment.actualBaselineAssessment}
+              </span>
+            </div>
+
+            <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+              {activeJourney.diagnosticAssessment.whyCustomizedExplanation || 'Curriculum custom-tailored to bridge your exact knowledge gaps.'}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {activeJourney.diagnosticAssessment.addedCoursesReason && (
+                <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                  <span className="font-bold font-mono text-[10px] block mb-0.5">🟢 ADDED TO FILL GAPS:</span>
+                  <span className="text-[11.5px] leading-snug">{activeJourney.diagnosticAssessment.addedCoursesReason}</span>
+                </div>
+              )}
+              {activeJourney.diagnosticAssessment.subtractedCoursesReason && (
+                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                  <span className="font-bold font-mono text-[10px] block mb-0.5">🟡 CUT OUT TO SAVE TIME:</span>
+                  <span className="text-[11.5px] leading-snug">{activeJourney.diagnosticAssessment.subtractedCoursesReason}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Current Active Mission Banner */}
-        {activePhase && (
+        {activePhase && !advisorData.phases.every((p) => p.completed) && (
           <div className="p-4 rounded-2xl bg-gradient-to-r from-[color-mix(in_srgb,var(--advisor)_12%,var(--surface-1))] to-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-1))] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">

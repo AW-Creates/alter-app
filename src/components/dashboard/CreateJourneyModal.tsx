@@ -341,7 +341,7 @@ export const CreateJourneyModal: React.FC = () => {
             <div className="flex items-center justify-between text-xs font-mono text-[var(--ink-3)]">
               <span>Probe {currentQIndex + 1} of {questions.length}</span>
               <span className="capitalize text-[var(--advisor)] font-bold">
-                {currentQ.type.replace('_', ' ')}
+                {currentQ.type.replace('_', ' ').replace(/technical/i, 'Foundational')}
               </span>
             </div>
 

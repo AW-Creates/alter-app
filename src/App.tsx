@@ -104,7 +104,7 @@ export const AppContent: React.FC = () => {
       {activeJourney && <MomentumHUD />}
 
       {/* Main Screen Content */}
-      <main className="screen active">
+      <main className="screen active pb-24 md:pb-8">
         {activeJourney ? (
           <>
             {activePersona === 'advisor' && <AdvisorView />}

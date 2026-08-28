@@ -42,6 +42,13 @@ export const RoommateView: React.FC = () => {
     try {
       const collision = await generateCollisionWithAI(activeJourney.topic, domain);
       setActiveCollision(collision);
+      updateActiveJourney((prev) => ({
+        ...prev,
+        roommateData: {
+          ...prev.roommateData,
+          collisions: [collision, ...(prev.roommateData.collisions || []).filter((c) => c.id !== collision.id)]
+        }
+      }));
     } catch (err) {
       console.error('Collision failed', err);
     } finally {
