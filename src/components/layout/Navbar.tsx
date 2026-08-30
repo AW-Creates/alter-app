@@ -207,33 +207,50 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
           </div>
         )}
 
-        {/* Live / Demo Mode Status Pill */}
-        <button
-          onClick={() => setIsApiKeyModalOpen(true)}
-          className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs ${
-            apiKey || localStorage.getItem('alter_openrouter_api_key')
-              ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-500'
-              : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-500'
-          }`}
-          title={
-            apiKey || localStorage.getItem('alter_openrouter_api_key')
-              ? 'Live LLM Engine Connected (Gemini / OpenRouter). Click to manage keys.'
-              : 'Running in Local Simulated Demo Mode. Click to connect your Gemini or OpenRouter API key for live AI.'
+        {/* Live / Shared / Demo Mode Status Pill */}
+        {(() => {
+          const hasPersonalKey = Boolean(apiKey || localStorage.getItem('alter_openrouter_api_key'));
+          const usage = JSON.parse(localStorage.getItem('altor_shared_usage_cache_v1') || '{"remaining":5}');
+          const remaining = typeof usage.remaining === 'number' ? usage.remaining : 5;
+
+          if (hasPersonalKey) {
+            return (
+              <button
+                onClick={() => setIsApiKeyModalOpen(true)}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-500"
+                title="Personal API Key Connected (Unlimited Live AI). Click to manage."
+              >
+                <ShieldCheck size={12} className="text-emerald-500" />
+                <span>Live AI Active</span>
+              </button>
+            );
           }
-        >
-          {apiKey || localStorage.getItem('alter_openrouter_api_key') ? (
-            <>
-              <ShieldCheck size={12} className="text-emerald-500" />
-              <span>Live AI Active</span>
-            </>
-          ) : (
-            <>
+
+          if (remaining > 0) {
+            return (
+              <button
+                onClick={() => setIsApiKeyModalOpen(true)}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/30 text-sky-400"
+                title={`Shared Free Tier (${remaining}/5 live AI requests remaining today). Click to add your own key for unlimited.`}
+              >
+                <Zap size={12} className="text-sky-400" />
+                <span>Free Tier ({remaining}/5)</span>
+              </button>
+            );
+          }
+
+          return (
+            <button
+              onClick={() => setIsApiKeyModalOpen(true)}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-500"
+              title="Daily free quota reached. Running in Simulated Demo Mode. Click to add your own API key."
+            >
               <Zap size={12} className="text-amber-500" />
-              <span>Demo Mode (Simulated AI)</span>
+              <span>Demo Mode</span>
               <span className="underline ml-0.5 text-[10px]">Add Key</span>
-            </>
-          )}
-        </button>
+            </button>
+          );
+        })()}
 
         {/* Guide Tour Opener */}
         <button

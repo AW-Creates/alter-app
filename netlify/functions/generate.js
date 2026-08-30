@@ -1,4 +1,11 @@
-﻿// Netlify Serverless Function: /.netlify/functions/generate
+// Netlify Serverless Function: /.netlify/functions/generate
+const DAILY_LIMIT = 5;
+const MODEL = 'gemini-2.0-flash';
+const MAX_PROMPT_CHARS = 25000;
+
+// In-memory usage map for function instances
+const memStore = new Map();
+
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return {
@@ -7,13 +14,33 @@ export async function handler(event) {
     };
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const guestId = (event.headers && (event.headers['x-guest-id'] || event.headers['client-ip'])) || 'guest_anon';
+  const today = new Date().toISOString().slice(0, 10);
+  const usageKey = `${guestId}:${today}`;
+
+  const currentUsage = memStore.get(usageKey) || 0;
+  if (currentUsage >= DAILY_LIMIT) {
+    return {
+      statusCode: 429,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `You've used your ${DAILY_LIMIT} free requests for today. Add your own Gemini API key for unlimited access.`
+      })
+    };
+  }
+
+  const apiKey =
+    process.env.GEMINI_SHARED_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY;
+
   if (!apiKey) {
     return {
       statusCode: 503,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         error: 'UNCONFIGURED_SERVER_KEY',
-        message: 'No GEMINI_API_KEY environment variable configured on Netlify. Please use client-side BYOK.'
+        message: 'No GEMINI_SHARED_API_KEY environment variable configured on Netlify. Please use client-side BYOK.'
       })
     };
   }
@@ -23,11 +50,27 @@ export async function handler(event) {
     const {
       prompt,
       systemInstruction,
-      model = 'gemini-2.0-flash',
+      model = MODEL,
       jsonMode = false,
       enableSearchGrounding = false,
       contents: customContents
     } = body;
+
+    if (!prompt && (!customContents || customContents.length === 0)) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Missing prompt or contents' })
+      };
+    }
+
+    if (prompt && prompt.length > MAX_PROMPT_CHARS) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Prompt exceeds maximum character limit' })
+      };
+    }
 
     const contents = customContents || [
       {
@@ -38,13 +81,16 @@ export async function handler(event) {
 
     const payload = {
       contents,
-      systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined,
       generationConfig: {
         temperature: 0.7,
         topP: 0.95,
         maxOutputTokens: 2500
       }
     };
+
+    if (systemInstruction) {
+      payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+    }
 
     if (jsonMode) {
       payload.generationConfig.responseMimeType = 'application/json';
@@ -54,22 +100,30 @@ export async function handler(event) {
       payload.tools = [{ googleSearch: {} }];
     }
 
-    const url = https://generativelanguage.googleapis.com/v1beta/models/:generateContent?key=;
-    const response = await fetch(url, {
+    const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
     const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    memStore.set(usageKey, currentUsage + 1);
+
     return {
       statusCode: response.status,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        text,
+        remaining: Math.max(0, DAILY_LIMIT - (currentUsage + 1)),
+        candidates: data.candidates
+      })
     };
   } catch (err) {
     return {
       statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: err.message || 'Internal Netlify function error' })
     };
   }

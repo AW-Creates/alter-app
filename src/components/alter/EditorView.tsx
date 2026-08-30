@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { VoiceInputButton } from '../common/VoiceInputButton';
-import { chatWithPersona, critiqueTextWithAI, hasActiveApiKey } from '../../services/gemini';
+import { chatWithPersona, critiqueTextWithAI, hasActiveApiKey, getGenerationTier, getSharedRemainingCount } from '../../services/gemini';
 import { TextCritique } from '../../types/alter';
 
 export const EditorView: React.FC = () => {
@@ -104,15 +104,28 @@ export const EditorView: React.FC = () => {
               <FileEdit size={15} color="var(--accent)" strokeWidth={2} />
               SUBMIT DRAFT FOR EDITORIAL PRESSURE-TEST
             </p>
-            {hasActiveApiKey() ? (
-              <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2 py-0.5 rounded font-bold">
-                🛡️ Live AI Analysis
-              </span>
-            ) : (
-              <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)] px-2 py-0.5 rounded font-bold">
-                ⚡ Local Analytical Engine
-              </span>
-            )}
+            {(() => {
+              const tier = getGenerationTier();
+              if (tier === 'personal') {
+                return (
+                  <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2 py-0.5 rounded font-bold">
+                    🛡️ Live AI Analysis
+                  </span>
+                );
+              }
+              if (tier === 'shared') {
+                return (
+                  <span className="text-[10px] font-mono uppercase bg-sky-500/10 text-sky-400 border border-sky-500/25 px-2 py-0.5 rounded font-bold">
+                    ⚡ Live Free Tier ({getSharedRemainingCount()}/5)
+                  </span>
+                );
+              }
+              return (
+                <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)] px-2 py-0.5 rounded font-bold">
+                  ⚡ Local Analytical Engine
+                </span>
+              );
+            })()}
           </div>
 
           <div className="segmented" style={{ width: 'fit-content', marginBottom: '8px' }}>

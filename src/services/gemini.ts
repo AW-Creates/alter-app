@@ -16,9 +16,14 @@ import {
 } from '../types/alter';
 import { queryGroundedAI, getStoredPerplexityKey } from './grounding';
 import { getStoredOpenRouterKey, callOpenRouter, getRecommendedModelForPersona } from './openrouter';
+import {
+  callSharedProxy,
+  getStoredSharedUsage,
+  updateStoredSharedUsage,
+  DEFAULT_DAILY_LIMIT
+} from './sharedApi';
 
 const STORAGE_API_KEY = 'alter_gemini_api_key';
-const FREE_PROXY_DAILY_LIMIT = 5;
 
 export const getStoredApiKey = (): string => {
   return localStorage.getItem(STORAGE_API_KEY) || '';
@@ -32,79 +37,24 @@ export const setStoredApiKey = (key: string): void => {
   }
 };
 
-export function getDailyProxyUsage(): { date: string; count: number } {
-  const today = new Date().toISOString().split('T')[0];
-  try {
-    const raw = localStorage.getItem('altor_free_proxy_usage');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.date === today) return parsed;
-    }
-  } catch (e) {}
-  return { date: today, count: 0 };
-}
+export const hasPersonalApiKey = (): boolean => {
+  return Boolean(getStoredApiKey() || getStoredOpenRouterKey() || getStoredPerplexityKey());
+};
 
-export function incrementDailyProxyUsage(): number {
-  const today = new Date().toISOString().split('T')[0];
-  const usage = getDailyProxyUsage();
-  const updated = { date: today, count: usage.count + 1 };
-  try {
-    localStorage.setItem('altor_free_proxy_usage', JSON.stringify(updated));
-  } catch (e) {}
-  return updated.count;
-}
-
-export function hasFreeProxyGenerationsRemaining(): boolean {
-  const usage = getDailyProxyUsage();
-  return usage.count < FREE_PROXY_DAILY_LIMIT;
-}
-
-export async function callServerlessProxy(
-  prompt?: string,
-  systemInstruction?: string,
-  model = 'gemini-2.0-flash',
-  enableSearchGrounding = false,
-  customContents?: any[]
-): Promise<string | null> {
-  if (!hasFreeProxyGenerationsRemaining()) {
-    return null;
-  }
-
-  try {
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        systemInstruction,
-        model,
-        enableSearchGrounding,
-        contents: customContents
-      })
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        incrementDailyProxyUsage();
-        return text;
-      }
-    }
-  } catch (err) {
-    // Serverless proxy unavailable (e.g. running purely local Vite dev server without backend)
-    console.debug('Serverless proxy unavailable, falling back to simulated engine.', err);
-  }
-  return null;
-}
+export const getSharedRemainingCount = (): number => {
+  const usage = getStoredSharedUsage();
+  return usage.remaining;
+};
 
 export const hasActiveApiKey = (): boolean => {
-  return Boolean(
-    getStoredApiKey() ||
-    getStoredOpenRouterKey() ||
-    getStoredPerplexityKey() ||
-    hasFreeProxyGenerationsRemaining()
-  );
+  if (hasPersonalApiKey()) return true;
+  return getSharedRemainingCount() > 0;
+};
+
+export const getGenerationTier = (): 'personal' | 'shared' | 'simulated' => {
+  if (hasPersonalApiKey()) return 'personal';
+  if (getSharedRemainingCount() > 0) return 'shared';
+  return 'simulated';
 };
 
 const extractJsonFromResponse = <T>(text: string): T => {
@@ -199,13 +149,12 @@ export async function callGemini(
     return candidate;
   }
 
-  // 3. If no client key is configured, attempt the serverless proxy (Free Daily Allowance)
-  const proxyResult = await callServerlessProxy(prompt, systemInstruction, model, enableSearchGrounding);
-  if (proxyResult) {
-    return proxyResult;
+  // 3. If no client key is configured, attempt the shared serverless proxy (Free Daily Allowance)
+  const { text } = await callSharedProxy(prompt, systemInstruction, enableSearchGrounding, undefined, model);
+  if (!text) {
+    throw new Error('Empty response from shared AI proxy');
   }
-
-  throw new Error('MISSING_API_KEY');
+  return text;
 }
 
 // ----------------------------------------------------
@@ -278,15 +227,19 @@ export async function chatWithPersona(
   }
 
   // 2. If no client key is set, attempt serverless proxy (Free Daily Allowance)
-  const proxyResult = await callServerlessProxy(
-    undefined,
-    systemPrompt,
-    'gemini-2.0-flash',
-    false,
-    contents
-  );
-  if (proxyResult) {
-    return proxyResult;
+  try {
+    const { text } = await callSharedProxy(
+      undefined,
+      systemPrompt,
+      false,
+      contents,
+      'gemini-2.0-flash'
+    );
+    if (text) return text;
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) {
+      throw err; // Honest quota limit error so UI can display friendly modal/warning
+    }
   }
 
   // 3. Fallback to Simulated Persona Responses for Demo Mode
@@ -306,62 +259,61 @@ export async function generateCurriculumWithAI(
   depth: string,
   diagnostic?: DiagnosticAssessment
 ): Promise<AdvisorData> {
-  const hasKey = hasActiveApiKey();
-
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 1000));
-    return getSimulatedCurriculum(topic, destination, diagnostic);
-  }
-
   const prompt = GENERATOR_PROMPTS.generateCurriculum(topic, destination, baseline, hoursPerWeek, depth, diagnostic);
   
-  let raw = '';
   try {
-    // Attempt with Google Search Grounding to verify modern frameworks vs deprecated cuts
-    raw = await callGemini(
-      prompt,
-      'You are an elite academic curriculum architect and dean. Ground your recommendations in current, live industry standards and verified first principles.',
-      'gemini-2.0-flash',
-      true
-    );
-  } catch (err) {
-    // Fallback without search grounding if quota/search issues occur
-    raw = await callGemini(prompt, 'You are an elite academic curriculum architect and dean.', 'gemini-2.0-flash', false);
-  }
+    let raw = '';
+    try {
+      // Attempt with Google Search Grounding to verify modern frameworks vs deprecated cuts
+      raw = await callGemini(
+        prompt,
+        'You are an elite academic curriculum architect and dean. Ground your recommendations in current, live industry standards and verified first principles.',
+        'gemini-2.0-flash',
+        true
+      );
+    } catch (err: any) {
+      if (err.message?.includes('free requests')) throw err;
+      // Fallback without search grounding if quota/search issues occur
+      raw = await callGemini(prompt, 'You are an elite academic curriculum architect and dean.', 'gemini-2.0-flash', false);
+    }
 
-  const parsed = extractJsonFromResponse<{
-    overview: string;
-    estimatedWeeks: number;
-    phases: any[];
-    cutList: any[];
-  }>(raw);
+    const parsed = extractJsonFromResponse<{
+      overview: string;
+      estimatedWeeks: number;
+      phases: any[];
+      cutList: any[];
+    }>(raw);
 
-  return {
-    overview: parsed.overview || `Targeted curriculum for ${topic}`,
-    estimatedWeeks: parsed.estimatedWeeks || 8,
-    phases: (parsed.phases || []).map((p, idx) => ({
-      id: `phase-${idx + 1}-${Date.now()}`,
-      phaseNumber: p.phaseNumber || idx + 1,
-      title: p.title || `Phase ${idx + 1}`,
-      duration: p.duration || '2 weeks',
-      objective: p.objective || '',
-      coreConcepts: p.coreConcepts || [],
-      checkpoint: {
-        id: `cp-${idx + 1}-${Date.now()}`,
-        title: p.checkpoint?.title || 'Phase Checkpoint Project',
-        description: p.checkpoint?.description || 'Build proof-of-work',
+    return {
+      overview: parsed.overview || `Targeted curriculum for ${topic}`,
+      estimatedWeeks: parsed.estimatedWeeks || 8,
+      phases: (parsed.phases || []).map((p, idx) => ({
+        id: `phase-${idx + 1}-${Date.now()}`,
+        phaseNumber: p.phaseNumber || idx + 1,
+        title: p.title || `Phase ${idx + 1}`,
+        duration: p.duration || '2 weeks',
+        objective: p.objective || '',
+        coreConcepts: p.coreConcepts || [],
+        checkpoint: {
+          id: `cp-${idx + 1}-${Date.now()}`,
+          title: p.checkpoint?.title || 'Phase Checkpoint Project',
+          description: p.checkpoint?.description || 'Build proof-of-work',
+          completed: false
+        },
         completed: false
-      },
-      completed: false
-    })),
-    cutList: (parsed.cutList || []).map((c, idx) => ({
-      id: `cut-${idx + 1}-${Date.now()}`,
-      topic: c.topic || 'Outdated Tutorial',
-      reasonToSkip: c.reasonToSkip || 'Low leverage / cognitive noise',
-      alternativeFocus: c.alternativeFocus || 'Focus on foundational mental models'
-    })),
-    chatHistory: []
-  };
+      })),
+      cutList: (parsed.cutList || []).map((c, idx) => ({
+        id: `cut-${idx + 1}-${Date.now()}`,
+        topic: c.topic || 'Outdated Tutorial',
+        reasonToSkip: c.reasonToSkip || 'Low leverage / cognitive noise',
+        alternativeFocus: c.alternativeFocus || 'Focus on foundational mental models'
+      })),
+      chatHistory: []
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
+    return getSimulatedCurriculum(topic, destination, diagnostic);
+  }
 }
 
 export async function generateSourcesWithAI(
@@ -369,205 +321,197 @@ export async function generateSourcesWithAI(
   destination: string,
   baseline: string
 ): Promise<CuratedSource[]> {
-  const hasKey = hasActiveApiKey();
-
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 900));
-    return getSimulatedSources(topic);
-  }
-
-  // 1. Try real-time web grounding via Google Search or Perplexity Sonar
   try {
-    const groundedPrompt = `Find the top 5 most authoritative, seminal books, official documentation, or seminal research papers for mastering "${topic}" (goal: ${destination}). Return a strictly valid JSON array of objects with keys: "type" ('book'|'paper'|'doc'|'case_study'), "title", "authorOrCreator", "url" (valid https URL or official site), "signalScore" (integer 8-10), "whyEssential" (1 sentence), "keyTakeaway" (1 sentence).`;
-    
-    const groundedResult = await queryGroundedAI(
-      groundedPrompt,
-      'You are an elite academic research librarian. Use live web search to verify real existing titles, authors, and URLs. Output only raw JSON.'
-    );
+    // 1. Try real-time web grounding via Google Search or Perplexity Sonar
+    try {
+      const groundedPrompt = `Find the top 5 most authoritative, seminal books, official documentation, or seminal research papers for mastering "${topic}" (goal: ${destination}). Return a strictly valid JSON array of objects with keys: "type" ('book'|'paper'|'doc'|'case_study'), "title", "authorOrCreator", "url" (valid https URL or official site), "signalScore" (integer 8-10), "whyEssential" (1 sentence), "keyTakeaway" (1 sentence).`;
+      
+      const groundedResult = await queryGroundedAI(
+        groundedPrompt,
+        'You are an elite academic research librarian. Use live web search to verify real existing titles, authors, and URLs. Output only raw JSON.'
+      );
 
-    if (groundedResult.text) {
-      const parsed = extractJsonFromResponse<any[]>(groundedResult.text);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((s, idx) => {
-          // Robust citation matching by title/author keywords instead of blind positional array indexing
-          let matchedUrl = s.url && s.url.startsWith('http') ? s.url : '';
+      if (groundedResult.text) {
+        const parsed = extractJsonFromResponse<any[]>(groundedResult.text);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((s, idx) => {
+            let matchedUrl = s.url && s.url.startsWith('http') ? s.url : '';
 
-          if (!matchedUrl && groundedResult.citations && groundedResult.citations.length > 0) {
-            const titleWords = (s.title || '')
-              .toLowerCase()
-              .split(/[\s,.:;'"-]+/)
-              .filter((w: string) => w.length > 3);
-            const authorWords = (s.authorOrCreator || '')
-              .toLowerCase()
-              .split(/[\s,.:;'"-]+/)
-              .filter((w: string) => w.length > 3);
+            if (!matchedUrl && groundedResult.citations && groundedResult.citations.length > 0) {
+              const titleWords = (s.title || '')
+                .toLowerCase()
+                .split(/[\s,.:;'"-]+/)
+                .filter((w: string) => w.length > 3);
+              const authorWords = (s.authorOrCreator || '')
+                .toLowerCase()
+                .split(/[\s,.:;'"-]+/)
+                .filter((w: string) => w.length > 3);
 
-            for (const cit of groundedResult.citations) {
-              const citTitle = (cit.title || '').toLowerCase();
-              const citUrl = (cit.url || '').toLowerCase();
-              const matchesTitle = titleWords.some((w: string) => citTitle.includes(w) || citUrl.includes(w));
-              const matchesAuthor = authorWords.some((w: string) => citTitle.includes(w) || citUrl.includes(w));
+              for (const cit of groundedResult.citations) {
+                const citTitle = (cit.title || '').toLowerCase();
+                const citUrl = (cit.url || '').toLowerCase();
+                const matchesTitle = titleWords.some((w: string) => citTitle.includes(w) || citUrl.includes(w));
+                const matchesAuthor = authorWords.some((w: string) => citTitle.includes(w) || citUrl.includes(w));
 
-              if (matchesTitle || matchesAuthor) {
-                matchedUrl = cit.url;
-                break;
+                if (matchesTitle || matchesAuthor) {
+                  matchedUrl = cit.url;
+                  break;
+                }
               }
             }
-          }
 
-          // Fallback to verified search query rather than a mismatched citation from another book
-          if (!matchedUrl) {
-            matchedUrl = `https://www.google.com/search?q=${encodeURIComponent(`${s.title} ${s.authorOrCreator}`)}`;
-          }
+            if (!matchedUrl) {
+              matchedUrl = `https://www.google.com/search?q=${encodeURIComponent(`${s.title} ${s.authorOrCreator}`)}`;
+            }
 
-          return {
-            id: `source-${idx + 1}-${Date.now()}`,
-            type: s.type || 'book',
-            title: s.title || 'Seminal Source',
-            authorOrCreator: s.authorOrCreator || 'Author',
-            url: matchedUrl,
-            signalScore: s.signalScore || 10,
-            whyEssential: s.whyEssential || 'Top 1% high signal material.',
-            keyTakeaway: s.keyTakeaway || 'Foundational intuition',
-            status: 'unread'
-          };
-        });
+            return {
+              id: `source-${idx + 1}-${Date.now()}`,
+              type: s.type || 'book',
+              title: s.title || 'Seminal Source',
+              authorOrCreator: s.authorOrCreator || 'Author',
+              url: matchedUrl,
+              signalScore: s.signalScore || 10,
+              whyEssential: s.whyEssential || 'Top 1% high signal material.',
+              keyTakeaway: s.keyTakeaway || 'Foundational intuition',
+              status: 'unread'
+            };
+          });
+        }
       }
+    } catch (err: any) {
+      if (err.message?.includes('free requests')) throw err;
     }
-  } catch (err) {
-    console.warn('Grounded source generation fallback to standard prompt', err);
+
+    // 2. Direct Gemini Search Grounding fallback
+    const prompt = GENERATOR_PROMPTS.generateSources(topic, destination, baseline);
+    const raw = await callGemini(prompt, 'You are a master academic research librarian.', 'gemini-2.0-flash', true);
+    const parsed = extractJsonFromResponse<any[]>(raw);
+
+    return parsed.map((s, idx) => ({
+      id: `source-${idx + 1}-${Date.now()}`,
+      type: s.type || 'book',
+      title: s.title || 'Seminal Source',
+      authorOrCreator: s.authorOrCreator || 'Author',
+      url: s.url && s.url.startsWith('http') ? s.url : `https://www.google.com/search?q=${encodeURIComponent(`${s.title || ''} ${s.authorOrCreator || ''}`)}`,
+      signalScore: s.signalScore || 10,
+      whyEssential: s.whyEssential || 'Top 1% high signal material.',
+      keyTakeaway: s.keyTakeaway || 'Foundational intuition',
+      status: 'unread'
+    }));
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
+    return getSimulatedSources(topic);
   }
-
-  // 2. Direct Gemini Search Grounding fallback
-  const prompt = GENERATOR_PROMPTS.generateSources(topic, destination, baseline);
-  const raw = await callGemini(prompt, 'You are a master academic research librarian.', 'gemini-2.0-flash', true);
-  const parsed = extractJsonFromResponse<any[]>(raw);
-
-  return parsed.map((s, idx) => ({
-    id: `source-${idx + 1}-${Date.now()}`,
-    type: s.type || 'book',
-    title: s.title || 'Seminal Source',
-    authorOrCreator: s.authorOrCreator || 'Author',
-    url: s.url && s.url.startsWith('http') ? s.url : `https://www.google.com/search?q=${encodeURIComponent(`${s.title || ''} ${s.authorOrCreator || ''}`)}`,
-    signalScore: s.signalScore || 10,
-    whyEssential: s.whyEssential || 'Top 1% high signal material.',
-    keyTakeaway: s.keyTakeaway || 'Foundational intuition',
-    status: 'unread'
-  }));
 }
 
 export async function evaluateFeynmanWithAI(
   concept: string,
   userExplanation: string
 ): Promise<FeynmanSession> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 1000));
+  const prompt = GENERATOR_PROMPTS.evaluateFeynman(concept, userExplanation);
+  try {
+    const raw = await callGemini(prompt, 'You are a legendary Socratic professor applying the Feynman Technique.');
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      id: `feynman-${Date.now()}`,
+      concept,
+      userExplanation,
+      clarityScore: parsed.clarityScore || 85,
+      accuracyScore: parsed.accuracyScore || 85,
+      strengths: parsed.strengths || ['Good intuition'],
+      blindSpots: parsed.blindSpots || ['Clarify assumptions'],
+      simplifiedAnalogy: parsed.simplifiedAnalogy || 'Think of it like a library index card system...',
+      tutorFeedback: parsed.tutorFeedback || 'Strong grasp of core principles.',
+      date: new Date().toLocaleDateString()
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedFeynman(concept, userExplanation);
   }
-
-  const prompt = GENERATOR_PROMPTS.evaluateFeynman(concept, userExplanation);
-  const raw = await callGemini(prompt, 'You are a legendary Socratic professor applying the Feynman Technique.');
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    id: `feynman-${Date.now()}`,
-    concept,
-    userExplanation,
-    clarityScore: parsed.clarityScore || 85,
-    accuracyScore: parsed.accuracyScore || 85,
-    strengths: parsed.strengths || ['Good intuition'],
-    blindSpots: parsed.blindSpots || ['Clarify assumptions'],
-    simplifiedAnalogy: parsed.simplifiedAnalogy || 'Think of it like a library index card system...',
-    tutorFeedback: parsed.tutorFeedback || 'Strong grasp of core principles.',
-    date: new Date().toLocaleDateString()
-  };
 }
 
 export async function generateQuizWithAI(
   topic: string,
   specificFocus: string
 ): Promise<DiagnosticQuiz> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 900));
+  const prompt = GENERATOR_PROMPTS.generateQuiz(topic, specificFocus);
+  try {
+    const raw = await callGemini(prompt, 'You are a diagnostic examiner finding knowledge gaps.');
+    const parsed = extractJsonFromResponse<any[]>(raw);
+
+    return {
+      id: `quiz-${Date.now()}`,
+      topic: specificFocus || topic,
+      questions: parsed.map((q, idx) => ({
+        id: `q-${idx + 1}`,
+        question: q.question,
+        options: q.options || [],
+        correctIndex: q.correctIndex ?? 0,
+        explanation: q.explanation || ''
+      })),
+      date: new Date().toLocaleDateString()
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedQuiz(topic, specificFocus);
   }
-
-  const prompt = GENERATOR_PROMPTS.generateQuiz(topic, specificFocus);
-  const raw = await callGemini(prompt, 'You are a diagnostic examiner finding knowledge gaps.');
-  const parsed = extractJsonFromResponse<any[]>(raw);
-
-  return {
-    id: `quiz-${Date.now()}`,
-    topic: specificFocus || topic,
-    questions: parsed.map((q, idx) => ({
-      id: `q-${idx + 1}`,
-      question: q.question,
-      options: q.options || [],
-      correctIndex: q.correctIndex ?? 0,
-      explanation: q.explanation || ''
-    })),
-    date: new Date().toLocaleDateString()
-  };
 }
 
 export async function critiqueTextWithAI(
   draft: string,
   mode: 'logic' | 'clarity' | 'steelman' | 'first_principles'
 ): Promise<EditorReview> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 1000));
+  const prompt = GENERATOR_PROMPTS.critiqueText(draft, mode);
+  try {
+    const raw = await callGemini(prompt, 'You are a rigorous, award-winning academic and strategic editor.');
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      id: `review-${Date.now()}`,
+      title: draft.slice(0, 30) + '...',
+      submittedDraft: draft,
+      mode,
+      overallScore: parsed.overallScore || 80,
+      verdict: parsed.verdict || 'Promising thesis with identifiable logical gaps.',
+      strengths: parsed.strengths || [],
+      logicFlaws: parsed.logicFlaws || [],
+      counterarguments: parsed.counterarguments || [],
+      redlines: (parsed.redlines || []).map((r: any, idx: number) => ({
+        id: `redline-${idx + 1}`,
+        originalText: r.originalText,
+        improvedText: r.improvedText,
+        critiqueReason: r.critiqueReason
+      })),
+      revisedVersion: parsed.revisedVersion || draft,
+      date: new Date().toLocaleDateString()
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedCritique(draft, mode);
   }
-
-  const prompt = GENERATOR_PROMPTS.critiqueText(draft, mode);
-  const raw = await callGemini(prompt, 'You are a rigorous, award-winning academic and strategic editor.');
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    id: `review-${Date.now()}`,
-    title: draft.slice(0, 30) + '...',
-    submittedDraft: draft,
-    mode,
-    overallScore: parsed.overallScore || 80,
-    verdict: parsed.verdict || 'Promising thesis with identifiable logical gaps.',
-    strengths: parsed.strengths || [],
-    logicFlaws: parsed.logicFlaws || [],
-    counterarguments: parsed.counterarguments || [],
-    redlines: (parsed.redlines || []).map((r: any, idx: number) => ({
-      id: `redline-${idx + 1}`,
-      originalText: r.originalText,
-      improvedText: r.improvedText,
-      critiqueReason: r.critiqueReason
-    })),
-    revisedVersion: parsed.revisedVersion || draft,
-    date: new Date().toLocaleDateString()
-  };
 }
 
 export async function generateCollisionWithAI(
   topic: string,
   candidateDomain?: string
 ): Promise<DomainCollision> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 800));
+  const prompt = GENERATOR_PROMPTS.generateCollision(topic, candidateDomain);
+  try {
+    const raw = await callGemini(prompt, 'You are an intellectual lateral thinker bridging distant domains.');
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      id: `collision-${Date.now()}`,
+      collidingDomain: parsed.collidingDomain || 'Evolutionary Biology',
+      provocativeThesis: parsed.provocativeThesis || `How ${topic} behaves like an ecological ecosystem`,
+      connectionAnalysis: parsed.connectionAnalysis || 'Cross-disciplinary synthesis',
+      discussionStarters: parsed.discussionStarters || []
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedCollision(topic, candidateDomain);
   }
-
-  const prompt = GENERATOR_PROMPTS.generateCollision(topic, candidateDomain);
-  const raw = await callGemini(prompt, 'You are an intellectual lateral thinker bridging distant domains.');
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    id: `collision-${Date.now()}`,
-    collidingDomain: parsed.collidingDomain || 'Evolutionary Biology',
-    provocativeThesis: parsed.provocativeThesis || `How ${topic} behaves like an ecological ecosystem`,
-    connectionAnalysis: parsed.connectionAnalysis || 'Cross-disciplinary synthesis',
-    discussionStarters: parsed.discussionStarters || []
-  };
 }
 
 export async function teachConceptWithAI(
@@ -576,38 +520,33 @@ export async function teachConceptWithAI(
   destination: string,
   baseline: string
 ): Promise<InteractiveLesson> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 1000));
-    return getSimulatedLesson(topic, concept);
-  }
-
   const prompt = GENERATOR_PROMPTS.teachConcept(topic, concept, destination, baseline);
-  const raw = await callGemini(prompt, 'You are a master professor delivering a high-impact interactive masterclass.');
-  const parsed = extractJsonFromResponse<any>(raw);
+  try {
+    const raw = await callGemini(prompt, 'You are a master professor delivering a high-impact interactive masterclass.');
+    const parsed = extractJsonFromResponse<any>(raw);
 
-  return {
-    id: `lesson-${Date.now()}`,
-    concept,
-    lessonTitle: parsed.lessonTitle || `Mastering ${concept}: Zero-to-Hero Blueprint`,
-    estimatedReadTime: parsed.estimatedReadTime || '8 min masterclass',
-    plainEnglishAnalogy: parsed.plainEnglishAnalogy || `Think of ${concept} like a load-bearing foundation in a skyscraper...`,
-    whyNovicesGetConfused: parsed.whyNovicesGetConfused || 'Most beginners get confused by surface syntax before understanding the underlying state machine and feedback loop.',
-    laymanExplanation: parsed.laymanExplanation || parsed.coreExplanation || 'Core foundational breakdown...',
-    architecturalDiagramOrFlow: parsed.architecturalDiagramOrFlow || '┌──────────┐\n│  Input   │ ──► [ Process ] ──► [ Output ]\n└──────────┘',
-    mechanicsMarkdown: parsed.mechanicsMarkdown || parsed.coreExplanation || 'Deep first-principles technical breakdown...',
-    corePrimitives: parsed.corePrimitives || [
-      { name: 'Control Loop', role: 'Manages step execution and termination criteria', explanation: 'Orchestrates the active state transitions and decides when the final goal is met.' },
-      { name: 'State Context', role: 'Maintains running history and observations', explanation: 'Accumulates previous actions and results so the system does not repeat mistakes.' },
-      { name: 'Execution Vector', role: 'Interacts with tools and environment', explanation: 'Safely executes side-effects with timeout and exception boundaries.' }
-    ],
-    implementationGuide: parsed.implementationGuide || [
-      'Step 1: Define strict input and output type interfaces.',
-      'Step 2: Establish the loop termination condition to prevent infinite recursion.',
-      'Step 3: Implement tool calling with schema validation.',
-      'Step 4: Catch and format runtime errors as observation state for self-correction.'
-    ],
-    codeOrTemplate: parsed.codeOrTemplate || `// First-Principles Implementation Blueprint
+    return {
+      id: `lesson-${Date.now()}`,
+      concept,
+      lessonTitle: parsed.lessonTitle || `Mastering ${concept}: Zero-to-Hero Blueprint`,
+      estimatedReadTime: parsed.estimatedReadTime || '8 min masterclass',
+      plainEnglishAnalogy: parsed.plainEnglishAnalogy || `Think of ${concept} like a load-bearing foundation in a skyscraper...`,
+      whyNovicesGetConfused: parsed.whyNovicesGetConfused || 'Most beginners get confused by surface syntax before understanding the underlying state machine and feedback loop.',
+      laymanExplanation: parsed.laymanExplanation || parsed.coreExplanation || 'Core foundational breakdown...',
+      architecturalDiagramOrFlow: parsed.architecturalDiagramOrFlow || '┌──────────┐\n│  Input   │ ──► [ Process ] ──► [ Output ]\n└──────────┘',
+      mechanicsMarkdown: parsed.mechanicsMarkdown || parsed.coreExplanation || 'Deep first-principles technical breakdown...',
+      corePrimitives: parsed.corePrimitives || [
+        { name: 'Control Loop', role: 'Manages step execution and termination criteria', explanation: 'Orchestrates the active state transitions and decides when the final goal is met.' },
+        { name: 'State Context', role: 'Maintains running history and observations', explanation: 'Accumulates previous actions and results so the system does not repeat mistakes.' },
+        { name: 'Execution Vector', role: 'Interacts with tools and environment', explanation: 'Safely executes side-effects with timeout and exception boundaries.' }
+      ],
+      implementationGuide: parsed.implementationGuide || [
+        'Step 1: Define strict input and output type interfaces.',
+        'Step 2: Establish the loop termination condition to prevent infinite recursion.',
+        'Step 3: Implement tool calling with schema validation.',
+        'Step 4: Catch and format runtime errors as observation state for self-correction.'
+      ],
+      codeOrTemplate: parsed.codeOrTemplate || `// First-Principles Implementation Blueprint
 export async function runAgentLoop(task: string, maxIterations = 5) {
   let state = { task, history: [], isFinished: false };
   
@@ -629,25 +568,29 @@ export async function runAgentLoop(task: string, maxIterations = 5) {
   }
   return state;
 }`,
-    howMastersUseIt: parsed.howMastersUseIt || 'Top 1% engineers avoid heavy magic abstractions; they write clean, deterministic state loops with explicit observability.',
-    commonPitfalls: parsed.commonPitfalls || [
-      'Infinite Loops: Forgetting a hard iteration limit or token ceiling.',
-      'Unchecked Tool Output: Passing massive 100KB raw API payloads into the prompt context window.'
-    ],
-    cutListFluff: parsed.cutListFluff || 'Skip superficial tutorials that hide the loop behind black-box wrappers without teaching state handling.',
-    coreExplanation: parsed.coreExplanation || parsed.mechanicsMarkdown || 'Comprehensive masterclass synthesis.',
-    keyTakeaways: parsed.keyTakeaways || [
-      '1. Explicit state transitions beat opaque prompts every time.',
-      '2. Errors from tools must be fed back as observations for self-healing.',
-      '3. Always bound iterations and validate schema contracts.'
-    ],
-    audioOverview: parsed.audioOverview,
-    videoDeck: parsed.videoDeck,
-    socraticChallenge: parsed.socraticChallenge || 'How would you adapt this architecture to recover when an external API times out after 3 retries?',
-    practiceTask: parsed.practiceTask || 'Write a 20-line working prototype of this loop in the scratchpad below and click "Send to Editor" for redline review.',
-    mastered: false,
-    createdAt: new Date().toLocaleDateString()
-  };
+      howMastersUseIt: parsed.howMastersUseIt || 'Top 1% engineers avoid heavy magic abstractions; they write clean, deterministic state loops with explicit observability.',
+      commonPitfalls: parsed.commonPitfalls || [
+        'Infinite Loops: Forgetting a hard iteration limit or token ceiling.',
+        'Unchecked Tool Output: Passing massive 100KB raw API payloads into the prompt context window.'
+      ],
+      cutListFluff: parsed.cutListFluff || 'Skip superficial tutorials that hide the loop behind black-box wrappers without teaching state handling.',
+      coreExplanation: parsed.coreExplanation || parsed.mechanicsMarkdown || 'Comprehensive masterclass synthesis.',
+      keyTakeaways: parsed.keyTakeaways || [
+        '1. Explicit state transitions beat opaque prompts every time.',
+        '2. Errors from tools must be fed back as observations for self-healing.',
+        '3. Always bound iterations and validate schema contracts.'
+      ],
+      audioOverview: parsed.audioOverview,
+      videoDeck: parsed.videoDeck,
+      socraticChallenge: parsed.socraticChallenge || 'How would you adapt this architecture to recover when an external API times out after 3 retries?',
+      practiceTask: parsed.practiceTask || 'Write a 20-line working prototype of this loop in the scratchpad below and click "Send to Editor" for redline review.',
+      mastered: false,
+      createdAt: new Date().toLocaleDateString()
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
+    return getSimulatedLesson(topic, concept);
+  }
 }
 
 export async function evaluateLessonResponseWithAI(
@@ -655,9 +598,20 @@ export async function evaluateLessonResponseWithAI(
   challenge: string,
   studentResponse: string
 ): Promise<{ mastered: boolean; score: number; strengths: string; nuanceOrGap: string; coachingVerdict: string }> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 900));
+  const prompt = GENERATOR_PROMPTS.evaluateLessonResponse(concept, challenge, studentResponse);
+  try {
+    const raw = await callGemini(prompt, 'You are a rigorous Socratic examiner. Do not rubber-stamp shallow answers. Demand clear first-principles explanations before granting mastery.');
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      mastered: parsed.mastered ?? false,
+      score: parsed.score ?? 70,
+      strengths: parsed.strengths || 'Good attempt at framing the answer.',
+      nuanceOrGap: parsed.nuanceOrGap || 'Deepen your explanation of edge-case recovery and invariants.',
+      coachingVerdict: parsed.coachingVerdict || 'Review coaching feedback.'
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     
     // Dynamic Simulated Evaluation: Strict Grading
     const words = studentResponse.trim().split(/\s+/).filter(Boolean);
@@ -685,18 +639,6 @@ export async function evaluateLessonResponseWithAI(
       coachingVerdict: 'Concept Verified & Mastered! You have demonstrated true applied first-principles understanding.'
     };
   }
-
-  const prompt = GENERATOR_PROMPTS.evaluateLessonResponse(concept, challenge, studentResponse);
-  const raw = await callGemini(prompt, 'You are a rigorous Socratic examiner. Do not rubber-stamp shallow answers. Demand clear first-principles explanations before granting mastery.');
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    mastered: parsed.mastered ?? false,
-    score: parsed.score ?? 70,
-    strengths: parsed.strengths || 'Good attempt at framing the answer.',
-    nuanceOrGap: parsed.nuanceOrGap || 'Deepen your explanation of edge-case recovery and invariants.',
-    coachingVerdict: parsed.coachingVerdict || 'Review coaching feedback.'
-  };
 }
 
 export async function generateDiagnosticQuestionsWithAI(
@@ -704,24 +646,22 @@ export async function generateDiagnosticQuestionsWithAI(
   destination: string,
   baseline: string
 ): Promise<DiagnosticQuestion[]> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 600));
-    return getSimulatedDiagnosticQuestions(topic, destination);
-  }
-
   const prompt = GENERATOR_PROMPTS.generateDiagnosticQuestions(topic, destination, baseline);
-  const raw = await callGemini(prompt, 'You are an elite Socratic intake professor grilling a prospective student.');
-  const parsed = extractJsonFromResponse<any[]>(raw);
+  try {
+    const raw = await callGemini(prompt, 'You are an elite Socratic intake professor grilling a prospective student.');
+    const parsed = extractJsonFromResponse<any[]>(raw);
 
-  if (Array.isArray(parsed) && parsed.length > 0) {
-    return parsed.map((q, idx) => ({
-      id: q.id || `diag-${idx + 1}`,
-      type: q.type || (idx === 0 ? 'clarification' : idx === 1 ? 'claimed_baseline' : 'technical_probe'),
-      question: q.question,
-      contextReason: q.contextReason || 'Calibrates curriculum to your exact frontier of competence',
-      suggestedOptions: q.suggestedOptions || []
-    }));
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((q, idx) => ({
+        id: q.id || `diag-${idx + 1}`,
+        type: q.type || (idx === 0 ? 'clarification' : idx === 1 ? 'claimed_baseline' : 'technical_probe'),
+        question: q.question,
+        contextReason: q.contextReason || 'Calibrates curriculum to your exact frontier of competence',
+        suggestedOptions: q.suggestedOptions || []
+      }));
+    }
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
   }
 
   return getSimulatedDiagnosticQuestions(topic, destination);
@@ -737,77 +677,75 @@ export async function conductAdvisorIntakeTurnWithAI(
   isInterviewComplete: boolean;
   turnStage: string;
 }> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 600));
+  const prompt = GENERATOR_PROMPTS.conductAdvisorIntakeTurn(topic, history, userResponse);
+  try {
+    const raw = await callGemini(
+      prompt,
+      'You are a warm, welcoming, and encouraging AI Academic Advisor conducting a 1-on-1 friendly intake conversation.'
+    );
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      advisorMessage: parsed.advisorMessage || `Tell me more about what you'd love to achieve with ${topic}!`,
+      suggestedQuickReplies: parsed.suggestedQuickReplies || ['I want to build a complete project', 'I am starting from scratch', 'I have basic experience'],
+      isInterviewComplete: parsed.isInterviewComplete ?? false,
+      turnStage: parsed.turnStage || 'conversation'
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedAdvisorIntakeTurn(topic, history, userResponse);
   }
-
-  const prompt = GENERATOR_PROMPTS.conductAdvisorIntakeTurn(topic, history, userResponse);
-  const raw = await callGemini(
-    prompt,
-    'You are a warm, welcoming, and encouraging AI Academic Advisor conducting a 1-on-1 friendly intake conversation.'
-  );
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    advisorMessage: parsed.advisorMessage || `Tell me more about what you'd love to achieve with ${topic}!`,
-    suggestedQuickReplies: parsed.suggestedQuickReplies || ['I want to build a complete project', 'I am starting from scratch', 'I have basic experience'],
-    isInterviewComplete: parsed.isInterviewComplete ?? false,
-    turnStage: parsed.turnStage || 'conversation'
-  };
 }
 
 export async function evaluateDiagnosticAnswersWithAI(
   topic: string,
   qaPairs: Array<{ question: string; answer: string; type?: string }>
 ): Promise<DiagnosticAssessment> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 800));
+  const prompt = GENERATOR_PROMPTS.evaluateDiagnosticAnswers(topic, qaPairs);
+  try {
+    const raw = await callGemini(prompt, 'You are a supportive, insightful Academic Advisor creating a personalized curriculum.');
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      refinedTopic: parsed.refinedTopic || topic,
+      refinedDestination: parsed.refinedDestination || `Master ${topic} with a real-world project`,
+      actualBaselineAssessment: parsed.actualBaselineAssessment || 'Curious autodidact with specific strengths and areas to build confidence',
+      masteredStrengths: parsed.masteredStrengths || ['Clear motivation and strategic vision'],
+      criticalGapsToFill: parsed.criticalGapsToFill || ['Foundational core steps and starter confidence'],
+      recommendedStartingPhase: parsed.recommendedStartingPhase || 1,
+      recommendedCutList: parsed.recommendedCutList || ['Skip generic low-value video lectures', 'Avoid passive consumption without building'],
+      diagnosticScore: parsed.diagnosticScore || 80,
+      whyCustomizedExplanation: parsed.whyCustomizedExplanation || `We customized your roadmap to focus on hands-on building while ensuring you master foundational concepts first.`,
+      addedCoursesReason: parsed.addedCoursesReason || `We added Phase 1 foundational checkpoints so you have 100% confidence before moving to advanced milestones.`,
+      subtractedCoursesReason: parsed.subtractedCoursesReason || `We cut out unnecessary fluff so you save dozens of hours and focus on what works.`,
+      phasesSummary: parsed.phasesSummary || [
+        {
+          phaseNumber: 1,
+          title: 'Foundations & First Prototype',
+          duration: 'Weeks 1-2',
+          tangibleAsset: 'Working First Prototype / Outline',
+          whyThisOrder: 'Validates your core idea and builds initial momentum with zero overwhelm.'
+        },
+        {
+          phaseNumber: 2,
+          title: 'Core Build & Execution',
+          duration: 'Weeks 3-4',
+          tangibleAsset: 'Complete Functional Milestone',
+          whyThisOrder: 'Develops the primary asset using the validated foundations from Phase 1.'
+        },
+        {
+          phaseNumber: 3,
+          title: 'Polish, Launch & Real-World Results',
+          duration: 'Weeks 5-6',
+          tangibleAsset: 'Live Published Deliverable',
+          whyThisOrder: 'Brings your project into the real world for feedback and tangible proof.'
+        }
+      ]
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedDiagnosticEvaluation(topic, qaPairs);
   }
-
-  const prompt = GENERATOR_PROMPTS.evaluateDiagnosticAnswers(topic, qaPairs);
-  const raw = await callGemini(prompt, 'You are a supportive, insightful Academic Advisor creating a personalized curriculum.');
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    refinedTopic: parsed.refinedTopic || topic,
-    refinedDestination: parsed.refinedDestination || `Master ${topic} with a real-world project`,
-    actualBaselineAssessment: parsed.actualBaselineAssessment || 'Curious autodidact with specific strengths and areas to build confidence',
-    masteredStrengths: parsed.masteredStrengths || ['Clear motivation and strategic vision'],
-    criticalGapsToFill: parsed.criticalGapsToFill || ['Foundational core steps and starter confidence'],
-    recommendedStartingPhase: parsed.recommendedStartingPhase || 1,
-    recommendedCutList: parsed.recommendedCutList || ['Skip generic low-value video lectures', 'Avoid passive consumption without building'],
-    diagnosticScore: parsed.diagnosticScore || 80,
-    whyCustomizedExplanation: parsed.whyCustomizedExplanation || `We customized your roadmap to focus on hands-on building while ensuring you master foundational concepts first.`,
-    addedCoursesReason: parsed.addedCoursesReason || `We added Phase 1 foundational checkpoints so you have 100% confidence before moving to advanced milestones.`,
-    subtractedCoursesReason: parsed.subtractedCoursesReason || `We cut out unnecessary fluff so you save dozens of hours and focus on what works.`,
-    phasesSummary: parsed.phasesSummary || [
-      {
-        phaseNumber: 1,
-        title: 'Foundations & First Prototype',
-        duration: 'Weeks 1-2',
-        tangibleAsset: 'Working First Prototype / Outline',
-        whyThisOrder: 'Validates your core idea and builds initial momentum with zero overwhelm.'
-      },
-      {
-        phaseNumber: 2,
-        title: 'Core Build & Execution',
-        duration: 'Weeks 3-4',
-        tangibleAsset: 'Complete Functional Milestone',
-        whyThisOrder: 'Develops the primary asset using the validated foundations from Phase 1.'
-      },
-      {
-        phaseNumber: 3,
-        title: 'Polish, Launch & Real-World Results',
-        duration: 'Weeks 5-6',
-        tangibleAsset: 'Live Published Deliverable',
-        whyThisOrder: 'Brings your project into the real world for feedback and tangible proof.'
-      }
-    ]
-  };
 }
 
 export async function converseSocraticLessonWithAI(
@@ -823,23 +761,22 @@ export async function converseSocraticLessonWithAI(
   checkInQuestion: string;
   isConceptMastered: boolean;
 }> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 700));
+  const prompt = GENERATOR_PROMPTS.converseSocraticLesson(topic, concept, currentStage, history, studentInput);
+  try {
+    const raw = await callGemini(prompt, 'You are a lively, interactive Socratic master professor in a 1-on-1 private lesson. Hold the student to high standards and do not grant mastery until they demonstrate clear first-principles understanding.');
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      tutorSpeech: parsed.tutorSpeech || `Let's break down ${concept} from first principles.`,
+      stageName: parsed.stageName || currentStage,
+      tutorFeedbackOnStudent: parsed.tutorFeedbackOnStudent || undefined,
+      checkInQuestion: parsed.checkInQuestion || 'How would you apply this invariant in a live failure scenario?',
+      isConceptMastered: parsed.isConceptMastered ?? false
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedSocraticTurn(concept, currentStage, studentInput);
   }
-
-  const prompt = GENERATOR_PROMPTS.converseSocraticLesson(topic, concept, currentStage, history, studentInput);
-  const raw = await callGemini(prompt, 'You are a lively, interactive Socratic master professor in a 1-on-1 private lesson. Hold the student to high standards and do not grant mastery until they demonstrate clear first-principles understanding.');
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    tutorSpeech: parsed.tutorSpeech || `Let's break down ${concept} from first principles.`,
-    stageName: parsed.stageName || currentStage,
-    tutorFeedbackOnStudent: parsed.tutorFeedbackOnStudent || undefined,
-    checkInQuestion: parsed.checkInQuestion || 'How would you apply this invariant in a live failure scenario?',
-    isConceptMastered: parsed.isConceptMastered ?? false
-  };
 }
 
 export async function synthesizeSourceWithAI(
@@ -847,67 +784,66 @@ export async function synthesizeSourceWithAI(
   author: string,
   topic: string
 ): Promise<SourceDeepDive> {
-  const hasKey = hasActiveApiKey();
-  if (!hasKey) {
-    await new Promise((r) => setTimeout(r, 900));
+  const prompt = GENERATOR_PROMPTS.synthesizeSource(sourceTitle, author, topic);
+  try {
+    const raw = await callGemini(
+      prompt,
+      'You are a world-class university professor directly teaching seminal concepts from zero to hero.'
+    );
+    const parsed = extractJsonFromResponse<any>(raw);
+
+    return {
+      id: `dive-${Date.now()}`,
+      sourceTitle: parsed.sourceTitle || sourceTitle,
+      author: parsed.author || author,
+      topic: parsed.topic || topic,
+      estimatedTime: parsed.estimatedTime || '8 min masterclass',
+      bigIdea: parsed.bigIdea || 'Central thesis and paradigm shift.',
+      topMentalModels: parsed.topMentalModels || [
+        { model: 'First-Principles Deconstruction', explanation: 'Break down complex problems into basic truths that cannot be deduced any further.' }
+      ],
+      practicalApplication: parsed.practicalApplication || 'How to apply this in your project.',
+      cutListFluff: parsed.cutListFluff || 'Historical background chapters can be skipped.',
+      plainEnglishIntuition: parsed.plainEnglishIntuition || {
+        coreMetaphor: `Think of ${sourceTitle} like building a sturdy suspension bridge: before decorating the towers, you must anchor the bedrock cables.`,
+        whyNovicesGetConfused: 'Beginners focus on superficial tools rather than understanding the underlying system constraint.',
+        laymanExplanation: `To master ${sourceTitle}, you must start with the simplest possible invariant and build upward without unnecessary jargon.`
+      },
+      mechanicsAndAnatomy: parsed.mechanicsAndAnatomy || {
+        architecturalDiagramOrFlow: `[ Input ] ──► [ Core Mechanism ] ──► [ Output Feedback Loop ]`,
+        deepExplanationMarkdown: `### How It Works Under the Hood\n\nThe fundamental breakthrough of ${sourceTitle} is organizing execution into structured, self-correcting feedback loops.`,
+        corePrimitives: [
+          { name: 'Core Primitive 1', role: 'Input Processing', explanation: 'Decomposes the incoming objective into discrete actionable units.' },
+          { name: 'Core Primitive 2', role: 'Execution Engine', explanation: 'Runs the primary operation against real-world constraints.' },
+          { name: 'Core Primitive 3', role: 'Observation Loop', explanation: 'Inspects feedback and updates state before proceeding.' }
+        ]
+      },
+      implementationBlueprint: parsed.implementationBlueprint || {
+        stepByStepGuide: [
+          'Step 1: Isolate the core invariant and define your input/output schema.',
+          'Step 2: Implement the minimal viable loop without premature optimization.',
+          'Step 3: Test failure boundaries and edge cases before scaling.'
+        ],
+        codeOrTemplate: `// Minimal Tactical Implementation of ${sourceTitle}\nfunction executeConcept(input) {\n  const state = initializeState(input);\n  return processLoop(state);\n}`,
+        howMastersUseIt: 'Top practitioners automate feedback validation and decouple state management from business logic.'
+      },
+      trapsAndCutList: parsed.trapsAndCutList || {
+        commonPitfalls: [
+          'Prematurely adding secondary features before the core loop is proven.',
+          'Ignoring failure feedback and letting errors compound silently.'
+        ],
+        cutListFluff: parsed.cutListFluff || 'Skip historical anecdotes and outdated legacy benchmarks.'
+      },
+      socraticSparring: parsed.socraticSparring || {
+        realWorldScenario: `You are building a mission-critical system in ${topic} with strict latency and zero tolerance for hallucinations.`,
+        challengeQuestion: `How would you apply the core lessons of ${sourceTitle} to guarantee that unexpected errors trigger immediate self-correction rather than crashing the system?`,
+        sampleStrongAnswer: 'By wrapping execution in an explicit Thought-Action-Observation loop with state checkpointing.'
+      }
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
     return getSimulatedSourceDeepDive(sourceTitle, author, topic);
   }
-
-  const prompt = GENERATOR_PROMPTS.synthesizeSource(sourceTitle, author, topic);
-  const raw = await callGemini(
-    prompt,
-    'You are a world-class university professor directly teaching seminal concepts from zero to hero.'
-  );
-  const parsed = extractJsonFromResponse<any>(raw);
-
-  return {
-    id: `dive-${Date.now()}`,
-    sourceTitle: parsed.sourceTitle || sourceTitle,
-    author: parsed.author || author,
-    topic: parsed.topic || topic,
-    estimatedTime: parsed.estimatedTime || '8 min masterclass',
-    bigIdea: parsed.bigIdea || 'Central thesis and paradigm shift.',
-    topMentalModels: parsed.topMentalModels || [
-      { model: 'First-Principles Deconstruction', explanation: 'Break down complex problems into basic truths that cannot be deduced any further.' }
-    ],
-    practicalApplication: parsed.practicalApplication || 'How to apply this in your project.',
-    cutListFluff: parsed.cutListFluff || 'Historical background chapters can be skipped.',
-    plainEnglishIntuition: parsed.plainEnglishIntuition || {
-      coreMetaphor: `Think of ${sourceTitle} like building a sturdy suspension bridge: before decorating the towers, you must anchor the bedrock cables.`,
-      whyNovicesGetConfused: 'Beginners focus on superficial tools rather than understanding the underlying system constraint.',
-      laymanExplanation: `To master ${sourceTitle}, you must start with the simplest possible invariant and build upward without unnecessary jargon.`
-    },
-    mechanicsAndAnatomy: parsed.mechanicsAndAnatomy || {
-      architecturalDiagramOrFlow: `[ Input ] ──► [ Core Mechanism ] ──► [ Output Feedback Loop ]`,
-      deepExplanationMarkdown: `### How It Works Under the Hood\n\nThe fundamental breakthrough of ${sourceTitle} is organizing execution into structured, self-correcting feedback loops.`,
-      corePrimitives: [
-        { name: 'Core Primitive 1', role: 'Input Processing', explanation: 'Decomposes the incoming objective into discrete actionable units.' },
-        { name: 'Core Primitive 2', role: 'Execution Engine', explanation: 'Runs the primary operation against real-world constraints.' },
-        { name: 'Core Primitive 3', role: 'Observation Loop', explanation: 'Inspects feedback and updates state before proceeding.' }
-      ]
-    },
-    implementationBlueprint: parsed.implementationBlueprint || {
-      stepByStepGuide: [
-        'Step 1: Isolate the core invariant and define your input/output schema.',
-        'Step 2: Implement the minimal viable loop without premature optimization.',
-        'Step 3: Test failure boundaries and edge cases before scaling.'
-      ],
-      codeOrTemplate: `// Minimal Tactical Implementation of ${sourceTitle}\nfunction executeConcept(input) {\n  const state = initializeState(input);\n  return processLoop(state);\n}`,
-      howMastersUseIt: 'Top practitioners automate feedback validation and decouple state management from business logic.'
-    },
-    trapsAndCutList: parsed.trapsAndCutList || {
-      commonPitfalls: [
-        'Prematurely adding secondary features before the core loop is proven.',
-        'Ignoring failure feedback and letting errors compound silently.'
-      ],
-      cutListFluff: parsed.cutListFluff || 'Skip historical anecdotes and outdated legacy benchmarks.'
-    },
-    socraticSparring: parsed.socraticSparring || {
-      realWorldScenario: `You are building a mission-critical system in ${topic} with strict latency and zero tolerance for hallucinations.`,
-      challengeQuestion: `How would you apply the core lessons of ${sourceTitle} to guarantee that unexpected errors trigger immediate self-correction rather than crashing the system?`,
-      sampleStrongAnswer: 'By wrapping execution in an explicit Thought-Action-Observation loop with state checkpointing.'
-    }
-  };
 }
 
 export async function triageStuckStudentWithAI(
@@ -917,12 +853,6 @@ export async function triageStuckStudentWithAI(
   blockerType: string,
   blockerDetails: string
 ): Promise<StuckTriageResult> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
-    await new Promise((r) => setTimeout(r, 900));
-    return getSimulatedStuckTriage(topic, blockerType, blockerDetails);
-  }
-
   const prompt = GENERATOR_PROMPTS.triageStuckStudent(
     topic,
     phaseTitle,
@@ -930,21 +860,26 @@ export async function triageStuckStudentWithAI(
     blockerType,
     blockerDetails
   );
-  const raw = await callGemini(
-    prompt,
-    'You are an empathetic, ultra-pragmatic Dean of Momentum & Acceleration in an elite autodidactic academy.'
-  );
-  const parsed = extractJsonFromResponse<any>(raw);
+  try {
+    const raw = await callGemini(
+      prompt,
+      'You are an empathetic, ultra-pragmatic Dean of Momentum & Acceleration in an elite autodidactic academy.'
+    );
+    const parsed = extractJsonFromResponse<any>(raw);
 
-  return {
-    id: `triage-${Date.now()}`,
-    blockerSummary: parsed.blockerSummary || 'Overwhelm caused by trying to solve too many variables simultaneously.',
-    microAction5Min: parsed.microAction5Min || 'Write down the single input and single expected output of your next step.',
-    starterScaffold: parsed.starterScaffold || '// Minimal Starter Scaffold\nfunction executeStep() {\n  // 1. Fill in basic variable\n  const input = "test";\n  return input;\n}',
-    complexityReductionCut: parsed.complexityReductionCut || 'Ignore styling, edge cases, and scalability. Focus only on the happy path.',
-    mindsetReframing: parsed.mindsetReframing || 'Make it work before you make it good. Make it good before you make it fast.',
-    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  };
+    return {
+      id: `triage-${Date.now()}`,
+      blockerSummary: parsed.blockerSummary || 'Overwhelm caused by trying to solve too many variables simultaneously.',
+      microAction5Min: parsed.microAction5Min || 'Write down the single input and single expected output of your next step.',
+      starterScaffold: parsed.starterScaffold || '// Minimal Starter Scaffold\nfunction executeStep() {\n  // 1. Fill in basic variable\n  const input = "test";\n  return input;\n}',
+      complexityReductionCut: parsed.complexityReductionCut || 'Ignore styling, edge cases, and scalability. Focus only on the happy path.',
+      mindsetReframing: parsed.mindsetReframing || 'Make it work before you make it good. Make it good before you make it fast.',
+      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  } catch (err: any) {
+    if (err.message?.includes('free requests')) throw err;
+    return getSimulatedStuckTriage(topic, blockerType, blockerDetails);
+  }
 }
 
 function getSimulatedAdvisorIntakeTurn(

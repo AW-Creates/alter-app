@@ -25,7 +25,7 @@ import {
   Package,
   Target
 } from 'lucide-react';
-import { generateCurriculumWithAI, chatWithPersona, hasActiveApiKey } from '../../services/gemini';
+import { generateCurriculumWithAI, chatWithPersona, hasActiveApiKey, getGenerationTier, getSharedRemainingCount } from '../../services/gemini';
 import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
@@ -513,15 +513,28 @@ export const AdvisorView: React.FC = () => {
               <span className="text-[10px] font-mono uppercase bg-[rgba(234,176,84,0.1)] text-[var(--editor)] border border-[rgba(234,176,84,0.25)] px-1.5 py-0.5 rounded font-semibold">
                 Sandeep Swadia Rule
               </span>
-              {hasActiveApiKey() ? (
-                <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
-                  <Globe size={10} /> Live Grounded
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)] px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
-                  <Sparkles size={10} /> Curated Baseline
-                </span>
-              )}
+              {(() => {
+                const tier = getGenerationTier();
+                if (tier === 'personal') {
+                  return (
+                    <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
+                      <Globe size={10} /> Live Grounded
+                    </span>
+                  );
+                }
+                if (tier === 'shared') {
+                  return (
+                    <span className="text-[10px] font-mono uppercase bg-sky-500/10 text-sky-400 border border-sky-500/25 px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
+                      <Globe size={10} /> Live Free Tier ({getSharedRemainingCount()}/5)
+                    </span>
+                  );
+                }
+                return (
+                  <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)] px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
+                    <Sparkles size={10} /> Curated Baseline
+                  </span>
+                );
+              })()}
             </div>
             <div className="space-y-2.5">
               {advisorData.cutList.map((item) => (
