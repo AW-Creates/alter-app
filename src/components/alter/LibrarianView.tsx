@@ -291,64 +291,96 @@ export const LibrarianView: React.FC = () => {
         {/* Tab 1: Curated Sources */}
         {activeSubTab === 'sources' && (
           <div className="space-y-3.5">
-            {librarianData.sources.map((source) => (
-              <div key={source.id} className="source-card">
-                <div className="source-head">
-                  <div>
-                    <p className="source-title">{source.title}</p>
-                    <p className="source-author">By {source.authorOrCreator}</p>
-                  </div>
-                  <span className="signal-badge">
-                    Signal {source.signalScore}/10
-                  </span>
+            {librarianData.sources.length === 0 ? (
+              <div className="card p-8 text-center space-y-3 border-[var(--librarian)]/30">
+                <BookOpen size={32} className="text-[var(--librarian)] mx-auto opacity-70" />
+                <div className="space-y-1">
+                  <h4 className="font-display font-bold text-base text-[var(--ink)]">
+                    No Primary Sources Curated Yet
+                  </h4>
+                  <p className="text-xs text-[var(--ink-3)] max-w-md mx-auto leading-relaxed font-sans">
+                    The Librarian curates the top 1% definitive books, research papers, and case studies for <strong>{activeJourney.topic}</strong>.
+                  </p>
                 </div>
-
-                <p className="source-row">
-                  <b>Why essential —</b> {source.whyEssential}
-                </p>
-                <p className="source-row" style={{ marginTop: '4px' }}>
-                  <b>Key takeaway —</b> {source.keyTakeaway}
-                </p>
-
-                {/* Direct Zero-to-Hero Teaching Button */}
-                <div className="pt-2">
-                  <button
-                    onClick={() => handleOpenDeepDive(source)}
-                    className="px-3 py-1.5 rounded-lg bg-[color-mix(in_srgb,var(--librarian)_12%,var(--surface-2))] hover:bg-[color-mix(in_srgb,var(--librarian)_20%,var(--surface-2))] border border-[color-mix(in_srgb,var(--librarian)_35%,transparent)] text-xs font-semibold text-[var(--librarian)] transition flex items-center gap-1.5 shadow-2xs group"
-                  >
-                    <GraduationCap size={14} className="group-hover:scale-110 transition-transform" />
-                    <span>🎓 Teach Me This Source (Zero to Hero Masterclass) →</span>
-                  </button>
-                </div>
-
-                <div className="source-footer">
-                  <div className="status-pills">
-                    {(['unread', 'reading', 'mastered'] as ReadingStatus[]).map((st) => (
-                      <button
-                        key={st}
-                        onClick={() => updateSourceStatus(source.id, st)}
-                        className={`status-pill capitalize ${
-                          source.status === st ? 'active' : ''
-                        }`}
-                      >
-                        {st}
-                      </button>
-                    ))}
-                  </div>
-
-                  {source.url && (
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="open-link"
-                    >
-                      <span>Open primary source ↗</span>
-                    </a>
+                <button
+                  onClick={handleCurateTopSources}
+                  disabled={isCurating}
+                  className="accent-btn mx-auto cursor-pointer"
+                  style={{ background: 'var(--librarian)', padding: '8px 20px', borderRadius: '10px' }}
+                >
+                  {isCurating ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Curating Top 1% Sources...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={14} />
+                      <span>Curate Top 1% Sources Now →</span>
+                    </>
                   )}
-                </div>
+                </button>
               </div>
-            ))}
+            ) : (
+              librarianData.sources.map((source) => (
+                <div key={source.id} className="source-card">
+                  <div className="source-head">
+                    <div>
+                      <p className="source-title">{source.title}</p>
+                      <p className="source-author">By {source.authorOrCreator}</p>
+                    </div>
+                    <span className="signal-badge">
+                      Signal {source.signalScore}/10
+                    </span>
+                  </div>
+
+                  <p className="source-row">
+                    <b>Why essential —</b> {source.whyEssential}
+                  </p>
+                  <p className="source-row" style={{ marginTop: '4px' }}>
+                    <b>Key takeaway —</b> {source.keyTakeaway}
+                  </p>
+
+                  {/* Direct Zero-to-Hero Teaching Button */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => handleOpenDeepDive(source)}
+                      className="px-3 py-1.5 rounded-lg bg-[color-mix(in_srgb,var(--librarian)_12%,var(--surface-2))] hover:bg-[color-mix(in_srgb,var(--librarian)_20%,var(--surface-2))] border border-[color-mix(in_srgb,var(--librarian)_35%,transparent)] text-xs font-semibold text-[var(--librarian)] transition flex items-center gap-1.5 shadow-2xs group cursor-pointer"
+                    >
+                      <GraduationCap size={14} className="group-hover:scale-110 transition-transform" />
+                      <span>🎓 Teach Me This Source (Zero to Hero Masterclass) →</span>
+                    </button>
+                  </div>
+
+                  <div className="source-footer">
+                    <div className="status-pills">
+                      {(['unread', 'reading', 'mastered'] as ReadingStatus[]).map((st) => (
+                        <button
+                          key={st}
+                          onClick={() => updateSourceStatus(source.id, st)}
+                          className={`status-pill capitalize ${
+                            source.status === st ? 'active' : ''
+                          }`}
+                        >
+                          {st}
+                        </button>
+                      ))}
+                    </div>
+
+                    {source.url && (
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="open-link"
+                      >
+                        <span>Open primary source ↗</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 

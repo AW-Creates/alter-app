@@ -36,7 +36,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
     setActivePersona,
     apiKey,
     setIsApiKeyModalOpen,
-    setIsCreateModalOpen
+    setIsCreateModalOpen,
+    setIsOnboardingTourOpen
   } = useJourney();
 
   const { user, setIsAuthModalOpen } = useAuth();
@@ -146,6 +147,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
             🔥 {activeJourney.streakDays}d streak
           </span>
         )}
+
+        {/* Guide / How It Works Tour Trigger */}
+        <button
+          onClick={() => setIsOnboardingTourOpen(true)}
+          className="demo-mode hover:text-[var(--advisor)] font-bold text-xs"
+          title="How Altor Works — 1-Minute Walkthrough"
+        >
+          <Sparkles size={13} className="text-[var(--advisor)]" />
+          <span>Guide</span>
+        </button>
 
         {/* Pricing / Tiers Modal Trigger */}
         <button

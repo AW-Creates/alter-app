@@ -16,15 +16,19 @@ import {
 import { ImStuckModal } from './ImStuckModal';
 
 export const MomentumHUD: React.FC = () => {
-  const { activeJourney, setActivePersona } = useJourney();
+  const { activeJourney, setActivePersona, navigateToTutorConcept, setIsOnboardingTourOpen } = useJourney();
   const [isStuckModalOpen, setIsStuckModalOpen] = useState(false);
 
   if (!activeJourney) return null;
 
   const { advisorData, streakDays } = activeJourney;
-  const phases = advisorData.phases || [];
+  const phases = advisorData?.phases || [];
+  const totalPhasesCount = phases.length > 0 ? phases.length : 3;
   const activePhase = phases.find((p) => !p.completed) || phases[0];
-  const completedPhasesCount = phases.filter((p) => p.completed).length;
+  const activeCourse = activePhase?.courses?.[0] || {
+    title: activePhase?.coreConcepts?.[0] || 'Core Fundamentals',
+    courseNumber: `${activePhase?.phaseNumber || 1}.1`
+  };
 
   // Next tangible deliverable text
   const nextTangibleAsset =
@@ -33,23 +37,32 @@ export const MomentumHUD: React.FC = () => {
     activePhase?.checkpoint?.title ||
     'Phase 1 Milestone Deliverable';
 
+  const handleStartMission = () => {
+    if (activeCourse?.title) {
+      navigateToTutorConcept(activeCourse.title);
+    } else {
+      setActivePersona('tutor');
+    }
+  };
+
   return (
     <>
-      <div className="w-full bg-[var(--surface-1)] border-b border-[var(--hairline)] px-4 py-3 sm:px-6 transition-colors shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="w-full bg-[var(--surface-1)] border-b border-[var(--hairline)] px-4 py-2.5 sm:px-6 transition-colors shadow-xs">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Left: Next Tangible Milestone Horizon */}
           <div className="flex items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[color-mix(in_srgb,var(--advisor)_20%,transparent)] to-[color-mix(in_srgb,var(--tutor)_10%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-[var(--advisor)] flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[color-mix(in_srgb,var(--advisor)_20%,transparent)] to-[color-mix(in_srgb,var(--tutor)_15%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-[var(--advisor)] flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
               <Package size={17} />
             </div>
 
             <div className="space-y-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-mono uppercase bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] text-[var(--advisor)] border border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] px-2 py-0.5 rounded font-bold">
-                  Next Tangible Deliverable Ahead
+                <span className="text-[10px] font-mono uppercase bg-[color-mix(in_srgb,var(--advisor)_14%,transparent)] text-[var(--advisor)] border border-[color-mix(in_srgb,var(--advisor)_30%,transparent)] px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                  <Play size={9} fill="currentColor" />
+                  Active Mission
                 </span>
                 <span className="text-xs font-mono text-[var(--ink-3)] hidden sm:inline">
-                  Phase {activePhase?.phaseNumber || 1} of {phases.length}
+                  Phase {activePhase?.phaseNumber || 1} of {totalPhasesCount}
                 </span>
               </div>
 
@@ -62,68 +75,75 @@ export const MomentumHUD: React.FC = () => {
             </div>
           </div>
 
-          {/* Center: Milestone Asset Pipeline */}
-          <div className="hidden md:flex items-center gap-1.5 overflow-x-auto py-1">
-            {phases.map((p, idx) => {
-              const isCompleted = p.completed;
-              const isCurrent = p.id === activePhase?.id;
-
-              return (
-                <React.Fragment key={p.id}>
-                  <div
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono transition ${
-                      isCompleted
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
-                        : isCurrent
-                        ? 'bg-[var(--surface-2)] border-[var(--advisor)] text-[var(--ink)] font-bold shadow-xs'
-                        : 'bg-[var(--surface-2)]/60 border-[var(--hairline)] text-[var(--ink-3)]'
-                    }`}
-                    title={p.tangibleAsset || p.title}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 size={13} className="text-emerald-500" />
-                    ) : isCurrent ? (
-                      <span className="w-2 h-2 rounded-full bg-[var(--advisor)] animate-pulse" />
-                    ) : (
-                      <Lock size={11} className="opacity-50" />
-                    )}
-                    <span className="truncate max-w-[110px]">P{p.phaseNumber}: {p.checkpoint?.title || p.title}</span>
-                  </div>
-
-                  {idx < phases.length - 1 && (
-                    <span className="text-[var(--hairline-strong)] text-xs">→</span>
-                  )}
-                </React.Fragment>
-              );
-            })}
+          {/* Center: 4-Stage Collegiate Learning Loop Pipeline */}
+          <div className="hidden xl:flex items-center gap-2 bg-[var(--surface-2)]/70 px-3 py-1 rounded-xl border border-[var(--hairline)] text-[11px] font-mono">
+            <button
+              onClick={() => setActivePersona('advisor')}
+              className="flex items-center gap-1 text-[var(--advisor)] hover:underline font-bold"
+            >
+              <span>1. Advisor Plan</span>
+            </button>
+            <span className="text-[var(--ink-3)]">➔</span>
+            <button
+              onClick={() => setActivePersona('librarian')}
+              className="flex items-center gap-1 text-[var(--librarian)] hover:underline font-bold"
+            >
+              <span>2. Sources</span>
+            </button>
+            <span className="text-[var(--ink-3)]">➔</span>
+            <button
+              onClick={handleStartMission}
+              className="flex items-center gap-1 text-[var(--tutor)] hover:underline font-bold animate-pulse"
+            >
+              <span>3. Tutor Lesson</span>
+            </button>
+            <span className="text-[var(--ink-3)]">➔</span>
+            <button
+              onClick={() => setActivePersona('editor')}
+              className="flex items-center gap-1 text-[var(--editor)] hover:underline font-bold"
+            >
+              <span>4. Editor Polish</span>
+            </button>
           </div>
 
-          {/* Right: Streak & Actions */}
-          <div className="flex items-center gap-2 self-start lg:self-auto flex-shrink-0">
+          {/* Right: Streak, Guide Tour, Stuck & Direct Start CTA */}
+          <div className="flex items-center gap-2 self-start lg:self-auto flex-shrink-0 flex-wrap">
+            {/* Guide Tour Opener */}
+            <button
+              onClick={() => setIsOnboardingTourOpen(true)}
+              className="px-2.5 py-1 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] hover:text-[var(--ink)] font-medium transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              title="View Interactive Altor Walkthrough"
+            >
+              <HelpCircle size={13} className="text-[var(--advisor)]" />
+              <span className="hidden sm:inline">How It Works</span>
+            </button>
+
             {/* Streak Counter */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs font-mono font-bold text-amber-500 shadow-2xs">
-              <Flame size={14} className="text-amber-500 fill-amber-500" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs font-mono font-bold text-amber-500 shadow-2xs">
+              <Flame size={13} className="text-amber-500 fill-amber-500" />
               <span>{streakDays || 1}d Streak</span>
             </div>
 
-            {/* Quick Unblocker / SOS Button */}
+            {/* Anti-Procrastination SOS Button */}
             <button
               onClick={() => setIsStuckModalOpen(true)}
-              className="px-3 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
-              title="Click if you're stuck, procrastinating, or overwhelmed"
+              className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+              title="Click if stuck or overwhelmed"
             >
-              <Zap size={13} className="animate-pulse" />
+              <Zap size={12} className="animate-pulse" />
               <span>I'm Stuck</span>
             </button>
 
-            {/* Continue Masterclass Action */}
+            {/* Primary Action Button */}
             <button
-              onClick={() => setActivePersona('tutor')}
-              className="accent-btn"
+              onClick={handleStartMission}
+              className="accent-btn cursor-pointer"
               style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '11.5px' }}
             >
               <Play size={11} fill="currentColor" />
-              <span>Continue Lesson</span>
+              <span>
+                Start Course {activeCourse.courseNumber || '1.1'} →
+              </span>
             </button>
           </div>
         </div>

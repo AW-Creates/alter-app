@@ -25,6 +25,7 @@ import {
   Sparkles,
   X
 } from 'lucide-react';
+import { OnboardingGuideModal } from './components/common/OnboardingGuideModal';
 import { AlterPersona } from './types/alter';
 
 export const AppContent: React.FC = () => {
@@ -174,6 +175,7 @@ export const AppContent: React.FC = () => {
       <CreateJourneyModal />
       <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
       <AuthModal />
+      <OnboardingGuideModal />
     </div>
   );
 };

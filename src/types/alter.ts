@@ -23,6 +23,16 @@ export interface CheckpointProject {
   completed: boolean;
 }
 
+export interface PhaseCourse {
+  id: string;
+  courseNumber: string; // e.g. "1.1", "1.2", "1.3"
+  title: string;
+  description: string;
+  estimatedMinutes?: number; // e.g. 10
+  completed: boolean;
+  lesson?: InteractiveLesson;
+}
+
 export interface CurriculumPhase {
   id: string;
   phaseNumber: number;
@@ -31,6 +41,7 @@ export interface CurriculumPhase {
   objective: string;
   tangibleAsset?: string; // What physical/digital artifact exists after this phase
   coreConcepts: string[];
+  courses?: PhaseCourse[];
   checkpoint: CheckpointProject;
   completed: boolean;
 }

@@ -1315,28 +1315,208 @@ function getSimulatedSocraticTurn(
   checkInQuestion: string;
   isConceptMastered: boolean;
 } {
+  const safeConcept = (concept || '').trim() || 'Core Principles';
+
   if (!studentInput) {
     return {
-      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${concept}**! Let's start with first principles.\n\nImagine you are building a physical bridge. Before you pick what color to paint the railings, you must calculate the load-bearing stress points. In **${concept}**, the load-bearing stress point is our **state transition invariant**: every action must have an explicit verification check before moving to the next step.`,
-      stageName: 'Level 1: Intuition & Invariants',
-      checkInQuestion: `In your own words: If our system encounters an unexpected error from an external tool, what should happen to our state loop instead of crashing?`,
+      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${safeConcept}**! Let's start with first principles.\n\nImagine you are building a house. Before you pick what color to paint the front door, you must lay a rock-solid foundation. In **${safeConcept}**, the rock-solid foundation is understanding the core problem we are trying to solve before adding complex steps.`,
+      stageName: 'Level 1: Core Intuition & Purpose',
+      checkInQuestion: `In your own words: What is the single biggest mistake people make when they first try to master ${safeConcept}?`,
       isConceptMastered: false
     };
   }
 
   return {
-    tutorSpeech: `🎯 **Excellent deduction!** You correctly identified that errors must be captured as **observations** in the context window so the system can self-correct.\n\nNow let's look at the mechanics: When writing the execution loop, we always establish a **hard recursion limit** (e.g. max 5 iterations) and validate the schema of incoming tool payloads. This prevents infinite loops and token blowouts.`,
-    stageName: 'Level 2: Mechanics & Error Boundaries',
-    tutorFeedbackOnStudent: `Strong first-principles reasoning! You grasped the error-as-observation paradigm immediately.`,
-    checkInQuestion: `Now let's test a real scenario: If an upstream API returns HTTP 429 (Rate Limit), how would you structure the retry backoff without burning through your iteration ceiling?`,
+    tutorSpeech: `🎯 **Excellent deduction!** You hit the nail on the head. Most people get overwhelmed by superficial details instead of focusing on the high-value core outcome.\n\nNow let's look at the practical execution: Master practitioners build tight feedback loops where they test their work in small, manageable milestones rather than trying to do everything at once.`,
+    stageName: 'Level 2: Practical Execution & Quality Guardrails',
+    tutorFeedbackOnStudent: `Great practical intuition! You grasped the core problem immediately.`,
+    checkInQuestion: `Now let's apply this: If you had only 2 hours to build your first deliverable for ${safeConcept}, what single task would you prioritize first?`,
     isConceptMastered: true
   };
 }
 
-function getSimulatedCurriculum(topic: string, destination: string, diagnostic?: DiagnosticAssessment): AdvisorData {
-  const isAgent = topic.toLowerCase().includes('agent') || topic.toLowerCase().includes('autonomous');
-  const isDigitalProduct = topic.toLowerCase().includes('digital product') || topic.toLowerCase().includes('saas');
-  
+export function getSimulatedCurriculum(topic: string, destination?: string, diagnostic?: DiagnosticAssessment): AdvisorData {
+  const t = topic.toLowerCase();
+  const isAgency = t.includes('agency') || t.includes('agent agency') || t.includes('ai agency') || t.includes('service business');
+  const isDigitalProduct = t.includes('digital product') || t.includes('saas') || t.includes('micro-saas') || t.includes('web app');
+  const isEBook = t.includes('e-book') || t.includes('ebook') || t.includes('book') || t.includes('write') || t.includes('publish');
+  const isGardening = t.includes('garden') || t.includes('plant') || t.includes('herb') || t.includes('hydroponic') || t.includes('soil');
+  const isSourdough = t.includes('sourdough') || t.includes('bread') || t.includes('baking') || t.includes('ferment');
+  const isSpeaking = t.includes('speak') || t.includes('presentation') || t.includes('persuasion') || t.includes('pitch');
+  const isTrading = t.includes('trading') || t.includes('futures') || t.includes('stock') || t.includes('invest') || t.includes('crypto');
+  const isAgent = t.includes('agent') || t.includes('autonomous');
+
+  if (isAgency) {
+    return {
+      overview: `A complete, step-by-step 6-week roadmap to build, position, and scale a profitable AI Agent Agency from complete scratch to recurring client retainers.`,
+      estimatedWeeks: 6,
+      phases: [
+        {
+          id: `phase-1-${Date.now()}`,
+          phaseNumber: 1,
+          title: 'Agency Positioning, Client Offer & Core Tech Stack',
+          duration: 'Weeks 1-2',
+          objective: 'Understand AI agents from the ground up, select your agency niche, and package your first $3,000 client offer.',
+          tangibleAsset: 'A 1-page Client Service Agreement & Loom Video Audit Template ready for outreach.',
+          coreConcepts: [
+            'What Is An AI Agent & How Agencies Make Money',
+            'The AI Agency Tech Stack: APIs, Tools & Automation Platforms',
+            'Packaging High-Value Client Offers ($3K-$5K Setup + Retainer)'
+          ],
+          courses: [
+            {
+              id: `c-1-1-${Date.now()}`,
+              courseNumber: '1.1',
+              title: 'What Is An AI Agent & How Do AI Agencies Make Money?',
+              description: 'Understand the fundamental difference between basic chatbots and autonomous task-executing agents, and explore the top 3 agency monetization models.',
+              estimatedMinutes: 10,
+              completed: false
+            },
+            {
+              id: `c-1-2-${Date.now()}`,
+              courseNumber: '1.2',
+              title: 'The AI Agency Tech Stack: LLMs, Tools, APIs & Automations',
+              description: 'Deconstruct OpenAI, Anthropic, Gemini APIs, Make.com, n8n, and custom tool calling without getting overwhelmed by technical jargon.',
+              estimatedMinutes: 12,
+              completed: false
+            },
+            {
+              id: `c-1-3-${Date.now()}`,
+              courseNumber: '1.3',
+              title: 'Packaging Your First $3,000 Client Offer & Scope Agreement',
+              description: 'Create irresistible offers (lead qualification agents, 24/7 customer support triage, automated data sync) with clean deliverable contracts.',
+              estimatedMinutes: 15,
+              completed: false
+            }
+          ],
+          checkpoint: {
+            id: 'cp-1',
+            title: 'Phase 1 Milestone: Packaged Agency Offer & Pitch Deck',
+            description: 'Write a 1-page Client Service Agreement and record a 3-minute sample client audit pitch.',
+            tangibleAsset: '1-Page Client Service Agreement & Sample Loom Video Audit',
+            completed: false
+          },
+          completed: false
+        },
+        {
+          id: `phase-2-${Date.now()}`,
+          phaseNumber: 2,
+          title: 'Building & Deploying Client-Ready Autonomous Agent Systems',
+          duration: 'Weeks 3-4',
+          objective: 'Build working lead-qualification, support, and database triage agents with live tools, error handling, and knowledge bases.',
+          tangibleAsset: 'A live working AI Agent prototype integrated with CRM/Google Sheets and email triggers.',
+          coreConcepts: [
+            'Building Lead-Gen & Support Agents with Live Tools',
+            'Connecting Business Knowledge Bases & Vector Memory',
+            'Testing, Error-Proofing & Client Handoff Protocols'
+          ],
+          courses: [
+            {
+              id: `c-2-1-${Date.now()}`,
+              courseNumber: '2.1',
+              title: 'Building Custom Lead-Gen & Support Agents with Live Tools',
+              description: 'Step-by-step guide to building agents that can search databases, send emails, schedule meetings, and parse customer messages.',
+              estimatedMinutes: 12,
+              completed: false
+            },
+            {
+              id: `c-2-2-${Date.now()}`,
+              courseNumber: '2.2',
+              title: 'Connecting Business Knowledge Bases & Document Retrieval',
+              description: 'How to safely inject client PDFs, FAQs, and product catalogs into your agent so it answers with 100% accurate company information.',
+              estimatedMinutes: 14,
+              completed: false
+            },
+            {
+              id: `c-2-3-${Date.now()}`,
+              courseNumber: '2.3',
+              title: 'Testing, Error-Proofing & Client Handoff Protocols',
+              description: 'Stress-test your agents for edge cases, handle rate limits, and set up simple client dashboards with zero maintenance headaches.',
+              estimatedMinutes: 12,
+              completed: false
+            }
+          ],
+          checkpoint: {
+            id: 'cp-2',
+            title: 'Phase 2 Milestone: Working Client-Ready Agent Prototype',
+            description: 'Deploy a working AI Agent that connects to an external database, validates user inputs, and triggers automated actions.',
+            tangibleAsset: 'Live Working AI Agent Prototype with Tool Grounding',
+            completed: false
+          },
+          completed: false
+        },
+        {
+          id: `phase-3-${Date.now()}`,
+          phaseNumber: 3,
+          title: 'Client Acquisition, Monthly Retainers & Scaling Operations',
+          duration: 'Weeks 5-6',
+          objective: 'Land your first 3 paying agency clients, structure ongoing monthly maintenance retainers, and scale operations.',
+          tangibleAsset: 'Live outreach campaign launched with signed client contracts and monthly recurring revenue.',
+          coreConcepts: [
+            'Cold Video Audits & High-Converting Client Acquisition',
+            'Structuring $1,500/Month Maintenance & Optimization Retainers',
+            'Multi-Agent Swarm Workflows & Agency Automation'
+          ],
+          courses: [
+            {
+              id: `c-3-1-${Date.now()}`,
+              courseNumber: '3.1',
+              title: 'Cold Video Audits & High-Converting Client Outreach',
+              description: 'The exact step-by-step outreach system: record 2-minute personalized video teardowns that get business owners to reply and book sales calls.',
+              estimatedMinutes: 12,
+              completed: false
+            },
+            {
+              id: `c-3-2-${Date.now()}`,
+              courseNumber: '3.2',
+              title: 'Structuring $1,500/Month Maintenance & Optimization Retainers',
+              description: 'How to turn one-off builds into predictable monthly recurring revenue with SLA guarantees, prompt tuning, and system monitoring.',
+              estimatedMinutes: 10,
+              completed: false
+            },
+            {
+              id: `c-3-3-${Date.now()}`,
+              courseNumber: '3.3',
+              title: 'Multi-Agent Swarm Workflows & Scaling Agency Operations',
+              description: 'Automate your own agency workflows (prospecting, proposal generation, onboarding) using coordinated multi-agent teams.',
+              estimatedMinutes: 14,
+              completed: false
+            }
+          ],
+          checkpoint: {
+            id: 'cp-3',
+            title: 'Phase 3 Milestone: Live Client Acquisition & Retainer Launch',
+            description: 'Send 20 personalized video audits, conduct 3 sales discovery calls, and sign your first agency client.',
+            tangibleAsset: 'Signed Agency Client Contract & Active Monthly Retainer',
+            completed: false
+          },
+          completed: false
+        }
+      ],
+      cutList: [
+        {
+          id: 'cut-1',
+          topic: 'Building complex custom web scrapers and neural networks from scratch',
+          reasonToSkip: 'Distracts from high-margin client value and takes months to master.',
+          alternativeFocus: 'Use production LLM APIs and visual automation platforms (Make/n8n/Python) to deliver immediate ROI to clients in 48 hours.'
+        },
+        {
+          id: 'cut-2',
+          topic: 'Spending $5,000 on fancy agency logos, trademarks, and office space',
+          reasonToSkip: 'Classic procrastination trap that does not generate revenue.',
+          alternativeFocus: 'Focus 100% on recording high-signal video audits and closing your first paying customer.'
+        },
+        {
+          id: 'cut-3',
+          topic: 'Generic low-ticket chatbots ($99/mo) with zero custom business logic',
+          reasonToSkip: 'Commodity market with high churn and difficult customer support.',
+          alternativeFocus: 'High-ticket workflow automation agents ($3K-$5K setup + $1.5K/mo retainer) targeting concrete business bottlenecks.'
+        }
+      ],
+      chatHistory: []
+    };
+  }
+
   if (isDigitalProduct) {
     return {
       overview: `A tailored 6-week roadmap engineered to build, secure, and launch a commercial digital product with automated billing and customer onboarding.`,
@@ -1345,14 +1525,44 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
         {
           id: `phase-1-${Date.now()}`,
           phaseNumber: 1,
-          title: 'Product Architecture, Database Schemas & Core Invariants',
+          title: 'Product Blueprint, Core Value Loop & Rapid Prototype',
           duration: 'Weeks 1-2',
-          objective: 'Build the foundational database models, authentication, and core application loop.',
-          tangibleAsset: 'Working local MVP with authenticated user state and database CRUD.',
-          coreConcepts: ['Data Modeling & Relations', 'User Session Auth & JWTs', 'Core Application State Machine'],
+          objective: 'Define the core problem, build the foundational user state, and validate the minimal viable loop.',
+          tangibleAsset: 'Working local prototype with user authentication and core feature flow.',
+          coreConcepts: [
+            'Defining the Single Irreducible Value Metric',
+            'User Auth, Database State & Session Management',
+            'The Core Application Loop (Zero Fluff)'
+          ],
+          courses: [
+            {
+              id: `c-1-1-${Date.now()}`,
+              courseNumber: '1.1',
+              title: 'Defining the Single Irreducible Value Metric',
+              description: 'How to identify the one core job your product solves in 60 seconds without feature bloat.',
+              estimatedMinutes: 10,
+              completed: false
+            },
+            {
+              id: `c-1-2-${Date.now()}`,
+              courseNumber: '1.2',
+              title: 'User Auth, Database State & Session Management',
+              description: 'Step-by-step setup of user login, secure session cookies, and database tables.',
+              estimatedMinutes: 12,
+              completed: false
+            },
+            {
+              id: `c-1-3-${Date.now()}`,
+              courseNumber: '1.3',
+              title: 'The Core Application Loop (Zero Fluff)',
+              description: 'Build the primary action screen where users generate their first valuable output.',
+              estimatedMinutes: 15,
+              completed: false
+            }
+          ],
           checkpoint: {
             id: 'cp-1',
-            title: 'Functional Local MVP',
+            title: 'Functional Local Prototype',
             description: 'Deploy local database with user login, protected routes, and core feature CRUD.',
             tangibleAsset: 'Working Local Fullstack Application',
             completed: false
@@ -1362,11 +1572,41 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
         {
           id: `phase-2-${Date.now()}`,
           phaseNumber: 2,
-          title: 'Stripe Billing Integration & Webhook Security (Critical Gap-Filler)',
+          title: 'Stripe Billing Integration & Webhook Security',
           duration: 'Weeks 3-4',
           objective: 'Implement end-to-end subscription billing with signature-verified webhooks.',
           tangibleAsset: 'Live Stripe Checkout flow with automated customer provisioning and tier limits.',
-          coreConcepts: ['Stripe Checkout & Customer Portal', 'Webhook Signature Verification', 'Subscription Lifecycle State Management'],
+          coreConcepts: [
+            'Stripe Checkout & Customer Portal Architecture',
+            'Webhook Signature Verification & Idempotency',
+            'Subscription Lifecycle State Management'
+          ],
+          courses: [
+            {
+              id: `c-2-1-${Date.now()}`,
+              courseNumber: '2.1',
+              title: 'Stripe Checkout & Customer Portal Architecture',
+              description: 'Connect checkout sessions and self-serve customer billing management.',
+              estimatedMinutes: 12,
+              completed: false
+            },
+            {
+              id: `c-2-2-${Date.now()}`,
+              courseNumber: '2.2',
+              title: 'Webhook Signature Verification & Security',
+              description: 'Safely listen for successful charges and prevent spoofed payment events.',
+              estimatedMinutes: 14,
+              completed: false
+            },
+            {
+              id: `c-2-3-${Date.now()}`,
+              courseNumber: '2.3',
+              title: 'Subscription Lifecycle State Management',
+              description: 'Handle upgrades, cancellations, failed payments, and usage limits smoothly.',
+              estimatedMinutes: 10,
+              completed: false
+            }
+          ],
           checkpoint: {
             id: 'cp-2',
             title: 'Stripe Billing & Webhook Engine',
@@ -1381,9 +1621,39 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
           phaseNumber: 3,
           title: 'Production Deployment, Landing Page & Customer Launch',
           duration: 'Weeks 5-6',
-          objective: 'Deploy to live production domain, configure SEO/analytics, and onboard first 5 paying users.',
+          objective: 'Deploy to live production domain, configure analytics, and onboard first 5 paying users.',
           tangibleAsset: 'Live deployed web application accepting real customer payments.',
-          coreConcepts: ['Production Edge Deployment', 'Error Monitoring & Telemetry', 'High-Converting Onboarding Funnels'],
+          coreConcepts: [
+            'Production Edge Deployment & Custom Domains',
+            'High-Converting Landing Pages & Onboarding Tours',
+            'First 5 Paying Customers Acquisition Playbook'
+          ],
+          courses: [
+            {
+              id: `c-3-1-${Date.now()}`,
+              courseNumber: '3.1',
+              title: 'Production Edge Deployment & Custom Domains',
+              description: 'Deploy to Vercel/Cloudflare with SSL, environment variables, and error logging.',
+              estimatedMinutes: 10,
+              completed: false
+            },
+            {
+              id: `c-3-2-${Date.now()}`,
+              courseNumber: '3.2',
+              title: 'High-Converting Landing Pages & Onboarding Tours',
+              description: 'Design a clean 1-page hero presentation and guided first-run experience.',
+              estimatedMinutes: 12,
+              completed: false
+            },
+            {
+              id: `c-3-3-${Date.now()}`,
+              courseNumber: '3.3',
+              title: 'First 5 Paying Customers Acquisition Playbook',
+              description: 'Launch directly to your target community and gather first customer feedback.',
+              estimatedMinutes: 15,
+              completed: false
+            }
+          ],
           checkpoint: {
             id: 'cp-3',
             title: 'Live Commercial Launch',
@@ -1411,23 +1681,55 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
       chatHistory: []
     };
   }
+
+  // Universal Default for Any Topic
   return {
-    overview: `A razor-sharp 8-week immersion roadmap engineered to take you from foundational concepts to building real-world proof-of-work in ${topic}.`,
-    estimatedWeeks: 8,
+    overview: `A razor-sharp 6-week immersion roadmap engineered to take you from foundational concepts to building real-world proof-of-work in ${topic}.`,
+    estimatedWeeks: 6,
     phases: [
       {
         id: `phase-1-${Date.now()}`,
         phaseNumber: 1,
-        title: 'First-Principles Foundations & Mental Models',
+        title: 'Core Fundamentals & Starter Project Setup',
         duration: 'Weeks 1-2',
-        objective: 'Master the immutable primitives and mathematical/structural grammar of the field.',
-        tangibleAsset: 'A 2-page first-principles architectural blueprint and validated problem brief.',
-        coreConcepts: ['Core Primitives', 'System Constraints', 'Key Abstraction Layers'],
+        objective: 'Master the essential principles and build your initial working draft or prototype.',
+        tangibleAsset: 'A verified starter project blueprint and validated deliverable draft.',
+        coreConcepts: [
+          `Foundational Principles & Setup of ${topic}`,
+          `Practical Execution & Core Workflow Habits`,
+          `Initial Milestone Project Build & Quality Check`
+        ],
+        courses: [
+          {
+            id: `c-1-1-${Date.now()}`,
+            courseNumber: '1.1',
+            title: `What Is ${topic} & Core Principles (Zero Jargon)`,
+            description: `Understand the foundational intuition, why beginners get confused, and the 3 core pillars of ${topic}.`,
+            estimatedMinutes: 10,
+            completed: false
+          },
+          {
+            id: `c-1-2-${Date.now()}`,
+            courseNumber: '1.2',
+            title: `Step-by-Step Setup & Essential Execution Tools`,
+            description: `Set up your core workspace, gather your tools, and master the initial repeatable routine.`,
+            estimatedMinutes: 12,
+            completed: false
+          },
+          {
+            id: `c-1-3-${Date.now()}`,
+            courseNumber: '1.3',
+            title: `Building Your Phase 1 Starter Deliverable`,
+            description: `Apply your learnings to create your first tangible project asset and verify it against quality standards.`,
+            estimatedMinutes: 15,
+            completed: false
+          }
+        ],
         checkpoint: {
           id: `cp-1`,
-          title: 'Foundational Synthesis Document',
-          description: 'Explain the core mechanics from zero assumptions in a 2-page first-principles brief.',
-          tangibleAsset: '2-Page First-Principles Architectural Brief',
+          title: 'Phase 1 Milestone Deliverable',
+          description: 'Build and validate your first working milestone project draft.',
+          tangibleAsset: 'Validated Phase 1 Milestone Project Draft',
           completed: false
         },
         completed: false
@@ -1435,16 +1737,46 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
       {
         id: `phase-2-${Date.now()}`,
         phaseNumber: 2,
-        title: 'Mechanics, Architectures & Edge-Case Dynamics',
-        duration: 'Weeks 3-5',
-        objective: 'Deconstruct real-world implementations and stress-test failure modes.',
-        tangibleAsset: 'A functioning MVP prototype or verified system build deployed live.',
-        coreConcepts: ['State Management & Flows', 'Bottlenecks & Optimization', 'Trade-off Analysis'],
+        title: 'Intermediate Execution & Real-World System Build',
+        duration: 'Weeks 3-4',
+        objective: 'Deepen your mastery, resolve edge-case mistakes, and complete your core system build.',
+        tangibleAsset: 'A completed, functioning system build or deep practical case study.',
+        coreConcepts: [
+          `Advanced Mechanics & High-Leverage Techniques`,
+          `Troubleshooting Common Traps & Failure Modes`,
+          `System Integration & Real-World Testing`
+        ],
+        courses: [
+          {
+            id: `c-2-1-${Date.now()}`,
+            courseNumber: '2.1',
+            title: `Advanced Mechanics & High-Leverage Techniques`,
+            description: `Explore how top 1% masters achieve consistent high performance and speed.`,
+            estimatedMinutes: 12,
+            completed: false
+          },
+          {
+            id: `c-2-2-${Date.now()}`,
+            courseNumber: '2.2',
+            title: `Troubleshooting Common Traps & Failure Modes`,
+            description: `Learn the top 5 mistakes beginners make and exact protocols to diagnose and fix them.`,
+            estimatedMinutes: 12,
+            completed: false
+          },
+          {
+            id: `c-2-3-${Date.now()}`,
+            courseNumber: '2.3',
+            title: `System Integration & Practical Stress-Testing`,
+            description: `Test your project under realistic conditions to ensure durability and quality.`,
+            estimatedMinutes: 15,
+            completed: false
+          }
+        ],
         checkpoint: {
           id: `cp-2`,
-          title: 'Working Prototype / Deconstructed Case Study',
-          description: 'Build a functioning minimal viable implementation or complete a deep autopsy of a benchmark system.',
-          tangibleAsset: 'Working Minimal Viable Prototype Deployed Live',
+          title: 'Phase 2 Milestone Deliverable',
+          description: 'Build and test your complete intermediate system or second working project deliverable.',
+          tangibleAsset: 'Complete Intermediate System Project Deployed/Verified',
           completed: false
         },
         completed: false
@@ -1452,15 +1784,45 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
       {
         id: `phase-3-${Date.now()}`,
         phaseNumber: 3,
-        title: 'Mastery Capstone & Novel Application',
-        duration: 'Weeks 6-8',
-        objective: `Achieve the target destination: "${destination}".`,
-        tangibleAsset: 'A published public portfolio masterwork (open-source tool, live product, or published article).',
-        coreConcepts: ['End-to-End Orchestration', 'Production Hardening', 'Original Synthesis'],
+        title: 'Polish, Launch & Real-World Mastery Showcase',
+        duration: 'Weeks 5-6',
+        objective: `Achieve full mastery and launch your public capstone project in ${topic}.`,
+        tangibleAsset: 'A published public portfolio masterwork (live project, published work, or client case study).',
+        coreConcepts: [
+          `Refinement, Polish & Quality Assurance`,
+          `Public Launch, Publishing & Distribution`,
+          `Long-Term Maintenance & Continuous Growth`
+        ],
+        courses: [
+          {
+            id: `c-3-1-${Date.now()}`,
+            courseNumber: '3.1',
+            title: `Refinement, Polish & Quality Assurance`,
+            description: `Apply final professional polish to your project and verify all requirements.`,
+            estimatedMinutes: 10,
+            completed: false
+          },
+          {
+            id: `c-3-2-${Date.now()}`,
+            courseNumber: '3.2',
+            title: `Public Launch, Publishing & Sharing Your Work`,
+            description: `Step-by-step guide to publishing, sharing, or deploying your project for real-world audiences.`,
+            estimatedMinutes: 12,
+            completed: false
+          },
+          {
+            id: `c-3-3-${Date.now()}`,
+            courseNumber: '3.3',
+            title: `Long-Term Mastery & Next-Level Growth`,
+            description: `How to continue compounding your knowledge and scaling your results autonomously.`,
+            estimatedMinutes: 10,
+            completed: false
+          }
+        ],
         checkpoint: {
           id: `cp-3`,
-          title: 'Public Capstone Artifact',
-          description: 'Publish a tangible, public asset (open-source tool, published essay, or interactive system).',
+          title: 'Capstone Masterwork Artifact',
+          description: 'Publish a tangible, public asset or conduct final peer critique.',
           tangibleAsset: 'Public Masterwork Artifact & Portfolio Showcase',
           completed: false
         },
@@ -1470,57 +1832,107 @@ function getSimulatedCurriculum(topic: string, destination: string, diagnostic?:
     cutList: [
       {
         id: 'cut-1',
-        topic: 'Introductory YouTube "Tutorial Hell" & 10-hour generic video courses',
+        topic: 'Introductory YouTube "Tutorial Hell" & 10-hour passive video courses',
         reasonToSkip: 'Passive watching creates false competence without building cognitive retention or tactile muscle memory.',
-        alternativeFocus: 'Read source documentation and implement minimal code/concept prototypes immediately.'
+        alternativeFocus: 'Read concise masterclasses and build tangible milestone project deliverables immediately.'
       },
       {
         id: 'cut-2',
-        topic: 'Obsolete legacy toolchains and secondary hype frameworks',
-        reasonToSkip: 'Distracts from fundamental architectural patterns that remain invariant across 20+ years.',
-        alternativeFocus: 'Stick strictly to foundational invariants and canonical industry standards.'
-      },
-      {
-        id: 'cut-3',
-        topic: 'Memorizing syntax quirks and encyclopedic edge cases',
-        reasonToSkip: 'AI agents and docs can query syntax in 2 seconds; understanding the architectural trade-offs is where human leverage lives.',
-        alternativeFocus: 'High-level systems thinking and error-surface mapping.'
+        topic: 'Premature polish and non-essential cosmetic customization',
+        reasonToSkip: 'Distracts from mastering core fundamentals and delays shipping real progress.',
+        alternativeFocus: 'Stick strictly to proven practical frameworks and core value deliverables.'
       }
     ],
     chatHistory: []
   };
 }
 
-function getSimulatedSources(topic: string): CuratedSource[] {
+export function getSimulatedSources(topic: string): CuratedSource[] {
+  const t = topic.toLowerCase();
+  const isAgency = t.includes('agency') || t.includes('agent agency') || t.includes('ai agency');
+  const isEBook = t.includes('e-book') || t.includes('ebook') || t.includes('book');
+  const isGardening = t.includes('garden') || t.includes('plant') || t.includes('herb');
+  const isSourdough = t.includes('sourdough') || t.includes('bread');
+
+  if (isAgency) {
+    return [
+      {
+        id: `src-1`,
+        type: 'book',
+        title: '$100M Offers: How To Make Offers So Good People Feel Stupid Saying No',
+        authorOrCreator: 'Alex Hormozi',
+        signalScore: 10,
+        whyEssential: 'The gold standard for structuring high-ticket agency services, pricing, and irresistible client guarantees.',
+        keyTakeaway: 'Charge for the dream outcome and speed of execution rather than trading hourly labour.',
+        status: 'reading'
+      },
+      {
+        id: `src-2`,
+        type: 'paper',
+        title: 'ReAct: Synergizing Reasoning and Acting in Language Models',
+        authorOrCreator: 'Shunyu Yao et al. (Princeton & Google Brain)',
+        signalScore: 10,
+        whyEssential: 'The foundational architectural paper behind all modern autonomous task-executing AI agents.',
+        keyTakeaway: 'Interleave thinking (Thoughts) with doing (Actions) and observing results (Observations) for self-correcting agents.',
+        status: 'unread'
+      },
+      {
+        id: `src-3`,
+        type: 'case_study',
+        title: 'The AI Agency Playbook: Automated Lead Qualification & Triage Systems',
+        authorOrCreator: 'Top AI Automation Practitioners',
+        signalScore: 9,
+        whyEssential: 'Practical real-world case studies detailing how agencies implement and retain $3,000/month business clients.',
+        keyTakeaway: 'Focus on business bottlenecks (lead response time, customer support ticket triage) where ROI is unmistakable.',
+        status: 'unread'
+      }
+    ];
+  }
+
+  if (isEBook) {
+    return [
+      {
+        id: `src-1`,
+        type: 'book',
+        title: 'Write Useful Books: A Modern Approach to Designing and Refining Recommended Books',
+        authorOrCreator: 'Rob Fitzpatrick',
+        signalScore: 10,
+        whyEssential: 'The definitive guide to writing non-fiction books that spread by word of mouth through early reader testing.',
+        keyTakeaway: 'Treat your book like software: test reader comprehension chapter-by-chapter before mass publishing.',
+        status: 'reading'
+      },
+      {
+        id: `src-2`,
+        type: 'book',
+        title: 'Authority: Step-by-Step Guide to Self-Publishing and Selling Technical Books',
+        authorOrCreator: 'Nathan Barry (ConvertKit)',
+        signalScore: 10,
+        whyEssential: 'Master direct-to-consumer digital distribution, tiered packaging, and launching to an email waitlist.',
+        keyTakeaway: 'Build an audience and presale waitlist before you start writing page 1.',
+        status: 'unread'
+      }
+    ];
+  }
+
   return [
     {
       id: `src-1`,
       type: 'book',
-      title: `The Canonical Reference on ${topic}`,
-      authorOrCreator: 'Definitive Pioneer / Classic Authority',
+      title: `The Canonical Field Reference on ${topic}`,
+      authorOrCreator: 'Pioneering Authority / Classic Author',
       signalScore: 10,
-      whyEssential: 'The seminal text that established the standard vocabulary and design patterns in this discipline.',
-      keyTakeaway: 'Focus on invariant principles rather than transient implementations.',
-      status: 'unread'
+      whyEssential: 'The foundational text that established the standard principles and core frameworks in this discipline.',
+      keyTakeaway: 'Master the irreducible baseline principles before adding complex tooling layers.',
+      status: 'reading'
     },
     {
       id: `src-2`,
       type: 'paper',
-      title: `Seminal Architecture Paper on ${topic}`,
-      authorOrCreator: 'Top Research Institute / Lab',
+      title: `Seminal Applied Masterclass & Framework for ${topic}`,
+      authorOrCreator: 'Industry Benchmark Institute',
       signalScore: 10,
-      whyEssential: 'Groundbreaking paper that solved the critical scalability and correctness bottlenecks in the domain.',
-      keyTakeaway: 'Simplicity and modular decoupling outperform complex optimizations.',
-      status: 'unread'
-    },
-    {
-      id: `src-3`,
-      type: 'lecture',
-      title: `MIT / Stanford Masterclass Deep Dive`,
-      authorOrCreator: 'Distinguished Professor',
-      signalScore: 9,
-      whyEssential: 'Unpacks rigorous mathematical and conceptual foundations with zero marketing fluff.',
-      keyTakeaway: 'Understanding boundary conditions is the key to deep intuition.',
+      whyEssential: 'Solved the critical practical execution and reliability bottlenecks in the domain.',
+      keyTakeaway: 'Simplicity and modular execution consistently outperform premature optimization.',
       status: 'unread'
     }
   ];

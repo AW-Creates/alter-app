@@ -6,7 +6,7 @@ import {
   getStoredActiveJourneyId,
   setStoredActiveJourneyId
 } from '../services/storage';
-import { getStoredApiKey, setStoredApiKey } from '../services/gemini';
+import { getStoredApiKey, setStoredApiKey, getSimulatedCurriculum, getSimulatedSources } from '../services/gemini';
 
 interface JourneyContextType {
   journeys: LearningJourney[];
@@ -15,6 +15,7 @@ interface JourneyContextType {
   apiKey: string;
   isApiKeyModalOpen: boolean;
   isCreateModalOpen: boolean;
+  isOnboardingTourOpen: boolean;
   targetTutorConcept: string | null;
   editorDraftPayload: string | null;
   setActiveJourneyId: (id: string) => void;
@@ -22,6 +23,7 @@ interface JourneyContextType {
   setApiKey: (key: string) => void;
   setIsApiKeyModalOpen: (open: boolean) => void;
   setIsCreateModalOpen: (open: boolean) => void;
+  setIsOnboardingTourOpen: (open: boolean) => void;
   navigateToTutorConcept: (concept: string) => void;
   sendToEditor: (draft: string) => void;
   createJourney: (journey: Omit<LearningJourney, 'id' | 'createdAt' | 'lastActive' | 'streakDays' | 'advisorData' | 'librarianData' | 'tutorData' | 'editorData' | 'roommateData'>) => LearningJourney;
@@ -39,11 +41,49 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [apiKey, setApiKeyState] = useState<string>('');
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [isOnboardingTourOpen, setIsOnboardingTourOpen] = useState<boolean>(false);
   const [targetTutorConcept, setTargetTutorConcept] = useState<string | null>(null);
   const [editorDraftPayload, setEditorDraftPayload] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadedJourneys = getStoredJourneys();
+    let loadedJourneys = getStoredJourneys();
+    
+    // Auto-repair any journey that has 0 phases or missing sources
+    let repaired = false;
+    loadedJourneys = loadedJourneys.map((j) => {
+      if (!j.advisorData?.phases || j.advisorData.phases.length === 0) {
+        repaired = true;
+        const initialCurriculum = getSimulatedCurriculum(j.topic || j.title, j.destination);
+        const initialSources = getSimulatedSources(j.topic || j.title);
+        return {
+          ...j,
+          advisorData: {
+            ...initialCurriculum,
+            chatHistory: j.advisorData?.chatHistory?.length
+              ? j.advisorData.chatHistory
+              : [
+                  {
+                    id: `msg-${Date.now()}`,
+                    sender: 'assistant',
+                    persona: 'advisor',
+                    content: `Welcome to **${j.topic || j.title}**! I've engineered your ${initialCurriculum.estimatedWeeks}-week modular curriculum and locked in your **Cut List**. Check out Phase 1 and start **Course 1.1** below to begin.`,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  }
+                ]
+          },
+          librarianData: {
+            ...j.librarianData,
+            sources: j.librarianData?.sources?.length ? j.librarianData.sources : initialSources
+          }
+        };
+      }
+      return j;
+    });
+
+    if (repaired) {
+      saveJourneys(loadedJourneys);
+    }
+
     setJourneys(loadedJourneys);
     const storedId = getStoredActiveJourneyId();
     if (storedId && loadedJourneys.some((j) => j.id === storedId)) {
@@ -87,6 +127,9 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const createJourney = (data: Omit<LearningJourney, 'id' | 'createdAt' | 'lastActive' | 'streakDays' | 'advisorData' | 'librarianData' | 'tutorData' | 'editorData' | 'roommateData'>): LearningJourney => {
     const newId = `journey-${Date.now()}`;
+    const initialCurriculum = getSimulatedCurriculum(data.topic, data.destination);
+    const initialSources = getSimulatedSources(data.topic);
+
     const newJourney: LearningJourney = {
       ...data,
       id: newId,
@@ -94,22 +137,19 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       lastActive: new Date().toISOString(),
       streakDays: 1,
       advisorData: {
-        overview: `Mastery path for ${data.topic}`,
-        estimatedWeeks: 6,
-        phases: [],
-        cutList: [],
+        ...initialCurriculum,
         chatHistory: [
           {
             id: `msg-${Date.now()}`,
             sender: 'assistant',
             persona: 'advisor',
-            content: `Welcome to your learning journey for **${data.topic}**! I am your Academic Advisor. Click "Generate Custom Curriculum" to formulate your study plan, milestones, and crucial **Cut List**.`,
-            timestamp: new Date().toLocaleTimeString()
+            content: `Welcome to **${data.topic}**! I am your Academic Advisor. I've prepared your 3-Phase structured curriculum with step-by-step courses. Let's start with **Course 1.1**!`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }
         ]
       },
       librarianData: {
-        sources: [],
+        sources: initialSources,
         vaultNotes: [],
         conceptCards: [],
         chatHistory: []
@@ -232,6 +272,7 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         apiKey,
         isApiKeyModalOpen,
         isCreateModalOpen,
+        isOnboardingTourOpen,
         targetTutorConcept,
         editorDraftPayload,
         setActiveJourneyId,
@@ -239,6 +280,7 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setApiKey,
         setIsApiKeyModalOpen,
         setIsCreateModalOpen,
+        setIsOnboardingTourOpen,
         navigateToTutorConcept,
         sendToEditor,
         createJourney,

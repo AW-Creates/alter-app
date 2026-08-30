@@ -29,7 +29,7 @@ import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini
 import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona, navigateToTutorConcept } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona, navigateToTutorConcept, setIsOnboardingTourOpen } = useJourney();
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -172,18 +172,27 @@ export const AdvisorView: React.FC = () => {
               </div>
               <h1>{activeJourney.topic}</h1>
             </div>
-            <button
-              onClick={handleRegenerateCurriculum}
-              disabled={isRegenerating}
-              className="ghost-btn"
-            >
-              {isRegenerating ? (
-                <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
-              ) : (
-                <RefreshCw size={14} />
-              )}
-              <span>Regenerate syllabus</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsOnboardingTourOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_15%,transparent)] hover:bg-[color-mix(in_srgb,var(--advisor)_25%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-[var(--advisor)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <Sparkles size={13} />
+                <span>🎓 How Altor Works (1-Min Tour)</span>
+              </button>
+              <button
+                onClick={handleRegenerateCurriculum}
+                disabled={isRegenerating}
+                className="ghost-btn"
+              >
+                {isRegenerating ? (
+                  <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
+                ) : (
+                  <RefreshCw size={14} />
+                )}
+                <span>Regenerate syllabus</span>
+              </button>
+            </div>
           </div>
           <p className="hero-sub">
             {activeJourney.destination}. {activeJourney.hoursPerWeek} hrs/week · Depth:{' '}
@@ -378,74 +387,66 @@ export const AdvisorView: React.FC = () => {
                   </div>
                 )}
 
-                {/* 4-Step Action Playbook */}
+                {/* Phase Courses Directory */}
                 <div className="mt-4 pt-4 border-t border-[var(--hairline)] space-y-3">
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-3)] font-bold">
-                    Phase {phase.phaseNumber} Learning Action Playbook:
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-3)] font-bold flex items-center gap-1.5">
+                      <GraduationCap size={13} className="text-[var(--tutor)]" />
+                      <span>Phase {phase.phaseNumber} Structured Course Curriculum:</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[var(--tutor)] font-semibold">
+                      Complete in order (1.1 ➔ 1.2 ➔ 1.3)
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                    {/* Action 1: Read Sources */}
-                    <button
-                      onClick={() => setActivePersona('librarian')}
-                      className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--librarian)] text-left transition flex items-start gap-2.5 group"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--librarian)_12%,transparent)] border border-[color-mix(in_srgb,var(--librarian)_25%,transparent)] text-[var(--librarian)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <BookOpen size={14} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
-                          <span>1. Study Grounded Sources</span>
-                          <ArrowRight size={12} className="text-[var(--librarian)] group-hover:translate-x-0.5 transition-transform" />
-                        </div>
-                        <p className="text-[11px] text-[var(--ink-2)] m-0 mt-0.5">
-                          Open curated top 1% books &amp; papers in Librarian
-                        </p>
-                      </div>
-                    </button>
-
-                    {/* Action 2: Practice Concepts */}
-                    <button
-                      onClick={() => {
-                        if (phase.coreConcepts?.[0]) {
-                          navigateToTutorConcept(phase.coreConcepts[0]);
-                        } else {
-                          setActivePersona('tutor');
-                        }
-                      }}
-                      className="p-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)] text-left transition flex items-start gap-2.5 group cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--tutor)_12%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_25%,transparent)] text-[var(--tutor)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <GraduationCap size={14} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-[var(--ink)] flex items-center justify-between">
-                          <span>2. Zero-to-Hero Masterclass</span>
-                          <ArrowRight size={12} className="text-[var(--tutor)] group-hover:translate-x-0.5 transition-transform" />
-                        </div>
-                        <p className="text-[11px] text-[var(--ink-2)] m-0 mt-0.5 truncate max-w-[200px]">
-                          Master: {phase.coreConcepts?.[0] || 'Core concepts'}
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-
-                  {/* Core Concept Tags */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[11px] font-mono text-[var(--ink-3)] mr-1">Core Lessons:</span>
-                    {(phase.coreConcepts || []).map((concept, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          navigateToTutorConcept(concept);
-                        }}
-                        className="px-2.5 py-1 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] hover:border-[var(--tutor)] border border-[var(--hairline)] text-[var(--ink)] rounded-lg text-[11px] font-mono transition flex items-center gap-1.5 font-medium shadow-2xs cursor-pointer group"
-                        title={`Click to have Professor teach you "${concept}" from first principles`}
+                  {/* Sequential Course Cards */}
+                  <div className="space-y-2">
+                    {(phase.courses && phase.courses.length > 0
+                      ? phase.courses
+                      : (phase.coreConcepts || []).map((concept, idx) => ({
+                          id: `c-${phase.phaseNumber}-${idx + 1}`,
+                          courseNumber: `${phase.phaseNumber}.${idx + 1}`,
+                          title: concept,
+                          description: `Master the foundational concepts and practical execution of ${concept}.`,
+                          estimatedMinutes: 10 + idx * 2,
+                          completed: phase.completed
+                        }))
+                    ).map((course, idx) => (
+                      <div
+                        key={course.id || idx}
+                        className="p-3.5 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)]/60 transition flex items-start gap-3 group"
                       >
-                        <GraduationCap size={11} className="text-[var(--tutor)] group-hover:scale-110 transition-transform" />
-                        <span>Teach Me: {concept}</span>
-                        <ArrowRight size={10} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
+                        <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--tutor)_14%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_30%,transparent)] text-[var(--tutor)] font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                          {course.courseNumber || `${phase.phaseNumber}.${idx + 1}`}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="text-xs font-bold text-[var(--ink)] group-hover:text-[var(--tutor)] transition-colors line-clamp-1">
+                              {course.title}
+                            </h4>
+                            <span className="text-[10px] font-mono text-[var(--ink-3)] shrink-0">
+                              ⏱️ {course.estimatedMinutes || 10} min
+                            </span>
+                          </div>
+                          <p className="text-[11.5px] text-[var(--ink-2)] mt-0.5 line-clamp-2 leading-relaxed">
+                            {course.description}
+                          </p>
+                          <div className="mt-2.5 flex items-center justify-between">
+                            <button
+                              onClick={() => {
+                                navigateToTutorConcept(course.title);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-[var(--tutor)] hover:bg-[var(--tutor)]/90 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                            >
+                              <Play size={11} fill="currentColor" />
+                              <span>Start Course {course.courseNumber || `${phase.phaseNumber}.${idx + 1}`} →</span>
+                            </button>
+                            <span className="text-[10px] text-[var(--ink-3)] font-mono">
+                              Step-by-Step Interactive Masterclass
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
 
