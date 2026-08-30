@@ -715,7 +715,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         <div className="text-center space-y-6 max-w-4xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-xs font-mono text-[var(--advisor)] tracking-wide font-semibold">
             <Sparkles size={13} className="text-[var(--advisor)]" />
-            <span>YOUR PERSONAL 5-PROFESSOR AI UNIVERSITY FOR ANYTHING YOU WANT TO LEARN</span>
+            <span>YOUR AUTODIDACTIC AI UNIVERSITY · 100% PRIVATE CLIENT-SIDE SANDBOX</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--ink)] leading-[1.1]">
@@ -726,8 +726,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </h1>
 
           <p className="text-base sm:text-xl text-[var(--ink-2)] max-w-2xl mx-auto leading-relaxed font-sans">
-            Whether you want to launch an e-book business, learn real estate investing, bake artisan sourdough, or code your first app —
-            Altor creates your custom curriculum, cuts the fluff, explains concepts in plain English, and guides you to real, tangible proof.
+            Master any subject from scratch. Explore instantly in <strong>Simulated Demo Mode</strong>, or connect your free <strong>Gemini / OpenRouter API Key</strong> for live 1-on-1 AI Socratic sparring and customized curriculum generation.
           </p>
 
           {/* Interactive Custom Topic Search/Creation Bar (Star of Hero) */}
@@ -744,7 +743,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 px-4 py-2.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5"
+                  className="absolute right-2 px-4 py-2.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>Build Syllabus</span>
                   <Zap size={13} />
@@ -759,7 +758,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 <button
                   key={sug.value}
                   onClick={() => handleSelectSuggestion(sug.value)}
-                  className={`px-2.5 py-1 rounded-lg text-[11.5px] transition ${
+                  className={`px-2.5 py-1 rounded-lg text-[11.5px] transition cursor-pointer ${
                     simTopic === sug.value
                       ? 'bg-[var(--advisor)] text-[#04050a] font-semibold'
                       : 'bg-[var(--surface-1)] text-[var(--ink-2)] hover:text-[var(--ink)] border border-[var(--hairline)]'
@@ -774,17 +773,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-[var(--ink-3)] flex-wrap">
             <span>✓ 100% Free Forever</span>
             <span>•</span>
-            <span>✓ Any Topic on Earth</span>
+            <span>✓ Zero Server Tracking</span>
             <span>•</span>
-            <span>✓ 100% Client-Side Sandbox</span>
+            <span>✓ Demo Mode or Live AI BYOK</span>
           </div>
 
           {/* Transparent Live AI vs Demo Mode Engine Disclosure */}
           <div className="pt-2 max-w-xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[11.5px] font-mono text-[var(--ink-2)] shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>
-                <strong>Zero Lock-in:</strong> Explore pre-built curricula in Demo Mode, or connect your free Gemini / OpenRouter API Key for live AI generation.
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[11.5px] font-mono text-[var(--ink-2)] shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                <span>
+                  <strong>Demo Mode</strong> (Simulated) · <strong>Live Mode</strong> (BYO Key)
+                </span>
+              </div>
+              <span className="text-[10.5px] text-[var(--ink-3)] font-sans">
+                Works out-of-the-box with zero setup required.
               </span>
             </div>
           </div>

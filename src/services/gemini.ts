@@ -18,6 +18,7 @@ import { queryGroundedAI, getStoredPerplexityKey } from './grounding';
 import { getStoredOpenRouterKey, callOpenRouter, getRecommendedModelForPersona } from './openrouter';
 
 const STORAGE_API_KEY = 'alter_gemini_api_key';
+const FREE_PROXY_DAILY_LIMIT = 5;
 
 export const getStoredApiKey = (): string => {
   return localStorage.getItem(STORAGE_API_KEY) || '';
@@ -31,8 +32,79 @@ export const setStoredApiKey = (key: string): void => {
   }
 };
 
+export function getDailyProxyUsage(): { date: string; count: number } {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const raw = localStorage.getItem('altor_free_proxy_usage');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.date === today) return parsed;
+    }
+  } catch (e) {}
+  return { date: today, count: 0 };
+}
+
+export function incrementDailyProxyUsage(): number {
+  const today = new Date().toISOString().split('T')[0];
+  const usage = getDailyProxyUsage();
+  const updated = { date: today, count: usage.count + 1 };
+  try {
+    localStorage.setItem('altor_free_proxy_usage', JSON.stringify(updated));
+  } catch (e) {}
+  return updated.count;
+}
+
+export function hasFreeProxyGenerationsRemaining(): boolean {
+  const usage = getDailyProxyUsage();
+  return usage.count < FREE_PROXY_DAILY_LIMIT;
+}
+
+export async function callServerlessProxy(
+  prompt?: string,
+  systemInstruction?: string,
+  model = 'gemini-2.0-flash',
+  enableSearchGrounding = false,
+  customContents?: any[]
+): Promise<string | null> {
+  if (!hasFreeProxyGenerationsRemaining()) {
+    return null;
+  }
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        systemInstruction,
+        model,
+        enableSearchGrounding,
+        contents: customContents
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        incrementDailyProxyUsage();
+        return text;
+      }
+    }
+  } catch (err) {
+    // Serverless proxy unavailable (e.g. running purely local Vite dev server without backend)
+    console.debug('Serverless proxy unavailable, falling back to simulated engine.', err);
+  }
+  return null;
+}
+
 export const hasActiveApiKey = (): boolean => {
-  return Boolean(getStoredApiKey() || getStoredOpenRouterKey() || getStoredPerplexityKey());
+  return Boolean(
+    getStoredApiKey() ||
+    getStoredOpenRouterKey() ||
+    getStoredPerplexityKey() ||
+    hasFreeProxyGenerationsRemaining()
+  );
 };
 
 const extractJsonFromResponse = <T>(text: string): T => {
@@ -83,50 +155,57 @@ export async function callGemini(
     return await callOpenRouter(messages, openRouterModel, 0.7);
   }
 
-  if (!apiKey) {
-    throw new Error('MISSING_API_KEY');
-  }
+  // 2. If client-side Gemini key is present, call directly (unlimited BYOK)
+  if (apiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-  const payload: any = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: prompt }]
+    const payload: any = {
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ],
+      systemInstruction: systemInstruction
+        ? { parts: [{ text: systemInstruction }] }
+        : undefined,
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.95,
+        maxOutputTokens: 2500
       }
-    ],
-    systemInstruction: systemInstruction
-      ? { parts: [{ text: systemInstruction }] }
-      : undefined,
-    generationConfig: {
-      temperature: 0.7,
-      topP: 0.95,
-      maxOutputTokens: 2500
+    };
+
+    if (enableSearchGrounding) {
+      payload.tools = [{ googleSearch: {} }];
     }
-  };
 
-  if (enableSearchGrounding) {
-    payload.tools = [{ googleSearch: {} }];
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `Gemini API error (${response.status})`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!candidate) {
+      throw new Error('Empty response from Gemini');
+    }
+    return candidate;
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData?.error?.message || `Gemini API error (${response.status})`);
+  // 3. If no client key is configured, attempt the serverless proxy (Free Daily Allowance)
+  const proxyResult = await callServerlessProxy(prompt, systemInstruction, model, enableSearchGrounding);
+  if (proxyResult) {
+    return proxyResult;
   }
 
-  const data = await response.json();
-  const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!candidate) {
-    throw new Error('Empty response from Gemini');
-  }
-  return candidate;
+  throw new Error('MISSING_API_KEY');
 }
 
 // ----------------------------------------------------
@@ -141,6 +220,17 @@ export async function chatWithPersona(
   const systemPrompt = SYSTEM_PROMPTS[persona](journey);
   const apiKey = getStoredApiKey();
   const openRouterKey = getStoredOpenRouterKey();
+
+  const contents = [
+    ...chatHistory.map((m) => ({
+      role: m.role,
+      parts: [{ text: m.text }]
+    })),
+    {
+      role: 'user',
+      parts: [{ text: userMessage }]
+    }
+  ];
 
   // 1. If OpenRouter Key is configured, route to best specialized model (Claude 3.5 / DeepSeek R1)
   if (openRouterKey && !apiKey) {
@@ -160,47 +250,48 @@ export async function chatWithPersona(
     }
   }
 
-  if (!apiKey && !openRouterKey) {
-    // Simulated Persona Responses for Demo Mode
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    return getSimulatedPersonaResponse(persona, journey, userMessage);
+  if (apiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const payload = {
+      contents,
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      generationConfig: {
+        temperature: persona === 'roommate' ? 0.9 : 0.6,
+        maxOutputTokens: 2000
+      }
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `Gemini API error (${response.status})`);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-  const contents = [
-    ...chatHistory.map((m) => ({
-      role: m.role,
-      parts: [{ text: m.text }]
-    })),
-    {
-      role: 'user',
-      parts: [{ text: userMessage }]
-    }
-  ];
-
-  const payload = {
-    contents,
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    generationConfig: {
-      temperature: persona === 'roommate' ? 0.9 : 0.6,
-      maxOutputTokens: 2000
-    }
-  };
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData?.error?.message || `Gemini API error (${response.status})`);
+  // 2. If no client key is set, attempt serverless proxy (Free Daily Allowance)
+  const proxyResult = await callServerlessProxy(
+    undefined,
+    systemPrompt,
+    'gemini-2.0-flash',
+    false,
+    contents
+  );
+  if (proxyResult) {
+    return proxyResult;
   }
 
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
+  // 3. Fallback to Simulated Persona Responses for Demo Mode
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  return getSimulatedPersonaResponse(persona, journey, userMessage);
 }
 
 // ----------------------------------------------------
