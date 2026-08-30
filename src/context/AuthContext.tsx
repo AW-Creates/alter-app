@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getSupabase, isSupabaseConfigured, syncJourneysToCloud, fetchJourneysFromCloud } from '../services/supabase';
+import {
+  getSupabase,
+  isSupabaseConfigured,
+  syncJourneysToCloud,
+  fetchJourneysFromCloud,
+  setStoredSupabaseConfig,
+  getStoredSupabaseUrl,
+  getStoredSupabaseAnonKey
+} from '../services/supabase';
+import { getStorageMetrics, StorageMetrics, downloadBackupFile } from '../services/storage';
 
 export interface UserProfile {
   id: string;
@@ -17,19 +26,24 @@ interface AuthContextType {
   user: UserProfile;
   isAuthModalOpen: boolean;
   isSupabaseActive: boolean;
+  storageMetrics: StorageMetrics;
+  refreshStorageMetrics: () => void;
   setIsAuthModalOpen: (open: boolean) => void;
   loginWithGoogle: () => Promise<void>;
   loginWithGithub: () => Promise<void>;
   loginWithEmail: (email: string, name: string) => Promise<void>;
+  saveLocalProfile: (name: string, email: string, username?: string) => void;
+  configureSupabase: (url: string, anonKey: string) => boolean;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => void;
+  exportBackup: () => void;
 }
 
 const STORAGE_KEY_USER = 'altor_user_profile_v1';
 
 const defaultGuestUser: UserProfile = {
-  id: 'guest_' + Math.random().toString(36).substring(2, 9),
-  name: 'Scholar (Guest)',
+  id: 'local_scholar_' + Math.random().toString(36).substring(2, 8),
+  name: 'Local Scholar',
   email: '',
   username: 'scholar',
   tier: 'free',
@@ -53,11 +67,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSupabaseActive, setIsSupabaseActive] = useState(isSupabaseConfigured());
+  const [storageMetrics, setStorageMetrics] = useState<StorageMetrics>(getStorageMetrics());
+
+  const refreshStorageMetrics = () => {
+    setStorageMetrics(getStorageMetrics());
+  };
+
+  // Listen for storage quota error events
+  useEffect(() => {
+    const handleStorageError = (e: any) => {
+      refreshStorageMetrics();
+    };
+    window.addEventListener('altor_storage_quota_error', handleStorageError);
+    return () => window.removeEventListener('altor_storage_quota_error', handleStorageError);
+  }, []);
 
   // Listen for Supabase Auth state changes if configured
   useEffect(() => {
     const supabase = getSupabase();
-    if (!supabase) return;
+    if (!supabase) {
+      setIsSupabaseActive(false);
+      // Ensure syncEnabled is false if Supabase is not active
+      if (user.syncEnabled) {
+        setUser((prev) => ({ ...prev, syncEnabled: false }));
+      }
+      return;
+    }
 
     setIsSupabaseActive(true);
 
@@ -84,13 +119,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+      refreshStorageMetrics();
     } catch (e) {
       console.error('Failed to save user profile', e);
     }
@@ -108,19 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!error) return;
     }
 
-    // Seamless offline/demo fallback
-    const updatedUser: UserProfile = {
-      ...user,
-      id: 'google_' + Date.now(),
-      name: 'Alex Vance',
-      email: 'alex.vance@example.com',
-      username: 'alexvance',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-      isGuest: false,
-      syncEnabled: true
-    };
-    setUser(updatedUser);
-    setIsAuthModalOpen(false);
+    // Honest notice when Supabase is not configured
+    alert(
+      'Supabase Cloud Auth is not configured in this deployment.\n\nAltor is operating in Local-First Mode: all your learning journeys and streaks are securely saved in this browser.\n\nYou can customize your local profile or export JSON backups anytime.'
+    );
   };
 
   const loginWithGithub = async () => {
@@ -135,19 +162,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!error) return;
     }
 
-    // Seamless offline/demo fallback
-    const updatedUser: UserProfile = {
-      ...user,
-      id: 'github_' + Date.now(),
-      name: 'Jordan Lee',
-      email: 'jordan.lee@github.com',
-      username: 'jordanlee-dev',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-      isGuest: false,
-      syncEnabled: true
-    };
-    setUser(updatedUser);
-    setIsAuthModalOpen(false);
+    // Honest notice when Supabase is not configured
+    alert(
+      'Supabase Cloud Auth is not configured in this deployment.\n\nAltor is operating in Local-First Mode: all your learning journeys and streaks are securely saved in this browser.\n\nYou can customize your local profile or export JSON backups anytime.'
+    );
   };
 
   const loginWithEmail = async (email: string, name: string) => {
@@ -167,17 +185,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
+    // If Supabase is not connected, personalize the Local Scholar profile with their actual name & email
+    saveLocalProfile(name || email.split('@')[0], email);
+    setIsAuthModalOpen(false);
+  };
+
+  const saveLocalProfile = (name: string, email: string, username?: string) => {
+    const cleanName = name.trim() || 'Scholar';
+    const cleanEmail = email.trim();
+    const cleanUsername = (username || cleanName).toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'scholar';
+
     const updatedUser: UserProfile = {
       ...user,
-      id: 'email_' + Date.now(),
-      name: name || email.split('@')[0],
-      email: email,
-      username: email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
+      id: user.id.startsWith('local_') ? user.id : 'local_' + Date.now(),
+      name: cleanName,
+      email: cleanEmail,
+      username: cleanUsername,
       isGuest: false,
-      syncEnabled: true
+      syncEnabled: false // Honest: local storage only
     };
+
     setUser(updatedUser);
-    setIsAuthModalOpen(false);
+  };
+
+  const configureSupabase = (url: string, anonKey: string): boolean => {
+    setStoredSupabaseConfig(url, anonKey);
+    const client = getSupabase();
+    const isConfigured = Boolean(client);
+    setIsSupabaseActive(isConfigured);
+    return isConfigured;
   };
 
   const logout = async () => {
@@ -192,18 +228,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser((prev) => ({ ...prev, ...updates }));
   };
 
+  const exportBackup = () => {
+    downloadBackupFile();
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthModalOpen,
         isSupabaseActive,
+        storageMetrics,
+        refreshStorageMetrics,
         setIsAuthModalOpen,
         loginWithGoogle,
         loginWithGithub,
         loginWithEmail,
+        saveLocalProfile,
+        configureSupabase,
         logout,
-        updateProfile
+        updateProfile,
+        exportBackup
       }}
     >
       {children}

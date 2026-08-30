@@ -74,25 +74,28 @@ export const AppContent: React.FC = () => {
         onOpenPricing={() => setIsPricingOpen(true)}
       />
 
-      {/* Guest Mode Cloud Sync Banner */}
+      {/* Local Storage & Backup Banner */}
       {user.isGuest && activeJourney && showSyncBanner && (
         <div className="bg-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-1))] border-b border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] px-4 py-2 flex items-center justify-between text-xs text-[var(--ink)] transition">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <Sparkles size={14} className="text-[var(--advisor)] flex-shrink-0" />
             <span className="truncate">
-              Studying <strong>{activeJourney.title}</strong> in Guest Mode. <span className="hidden sm:inline text-[var(--ink-2)]">Create a free scholar account to preserve your streak &amp; sync across devices.</span>
+              Studying <strong>{activeJourney.title}</strong> (Local-First Mode).{' '}
+              <span className="hidden sm:inline text-[var(--ink-2)]">
+                All data is safely saved in this browser. Export JSON anytime for backup.
+              </span>
             </span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3 py-1 rounded-lg bg-[var(--advisor)] text-[#04050a] font-bold text-[11px] hover:brightness-110 shadow-sm transition"
+              className="px-3 py-1 rounded-lg bg-[var(--advisor)] text-[#04050a] font-bold text-[11px] hover:brightness-110 shadow-xs transition cursor-pointer"
             >
-              Sign Up / Sync
+              Storage &amp; Backup
             </button>
             <button
               onClick={() => setShowSyncBanner(false)}
-              className="p-1 text-[var(--ink-3)] hover:text-[var(--ink)] transition"
+              className="p-1 text-[var(--ink-3)] hover:text-[var(--ink)] transition cursor-pointer"
               title="Dismiss banner"
             >
               <X size={13} />

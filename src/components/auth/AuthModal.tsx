@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   X,
@@ -12,51 +12,98 @@ import {
   Github,
   Shield,
   Zap,
-  Globe
+  Globe,
+  Download,
+  Upload,
+  Database,
+  ChevronDown,
+  ChevronUp,
+  HardDrive,
+  AlertCircle
 } from 'lucide-react';
+import { importAllData } from '../../services/storage';
+import { getStoredSupabaseUrl, getStoredSupabaseAnonKey } from '../../services/supabase';
 
 export const AuthModal: React.FC = () => {
   const {
     user,
     isAuthModalOpen,
+    isSupabaseActive,
+    storageMetrics,
+    refreshStorageMetrics,
     setIsAuthModalOpen,
     loginWithGoogle,
     loginWithGithub,
     loginWithEmail,
+    saveLocalProfile,
+    configureSupabase,
     logout,
-    updateProfile
+    updateProfile,
+    exportBackup
   } = useAuth();
 
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'profile'>(
-    user.isGuest ? 'signin' : 'profile'
-  );
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [nameInput, setNameInput] = useState(user.name === 'Local Scholar' ? '' : user.name);
+  const [emailInput, setEmailInput] = useState(user.email);
   const [usernameInput, setUsernameInput] = useState(user.username);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Custom Supabase Cloud Sync configuration state
+  const [isSupabaseSectionOpen, setIsSupabaseSectionOpen] = useState(false);
+  const [supabaseUrlInput, setSupabaseUrlInput] = useState(getStoredSupabaseUrl());
+  const [supabaseKeyInput, setSupabaseKeyInput] = useState(getStoredSupabaseAnonKey());
+  const [supabaseStatusMsg, setSupabaseStatusMsg] = useState<string | null>(null);
+
+  // Import JSON file input ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isAuthModalOpen) return null;
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    await loginWithEmail(email.trim(), name.trim());
+    saveLocalProfile(nameInput || 'Scholar', emailInput, usernameInput);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handleSaveUsername = (e: React.FormEvent) => {
+  const handleSaveSupabaseConfig = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!usernameInput.trim()) return;
-    setIsSavingProfile(true);
-    updateProfile({ username: usernameInput.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') });
-    setTimeout(() => {
-      setIsSavingProfile(false);
-    }, 400);
+    const success = configureSupabase(supabaseUrlInput.trim(), supabaseKeyInput.trim());
+    if (success) {
+      setSupabaseStatusMsg('✅ Supabase cloud database connected successfully!');
+    } else {
+      setSupabaseStatusMsg(
+        supabaseUrlInput.trim()
+          ? '⚠️ Unable to connect to Supabase. Check URL and anon key.'
+          : 'Cleared Supabase configuration (reverted to Local Mode).'
+      );
+    }
+    setTimeout(() => setSupabaseStatusMsg(null), 4000);
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const ok = importAllData(content);
+        if (ok) {
+          refreshStorageMetrics();
+          alert('✅ All learning journeys and curricula restored successfully!');
+          window.location.reload();
+        } else {
+          alert('❌ Failed to restore backup. Invalid Altor JSON format.');
+        }
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-2xl space-y-6">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-7 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={() => setIsAuthModalOpen(false)}
@@ -66,189 +113,260 @@ export const AuthModal: React.FC = () => {
         </button>
 
         {/* Modal Header */}
-        <div className="text-center space-y-2 pt-1">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center font-display font-bold text-base text-[var(--advisor)] shadow-md mx-auto">
-            A
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center font-display font-bold text-sm text-[var(--advisor)] shadow-md">
+              A
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-bold text-[var(--ink)] tracking-tight m-0">
+                Scholar Profile &amp; Data Storage
+              </h3>
+              <p className="text-xs text-[var(--ink-2)] m-0">
+                Manage your local profile, storage quota, JSON backups &amp; cloud sync.
+              </p>
+            </div>
           </div>
-          <h3 className="font-display text-xl font-bold text-[var(--ink)] tracking-tight">
-            {user.isGuest
-              ? authMode === 'signin'
-                ? 'Sign in to Altor Academy'
-                : 'Create Your Scholar Account'
-              : 'Scholar Profile & Cloud Sync'}
-          </h3>
-          <p className="text-xs text-[var(--ink-2)]">
-            {user.isGuest
-              ? 'Sync your curricula, grounded notes, and streak across all devices.'
-              : 'Manage your portfolio handle, plan tier, and encrypted backup.'}
-          </p>
         </div>
 
-        {/* Unauthenticated / Guest View */}
-        {user.isGuest ? (
-          <div className="space-y-4">
-            {/* 1-Click OAuth Buttons */}
-            <div className="space-y-2.5">
-              <button
-                onClick={loginWithGoogle}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] hover:bg-[var(--surface-3)] text-[var(--ink)] font-semibold text-xs flex items-center justify-center gap-3 transition shadow-sm"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                <span>Continue with Google</span>
-              </button>
+        {/* Honest Storage Architecture Banner */}
+        <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-semibold text-[var(--ink)]">
+              <HardDrive size={15} className="text-[var(--advisor)]" />
+              <span>Storage Mode:</span>
+            </div>
+            {isSupabaseActive ? (
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-[11px] font-mono font-bold flex items-center gap-1">
+                <Cloud size={12} /> Supabase Cloud Sync (Active)
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-md bg-[var(--surface-3)] border border-[var(--hairline)] text-[var(--ink-2)] text-[11px] font-mono font-bold flex items-center gap-1">
+                <Shield size={12} className="text-[var(--advisor)]" /> Local Storage (This Browser)
+              </span>
+            )}
+          </div>
 
-              <button
-                onClick={loginWithGithub}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[var(--ink)] font-semibold text-xs flex items-center justify-center gap-3 transition"
-              >
-                <Github size={16} />
-                <span>Continue with GitHub</span>
-              </button>
+          {/* Storage Quota Usage Bar */}
+          <div className="space-y-1 pt-1">
+            <div className="flex justify-between text-[11px] font-mono text-[var(--ink-3)]">
+              <span>Used: {storageMetrics.formattedUsed} / ~5 MB</span>
+              <span>{storageMetrics.estimatedPercentage}% capacity</span>
+            </div>
+            <div className="w-full h-1.5 rounded-full bg-[var(--surface-3)] overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  storageMetrics.isNearQuota ? 'bg-rose-500' : 'bg-[var(--advisor)]'
+                }`}
+                style={{ width: `${storageMetrics.estimatedPercentage}%` }}
+              />
+            </div>
+            {storageMetrics.isNearQuota && (
+              <p className="text-[11px] text-rose-500 flex items-center gap-1 mt-1 font-sans">
+                <AlertCircle size={12} />
+                <span>Storage nearing limit. Export a JSON backup to protect your curricula.</span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* 1-Click Backup Export / Import */}
+        <div className="p-3.5 rounded-xl bg-gradient-to-r from-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-2))] to-[var(--surface-2)] border border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-[var(--ink)] flex items-center gap-1.5">
+              <Download size={14} className="text-[var(--advisor)]" />
+              <span>Full Data Backup &amp; Portability</span>
+            </div>
+            <span className="text-[10px] font-mono text-[var(--ink-3)]">100% Client-Side</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={exportBackup}
+              className="py-2 px-3 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+            >
+              <Download size={13} />
+              <span>Export Backup (.json)</span>
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="py-2 px-3 rounded-xl bg-[var(--surface-3)] hover:bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[var(--ink)] text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <Upload size={13} />
+              <span>Restore Backup</span>
+            </button>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportFile}
+              accept=".json"
+              className="hidden"
+            />
+          </div>
+        </div>
+
+        {/* Scholar Profile Details Form */}
+        <form onSubmit={handleSaveProfile} className="space-y-3 pt-1">
+          <div className="text-xs font-bold text-[var(--ink)] flex items-center gap-1.5">
+            <User size={14} className="text-[var(--tutor)]" />
+            <span>Scholar Identity</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Marie Curie"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none font-sans"
+              />
             </div>
 
-            <div className="flex items-center gap-3 py-1">
-              <div className="flex-1 border-t border-[var(--hairline)]" />
-              <span className="text-[10px] font-mono uppercase text-[var(--ink-3)]">or email passcode</span>
-              <div className="flex-1 border-t border-[var(--hairline)]" />
-            </div>
-
-            {/* Email Form */}
-            <form onSubmit={handleEmailSubmit} className="space-y-3">
-              {authMode === 'signup' && (
-                <div>
-                  <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">Your Name</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="e.g. Marie Curie"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none pl-9"
-                    />
-                    <User size={14} className="absolute left-3 top-3.5 text-[var(--ink-3)]" />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">Email Address</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    placeholder="scholar@domain.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none pl-9"
-                    required
-                  />
-                  <Mail size={14} className="absolute left-3 top-3.5 text-[var(--ink-3)]" />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition"
-              >
-                {authMode === 'signin' ? 'Sign In / Instant Sync' : 'Create Scholar Account'}
-              </button>
-            </form>
-
-            <div className="text-center pt-1">
-              <button
-                onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
-                className="text-xs text-[var(--ink-3)] hover:text-[var(--ink)] transition"
-              >
-                {authMode === 'signin'
-                  ? "Don't have an account? Create one"
-                  : 'Already have an account? Sign in'}
-              </button>
+            <div>
+              <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">
+                Email Address (Optional)
+              </label>
+              <input
+                type="email"
+                placeholder="scholar@example.com"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none font-sans"
+              />
             </div>
           </div>
-        ) : (
-          /* Authenticated User Profile View */
-          <div className="space-y-5">
-            {/* User Badge */}
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)]">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-[var(--hairline-strong)]" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--advisor)_18%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
-                  {user.name.charAt(0)}
+
+          <div>
+            <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">
+              Public Portfolio Handle
+            </label>
+            <div className="flex items-center bg-[var(--surface-2)] border border-[var(--hairline)] focus-within:border-[var(--advisor)] rounded-xl px-3 py-2 text-xs">
+              <Globe size={13} className="text-[var(--ink-3)] mr-2 flex-shrink-0" />
+              <span className="text-[var(--ink-3)] font-mono">altor.app/@</span>
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value)}
+                className="bg-transparent border-none text-[var(--ink)] outline-none font-mono flex-1 min-w-0"
+                placeholder="username"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <button
+              type="submit"
+              className="py-2 px-5 rounded-xl bg-[var(--surface-3)] hover:border-[var(--accent)] border border-[var(--hairline-strong)] text-xs font-bold text-[var(--ink)] transition flex items-center gap-1.5 cursor-pointer"
+            >
+              {isSaved ? <Check size={13} className="text-[var(--tutor)]" /> : null}
+              <span>{isSaved ? 'Profile Saved' : 'Save Scholar Profile'}</span>
+            </button>
+
+            {!user.isGuest && (
+              <button
+                type="button"
+                onClick={logout}
+                className="text-xs text-rose-500 hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none"
+              >
+                <LogOut size={12} />
+                <span>Reset to Default</span>
+              </button>
+            )}
+          </div>
+        </form>
+
+        {/* Optional Cloud Sync (Supabase PostgreSQL) Accordion */}
+        <div className="border-t border-[var(--hairline)] pt-3">
+          <button
+            type="button"
+            onClick={() => setIsSupabaseSectionOpen((prev) => !prev)}
+            className="w-full flex items-center justify-between text-xs text-[var(--ink-2)] hover:text-[var(--ink)] font-semibold transition py-1 cursor-pointer bg-transparent border-none"
+          >
+            <div className="flex items-center gap-2">
+              <Database size={14} className="text-[var(--advisor)]" />
+              <span>Connect Custom Supabase (Multi-Device Cloud Sync)</span>
+            </div>
+            {isSupabaseSectionOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+
+          {isSupabaseSectionOpen && (
+            <form onSubmit={handleSaveSupabaseConfig} className="space-y-3 pt-3 animate-fade-in text-xs">
+              <p className="text-[11px] text-[var(--ink-3)] leading-relaxed m-0 font-sans">
+                To sync your learning journeys across multiple devices without storing data on third-party servers, connect your own free Supabase PostgreSQL project.
+              </p>
+
+              <div>
+                <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">
+                  Supabase Project URL (e.g. https://xxx.supabase.co)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://xyzcompany.supabase.co"
+                  value={supabaseUrlInput}
+                  onChange={(e) => setSupabaseUrlInput(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-[var(--ink-2)] mb-1">
+                  Supabase Anon Public Key
+                </label>
+                <input
+                  type="password"
+                  placeholder="eyJhbGciOi..."
+                  value={supabaseKeyInput}
+                  onChange={(e) => setSupabaseKeyInput(e.target.value)}
+                  className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--advisor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none font-mono"
+                />
+              </div>
+
+              {supabaseStatusMsg && (
+                <div className="p-2.5 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-[11.5px] font-mono text-[var(--ink)]">
+                  {supabaseStatusMsg}
                 </div>
               )}
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[var(--ink)] text-xs truncate">{user.name}</div>
-                <div className="text-[11px] text-[var(--ink-3)] truncate font-mono">{user.email || 'Cloud Account'}</div>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--tutor)_15%,transparent)] text-[var(--tutor)] border border-[color-mix(in_srgb,var(--tutor)_30%,transparent)] text-[10px] font-mono uppercase font-semibold">
-                {user.tier}
-              </span>
-            </div>
 
-            {/* Public Portfolio Handle */}
-            <form onSubmit={handleSaveUsername} className="space-y-2">
-              <label className="block text-[11px] font-medium text-[var(--ink-2)]">
-                Public Proof-of-Work Portfolio URL
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center bg-[var(--surface-2)] border border-[var(--hairline)] focus-within:border-[var(--advisor)] rounded-xl px-3 py-2 text-xs">
-                  <Globe size={13} className="text-[var(--ink-3)] mr-2 flex-shrink-0" />
-                  <span className="text-[var(--ink-3)] font-mono">altor.app/@</span>
-                  <input
-                    type="text"
-                    value={usernameInput}
-                    onChange={(e) => setUsernameInput(e.target.value)}
-                    className="bg-transparent border-none text-[var(--ink)] outline-none font-mono flex-1 min-w-0"
-                    placeholder="username"
-                  />
-                </div>
+              <div className="flex gap-2">
                 <button
                   type="submit"
-                  disabled={isSavingProfile}
-                  className="px-3.5 py-2.5 rounded-xl bg-[var(--surface-3)] hover:border-[var(--accent)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] transition"
+                  className="py-2 px-4 rounded-xl bg-[var(--advisor)] text-[#04050a] font-bold text-xs shadow-xs transition cursor-pointer"
                 >
-                  {isSavingProfile ? <Check size={13} className="text-[var(--tutor)]" /> : 'Save'}
+                  Save &amp; Connect Cloud Sync
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSupabaseUrlInput('');
+                    setSupabaseKeyInput('');
+                    configureSupabase('', '');
+                    setSupabaseStatusMsg('Cleared cloud credentials. Operating in Local Mode.');
+                  }}
+                  className="py-2 px-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-[var(--ink-2)] text-xs transition cursor-pointer"
+                >
+                  Clear Keys
                 </button>
               </div>
             </form>
+          )}
+        </div>
 
-            {/* Cloud Sync Status */}
-            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2.5">
-                <Cloud size={16} className="text-[var(--advisor)]" />
-                <div>
-                  <div className="font-semibold text-[var(--ink)]">Cloud Encrypted Backup</div>
-                  <div className="text-[10px] text-[var(--ink-3)]">Auto-syncs across Desktop &amp; Mobile</div>
-                </div>
-              </div>
-              <span className="text-[11px] font-mono text-[var(--tutor)] font-semibold flex items-center gap-1">
-                <Check size={12} /> Active
-              </span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={logout}
-                className="flex-1 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-300 font-semibold text-xs flex items-center justify-center gap-2 transition"
-              >
-                <LogOut size={13} />
-                <span>Sign Out</span>
-              </button>
-              <button
-                onClick={() => setIsAuthModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl bg-[var(--surface-3)] hover:border-[var(--hairline-strong)] border border-[var(--hairline)] text-[var(--ink)] font-semibold text-xs transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Footer */}
+        <div className="pt-2 border-t border-[var(--hairline)] flex justify-end">
+          <button
+            type="button"
+            onClick={() => setIsAuthModalOpen(false)}
+            className="py-2 px-5 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--ink)] text-xs font-semibold transition cursor-pointer"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,13 @@ import { LearningJourney } from '../types/alter';
 const STORAGE_KEY = 'alter_learning_journeys_v1';
 const ACTIVE_JOURNEY_KEY = 'alter_active_journey_id_v1';
 
+export interface StorageMetrics {
+  usedBytes: number;
+  formattedUsed: string;
+  estimatedPercentage: number;
+  isNearQuota: boolean;
+}
+
 export const getStoredJourneys = (): LearningJourney[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -18,12 +25,110 @@ export const getStoredJourneys = (): LearningJourney[] => {
   }
 };
 
-export const saveJourneys = (journeys: LearningJourney[]): void => {
+/**
+ * Compact journeys by keeping only the most recent chat turns per persona
+ * to recover local storage space when approaching quota limits.
+ */
+export const compactJourneys = (journeys: LearningJourney[], maxChatTurns = 30): LearningJourney[] => {
+  return journeys.map((j) => ({
+    ...j,
+    advisorData: {
+      ...j.advisorData,
+      chatHistory: (j.advisorData.chatHistory || []).slice(-maxChatTurns)
+    },
+    librarianData: {
+      ...j.librarianData,
+      chatHistory: (j.librarianData.chatHistory || []).slice(-maxChatTurns)
+    },
+    tutorData: {
+      ...j.tutorData,
+      chatHistory: (j.tutorData.chatHistory || []).slice(-maxChatTurns)
+    },
+    editorData: {
+      ...j.editorData,
+      chatHistory: (j.editorData.chatHistory || []).slice(-maxChatTurns)
+    },
+    roommateData: {
+      ...j.roommateData,
+      chatHistory: (j.roommateData.chatHistory || []).slice(-maxChatTurns)
+    }
+  }));
+};
+
+export const saveJourneys = (journeys: LearningJourney[]): boolean => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(journeys));
-  } catch (e) {
+    return true;
+  } catch (e: any) {
     console.error('Failed to save journeys to storage', e);
+    
+    // Handle QuotaExceededError
+    if (
+      e.name === 'QuotaExceededError' ||
+      e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      e.code === 22 ||
+      e.code === 1014
+    ) {
+      try {
+        // Attempt aggressive compaction of old chat histories
+        const compacted = compactJourneys(journeys, 15);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(compacted));
+        console.warn('Storage quota was near limit; successfully compacted historical chat logs.');
+        return true;
+      } catch (innerErr) {
+        console.error('Storage quota exceeded even after compaction.', innerErr);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('altor_storage_quota_error', {
+              detail: {
+                message: 'Browser storage limit reached. Please export a JSON backup to prevent data loss.'
+              }
+            })
+          );
+        }
+        return false;
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('altor_storage_quota_error', {
+          detail: { message: 'Failed to write to local storage: ' + (e.message || 'Unknown error') }
+        })
+      );
+    }
+    return false;
   }
+};
+
+export const getStorageMetrics = (): StorageMetrics => {
+  let totalBytes = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const val = localStorage.getItem(key) || '';
+        totalBytes += (key.length + val.length) * 2; // UTF-16 approx 2 bytes per char
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to calculate storage metrics', err);
+  }
+
+  const maxEstimatedBytes = 5 * 1024 * 1024; // 5 MB typical localStorage quota
+  const percentage = Math.min(100, Math.round((totalBytes / maxEstimatedBytes) * 100));
+
+  let formattedUsed = `${(totalBytes / 1024).toFixed(1)} KB`;
+  if (totalBytes > 1024 * 1024) {
+    formattedUsed = `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  return {
+    usedBytes: totalBytes,
+    formattedUsed,
+    estimatedPercentage: percentage,
+    isNearQuota: percentage >= 80
+  };
 };
 
 export const getStoredActiveJourneyId = (): string | null => {
@@ -42,6 +147,19 @@ export const exportAllData = (): string => {
     journeys
   };
   return JSON.stringify(data, null, 2);
+};
+
+export const downloadBackupFile = (): void => {
+  const jsonStr = exportAllData();
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `altor_scholar_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 export const importAllData = (jsonString: string): boolean => {

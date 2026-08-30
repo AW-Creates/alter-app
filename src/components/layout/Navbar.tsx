@@ -281,14 +281,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
                   <div className="flex items-center gap-2">
                     <User size={14} className="text-[var(--advisor)]" />
                     <span className="font-medium">
-                      {user.isGuest ? 'Sign Up / Cloud Sync' : user.username}
+                      {user.isGuest ? 'Scholar Profile & Backup' : user.name || user.username}
                     </span>
                   </div>
-                  {user.isGuest && (
-                    <span className="text-[9px] font-mono bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1.5 py-0.2 rounded font-bold">
-                      Guest
-                    </span>
-                  )}
+                  <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold ${user.syncEnabled ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)]'}`}>
+                    {user.syncEnabled ? 'Cloud Sync' : 'Local'}
+                  </span>
                 </button>
 
                 <button

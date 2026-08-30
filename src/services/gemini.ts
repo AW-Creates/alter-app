@@ -297,17 +297,50 @@ export async function generateSourcesWithAI(
     if (groundedResult.text) {
       const parsed = extractJsonFromResponse<any[]>(groundedResult.text);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((s, idx) => ({
-          id: `source-${idx + 1}-${Date.now()}`,
-          type: s.type || 'book',
-          title: s.title || 'Seminal Source',
-          authorOrCreator: s.authorOrCreator || 'Author',
-          url: s.url || groundedResult.citations[idx]?.url || '',
-          signalScore: s.signalScore || 10,
-          whyEssential: s.whyEssential || 'Top 1% high signal material.',
-          keyTakeaway: s.keyTakeaway || 'Foundational intuition',
-          status: 'unread'
-        }));
+        return parsed.map((s, idx) => {
+          // Robust citation matching by title/author keywords instead of blind positional array indexing
+          let matchedUrl = s.url && s.url.startsWith('http') ? s.url : '';
+
+          if (!matchedUrl && groundedResult.citations && groundedResult.citations.length > 0) {
+            const titleWords = (s.title || '')
+              .toLowerCase()
+              .split(/[\s,.:;'"-]+/)
+              .filter((w: string) => w.length > 3);
+            const authorWords = (s.authorOrCreator || '')
+              .toLowerCase()
+              .split(/[\s,.:;'"-]+/)
+              .filter((w: string) => w.length > 3);
+
+            for (const cit of groundedResult.citations) {
+              const citTitle = (cit.title || '').toLowerCase();
+              const citUrl = (cit.url || '').toLowerCase();
+              const matchesTitle = titleWords.some((w: string) => citTitle.includes(w) || citUrl.includes(w));
+              const matchesAuthor = authorWords.some((w: string) => citTitle.includes(w) || citUrl.includes(w));
+
+              if (matchesTitle || matchesAuthor) {
+                matchedUrl = cit.url;
+                break;
+              }
+            }
+          }
+
+          // Fallback to verified search query rather than a mismatched citation from another book
+          if (!matchedUrl) {
+            matchedUrl = `https://www.google.com/search?q=${encodeURIComponent(`${s.title} ${s.authorOrCreator}`)}`;
+          }
+
+          return {
+            id: `source-${idx + 1}-${Date.now()}`,
+            type: s.type || 'book',
+            title: s.title || 'Seminal Source',
+            authorOrCreator: s.authorOrCreator || 'Author',
+            url: matchedUrl,
+            signalScore: s.signalScore || 10,
+            whyEssential: s.whyEssential || 'Top 1% high signal material.',
+            keyTakeaway: s.keyTakeaway || 'Foundational intuition',
+            status: 'unread'
+          };
+        });
       }
     }
   } catch (err) {
@@ -324,7 +357,7 @@ export async function generateSourcesWithAI(
     type: s.type || 'book',
     title: s.title || 'Seminal Source',
     authorOrCreator: s.authorOrCreator || 'Author',
-    url: s.url || '',
+    url: s.url && s.url.startsWith('http') ? s.url : `https://www.google.com/search?q=${encodeURIComponent(`${s.title || ''} ${s.authorOrCreator || ''}`)}`,
     signalScore: s.signalScore || 10,
     whyEssential: s.whyEssential || 'Top 1% high signal material.',
     keyTakeaway: s.keyTakeaway || 'Foundational intuition',

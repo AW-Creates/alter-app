@@ -69,12 +69,12 @@ export const LibrarianView: React.FC = () => {
   const groundedNotes = librarianData.groundedNotes || librarianData.vaultNotes || [];
   const flashcards = librarianData.flashcards || librarianData.conceptCards || [];
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim() || isLoading) return;
+  const handleSendMessage = async (e?: React.FormEvent, customMsg?: string) => {
+    if (e?.preventDefault) e.preventDefault();
+    const userMsg = (customMsg || inputText).trim();
+    if (!userMsg || isLoading) return;
 
-    const userMsg = inputText.trim();
-    setInputText('');
+    if (!customMsg) setInputText('');
     addChatMessage('librarian', { sender: 'user', content: userMsg, persona: 'librarian' });
     setIsLoading(true);
 
@@ -604,39 +604,51 @@ export const LibrarianView: React.FC = () => {
               <div className="p-16 flex flex-col items-center justify-center space-y-4 text-xs text-[var(--ink-2)]">
                 <Loader2 size={32} className="animate-spin text-[var(--librarian)]" />
                 <div className="text-center space-y-1">
-                  <p className="font-semibold text-sm text-[var(--ink)]">Building Zero-to-Hero Progressive Masterclass...</p>
-                  <p className="text-[11.5px] text-[var(--ink-3)]">Deconstructing core intuition, mechanics diagram, implementation code, and Socratic challenge.</p>
+                  <p className="font-semibold text-sm text-[var(--ink)]">Building Canonical Reading Guide...</p>
+                  <p className="text-[11.5px] text-[var(--ink-3)]">Deconstructing core thesis, high-yield chapters, and mental model heuristics.</p>
                 </div>
               </div>
             ) : deepDiveData ? (
               <>
-                {/* 5-Level Progress Stepper */}
-                <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-2 bg-[var(--surface-1)] overflow-x-auto gap-1">
-                  {[
-                    { id: 'intuition', num: '1', label: 'Plain Intuition', icon: '🐣' },
-                    { id: 'mechanics', num: '2', label: 'Deep Mechanics & Flow', icon: '⚙️' },
-                    { id: 'code', num: '3', label: 'Tactical Implementation', icon: '💻' },
-                    { id: 'traps', num: '4', label: 'Traps & Cut-List', icon: '⚠️' },
-                    { id: 'sparring', num: '5', label: 'Socratic Sparring Check', icon: '🥊' }
-                  ].map((step) => (
-                    <button
-                      key={step.id}
-                      onClick={() => setMasterclassTab(step.id as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
-                        masterclassTab === step.id
-                          ? 'bg-[var(--librarian)] text-[#04050a] font-bold shadow-xs'
-                          : 'text-[var(--ink-2)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)]'
-                      }`}
-                    >
-                      <span>{step.icon}</span>
-                      <span>Level {step.num}: {step.label}</span>
-                    </button>
-                  ))}
+                {/* Canonical Reading Guide Navigation */}
+                <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-2 bg-[var(--surface-1)] overflow-x-auto gap-2">
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { id: 'intuition', label: '📖 Seminal Thesis & Synthesis', icon: '💡' },
+                      { id: 'mechanics', label: '🗺️ High-Yield Chapter Map', icon: '📑' },
+                      { id: 'code', label: '🧠 Mental Models & Heuristics', icon: '⚡' }
+                    ].map((step) => (
+                      <button
+                        key={step.id}
+                        onClick={() => setMasterclassTab(step.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+                          masterclassTab === step.id
+                            ? 'bg-[var(--librarian)] text-[#04050a] font-bold shadow-xs'
+                            : 'text-[var(--ink-2)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)]'
+                        }`}
+                      >
+                        <span>{step.icon}</span>
+                        <span>{step.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const prompt = `I've just reviewed the canonical synthesis of "${selectedSourceForDeepDive.title}". How does its core thesis specifically apply to my project goal (${activeJourney.destination})?`;
+                      setSelectedSourceForDeepDive(null);
+                      handleSendMessage({ preventDefault: () => {} } as any, prompt);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-[color-mix(in_srgb,var(--librarian)_15%,var(--surface-2))] border border-[var(--librarian)] text-[var(--librarian)] hover:bg-[var(--librarian)] hover:text-[#04050a] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                  >
+                    <span>💬 Discuss at Desk</span>
+                    <ArrowRight size={13} />
+                  </button>
                 </div>
 
-                {/* Masterclass Content Area */}
+                {/* Synthesis Content Area */}
                 <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 text-xs leading-relaxed">
-                  {/* Multimedia Masterclass Player */}
+                  {/* Multimedia Overview Audio / Visual Deck */}
                   <LessonVideoAudioPlayer
                     concept={selectedSourceForDeepDive.title}
                     topic={activeJourney.topic}
@@ -646,18 +658,34 @@ export const LibrarianView: React.FC = () => {
                     socraticChallenge={deepDiveData?.socraticSparring?.challengeQuestion}
                   />
 
-                  {/* LEVEL 0: PLAIN INTUITION & LAYMAN ANALOGY */}
+                  {/* TAB 1: SEMINAL THESIS & SYNTHESIS */}
                   {masterclassTab === 'intuition' && (
                     <div className="space-y-4 animate-fade-in">
-                      {/* Metaphor Card */}
+                      {/* Big Idea Thesis Card */}
                       <div className="p-4 rounded-xl bg-[color-mix(in_srgb,var(--librarian)_12%,var(--surface-2))] border-2 border-[var(--librarian)]/60 space-y-2 shadow-xs">
                         <div className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase text-[var(--librarian)]">
                           <Lightbulb size={15} />
-                          <span>The Plain-English Metaphor (Zero Jargon Required):</span>
+                          <span>The Seminal Paradigm Shift / Core Thesis:</span>
                         </div>
                         <p className="text-sm sm:text-base font-bold text-[var(--ink)] m-0 leading-relaxed font-sans">
-                          {deepDiveData.plainEnglishIntuition?.coreMetaphor || deepDiveData.bigIdea}
+                          {deepDiveData.bigIdea || deepDiveData.plainEnglishIntuition?.coreMetaphor}
                         </p>
+                      </div>
+
+                      {/* Plain-English Breakdown */}
+                      <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
+                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
+                          📖 Foundations &amp; Plain-English Deconstruction:
+                        </div>
+                        <div className="text-xs sm:text-[12.5px] text-[var(--ink)] leading-relaxed font-sans space-y-2">
+                          <MarkdownRenderer
+                            content={
+                              deepDiveData.plainEnglishIntuition?.laymanExplanation ||
+                              deepDiveData.mechanicsAndAnatomy?.deepExplanationMarkdown ||
+                              deepDiveData.bigIdea
+                            }
+                          />
+                        </div>
                       </div>
 
                       {/* Why Beginners Get Confused */}
@@ -666,7 +694,7 @@ export const LibrarianView: React.FC = () => {
                           <AlertTriangle size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
                           <div>
                             <div className="font-mono text-[10.5px] uppercase font-bold text-amber-500 mb-0.5">
-                              Why Beginners Get Confused by this Topic:
+                              Why Beginners Get Confused by this Work:
                             </div>
                             <p className="text-xs text-[var(--ink)] m-0 leading-relaxed font-sans">
                               {deepDiveData.plainEnglishIntuition.whyNovicesGetConfused}
@@ -675,58 +703,28 @@ export const LibrarianView: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Layman Multi-Paragraph Breakdown */}
-                      <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
-                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                          📖 Foundations: What Is Actually Happening Here?
-                        </div>
-                        <div className="text-xs sm:text-[12.5px] text-[var(--ink)] leading-relaxed font-sans space-y-2">
-                          <MarkdownRenderer
-                            content={
-                              deepDiveData.plainEnglishIntuition?.laymanExplanation ||
-                              deepDiveData.bigIdea
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {/* Mental Model Pills */}
-                      <div className="space-y-2 pt-1">
-                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                          🧠 Core Mental Models Extracted from this Work:
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                          {deepDiveData.topMentalModels.map((mm, idx) => (
-                            <div key={idx} className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1">
-                              <div className="font-bold text-[var(--ink)] text-xs flex items-center gap-1.5">
-                                <span className="w-4 h-4 rounded-full bg-[var(--librarian)] text-[#04050a] font-mono text-[10px] flex items-center justify-center font-bold">
-                                  {idx + 1}
-                                </span>
-                                <span>{mm.model}</span>
-                              </div>
-                              <p className="text-[11px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
-                                {mm.explanation}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Next Step Button */}
-                      <div className="pt-3 flex justify-end">
+                      {/* Next Step */}
+                      <div className="pt-2 flex justify-between items-center">
+                        <button
+                          onClick={handleSaveDeepDiveToNotes}
+                          className="ghost-btn text-xs"
+                        >
+                          <Bookmark size={12} />
+                          <span>Save to Vault Notes</span>
+                        </button>
                         <button
                           onClick={() => setMasterclassTab('mechanics')}
                           className="accent-btn"
                           style={{ padding: '8px 18px', borderRadius: '10px' }}
                         >
-                          <span>Next: Level 2 — See Under-the-Hood Mechanics →</span>
+                          <span>Next: High-Yield Chapter Map →</span>
                           <ArrowRight size={13} />
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* LEVEL 1: FIRST-PRINCIPLES MECHANICS & FLOW */}
+                  {/* TAB 2: HIGH-YIELD CHAPTER MAP & TRIAGE */}
                   {masterclassTab === 'mechanics' && (
                     <div className="space-y-4 animate-fade-in">
                       {/* Flow Diagram */}
@@ -734,7 +732,7 @@ export const LibrarianView: React.FC = () => {
                         <div className="p-4 rounded-xl bg-[var(--void)] border border-[var(--hairline-strong)] space-y-2">
                           <div className="font-mono text-[11px] uppercase font-bold text-[var(--librarian)] flex items-center gap-1.5">
                             <Layers size={13} />
-                            <span>Process Loop &amp; Architectural Flowchart:</span>
+                            <span>System Architecture &amp; Conceptual Flow:</span>
                           </div>
                           <pre className="p-3 bg-[var(--surface-1)] rounded-lg text-[11px] font-mono text-emerald-400 overflow-x-auto leading-relaxed border border-[var(--hairline)] m-0">
                             {deepDiveData.mechanicsAndAnatomy.architecturalDiagramOrFlow}
@@ -742,296 +740,125 @@ export const LibrarianView: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Deep Explanation */}
-                      <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
-                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                          ⚙️ Step-by-Step Deep Anatomy:
+                      {/* High Yield Map & The Cut List */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 space-y-2">
+                          <div className="font-mono text-[11px] uppercase font-bold text-emerald-500 flex items-center gap-1.5">
+                            <CheckCircle2 size={14} />
+                            <span>High-Yield Focus Sections (Read Deeply):</span>
+                          </div>
+                          <p className="text-xs text-[var(--ink)] leading-relaxed m-0 font-sans">
+                            {deepDiveData.practicalApplication ||
+                              'Focus on core conceptual definitions, architectural tradeoffs, and canonical design patterns.'}
+                          </p>
                         </div>
-                        <div className="text-xs sm:text-[12.5px] text-[var(--ink)] leading-relaxed font-sans">
-                          <MarkdownRenderer
-                            content={
-                              deepDiveData.mechanicsAndAnatomy?.deepExplanationMarkdown ||
-                              deepDiveData.practicalApplication
-                            }
-                          />
+
+                        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+                          <div className="font-mono text-[11px] uppercase font-bold text-amber-500 flex items-center gap-1.5">
+                            <Scissors size={14} />
+                            <span>The Cut List: What to Safely Skip:</span>
+                          </div>
+                          <p className="text-xs text-[var(--ink)] leading-relaxed m-0 font-sans">
+                            {deepDiveData.cutListFluff ||
+                              deepDiveData.trapsAndCutList?.cutListFluff ||
+                              'Historical context chapters, deprecated syntax examples, and theoretical edge cases with low real-world relevance.'}
+                          </p>
                         </div>
                       </div>
 
-                      {/* Core Primitives */}
-                      {deepDiveData.mechanicsAndAnatomy?.corePrimitives && (
-                        <div className="space-y-2">
-                          <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
-                            🧩 The 3 Core Elements of this Concept:
-                          </div>
-                          <div className="space-y-2">
-                            {deepDiveData.mechanicsAndAnatomy.corePrimitives.map((prim, idx) => (
-                              <div key={idx} className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] flex items-start gap-3">
-                                <div className="w-6 h-6 rounded-lg bg-[var(--librarian)]/20 text-[var(--librarian)] font-mono text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  {idx + 1}
-                                </div>
-                                <div className="flex-1 space-y-0.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-[var(--ink)]">{prim.name}</span>
-                                    <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] px-1.5 py-0.2 rounded text-[var(--ink-3)]">
-                                      {prim.role}
-                                    </span>
-                                  </div>
-                                  <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
-                                    {prim.explanation}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                       {/* Step Navigation */}
-                      <div className="pt-3 flex justify-between items-center">
+                      <div className="pt-2 flex justify-between items-center">
                         <button onClick={() => setMasterclassTab('intuition')} className="ghost-btn">
                           <ArrowLeft size={12} />
-                          <span>Back to Intuition</span>
+                          <span>Back to Thesis</span>
                         </button>
                         <button
                           onClick={() => setMasterclassTab('code')}
                           className="accent-btn"
                           style={{ padding: '8px 18px', borderRadius: '10px' }}
                         >
-                          <span>Next: Level 3 — Tactical Code Blueprint →</span>
+                          <span>Next: Mental Models &amp; Heuristics →</span>
                           <ArrowRight size={13} />
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* LEVEL 2: TACTICAL IMPLEMENTATION & CODE BLUEPRINT */}
+                  {/* TAB 3: MENTAL MODELS & HEURISTICS */}
                   {masterclassTab === 'code' && (
                     <div className="space-y-4 animate-fade-in">
-                      {/* Step-by-Step Tactical Guide */}
-                      {deepDiveData.implementationBlueprint?.stepByStepGuide && (
-                        <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
-                          <div className="font-mono text-[11px] uppercase font-bold text-emerald-500 flex items-center gap-1.5">
-                            <Zap size={13} />
-                            <span>Tactical Execution Playbook (How to Build It):</span>
-                          </div>
-                          <div className="space-y-1.5 pl-1">
-                            {deepDiveData.implementationBlueprint.stepByStepGuide.map((step, idx) => (
-                              <div key={idx} className="flex items-start gap-2 text-xs text-[var(--ink)]">
-                                <span className="font-mono font-bold text-emerald-500 flex-shrink-0">
-                                  {idx + 1}.
+                      {/* Mental Model Cards */}
+                      <div className="space-y-2.5">
+                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--ink-3)]">
+                          🧠 Core Mental Models Extracted from this Work:
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {deepDiveData.topMentalModels.map((mm, idx) => (
+                            <div key={idx} className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+                              <div className="font-bold text-[var(--ink)] text-xs flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-[var(--librarian)] text-[#04050a] font-mono text-[10px] flex items-center justify-center font-bold">
+                                  {idx + 1}
                                 </span>
-                                <span>{step}</span>
+                                <span>{mm.model}</span>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Code / Template Block */}
-                      {deepDiveData.implementationBlueprint?.codeOrTemplate && (
-                        <div className="p-4 rounded-xl bg-[var(--void)] border border-[var(--hairline-strong)] space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="font-mono text-[11px] uppercase font-bold text-[var(--librarian)] flex items-center gap-1.5">
-                              <Code2 size={13} />
-                              <span>Executable Implementation Blueprint:</span>
-                            </div>
-                            <button
-                              onClick={handleCopyCode}
-                              className="px-2.5 py-1 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[11px] font-mono text-[var(--ink)] transition flex items-center gap-1"
-                            >
-                              {copiedCode ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                              <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
-                            </button>
-                          </div>
-                          <pre className="p-3 bg-[var(--surface-1)] rounded-lg text-[11px] font-mono text-[var(--ink-2)] overflow-x-auto leading-relaxed border border-[var(--hairline)] m-0">
-                            {deepDiveData.implementationBlueprint.codeOrTemplate}
-                          </pre>
-                        </div>
-                      )}
-
-                      {/* How Masters Use It */}
-                      {deepDiveData.implementationBlueprint?.howMastersUseIt && (
-                        <div className="p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface-2))] border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] space-y-1">
-                          <div className="font-mono text-[10.5px] uppercase font-bold text-[var(--accent)] flex items-center gap-1">
-                            <Sparkles size={12} />
-                            <span>How Top 1% Masters &amp; Production Teams Apply This:</span>
-                          </div>
-                          <p className="text-xs text-[var(--ink)] m-0 leading-relaxed font-sans">
-                            {deepDiveData.implementationBlueprint.howMastersUseIt}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Step Navigation */}
-                      <div className="pt-3 flex justify-between items-center">
-                        <button onClick={() => setMasterclassTab('mechanics')} className="ghost-btn">
-                          <ArrowLeft size={12} />
-                          <span>Back to Mechanics</span>
-                        </button>
-                        <button
-                          onClick={() => setMasterclassTab('traps')}
-                          className="accent-btn"
-                          style={{ padding: '8px 18px', borderRadius: '10px' }}
-                        >
-                          <span>Next: Level 4 — Traps &amp; Cut-List →</span>
-                          <ArrowRight size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* LEVEL 3: TRAPS & CUT LIST */}
-                  {masterclassTab === 'traps' && (
-                    <div className="space-y-4 animate-fade-in">
-                      {/* Common Pitfalls */}
-                      <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/25 space-y-2">
-                        <div className="font-mono text-[11px] uppercase font-bold text-rose-500 flex items-center gap-1.5">
-                          <AlertTriangle size={14} />
-                          <span>Beginner Traps &amp; Common Failure Modes:</span>
-                        </div>
-                        <div className="space-y-2">
-                          {(deepDiveData.trapsAndCutList?.commonPitfalls || [
-                            'Premature optimization: Adding complexity before proving the basic loop works.',
-                            'Ignoring error feedback and letting hallucinations compound silently.'
-                          ]).map((trap, idx) => (
-                            <div key={idx} className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-rose-500/20 text-xs text-[var(--ink)] leading-relaxed">
-                              {trap}
+                              <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+                                {mm.explanation}
+                              </p>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Cut-List Fluff */}
-                      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-1.5">
-                        <div className="font-mono text-[11px] uppercase font-bold text-amber-500 flex items-center gap-1.5">
-                          <Scissors size={13} />
-                          <span>The Cut-List: What to Safely Ignore in this Book/Paper:</span>
-                        </div>
-                        <p className="text-xs text-[var(--ink)] m-0 leading-relaxed font-sans">
-                          {deepDiveData.trapsAndCutList?.cutListFluff || deepDiveData.cutListFluff}
-                        </p>
-                      </div>
-
-                      {/* Step Navigation */}
-                      <div className="pt-3 flex justify-between items-center">
-                        <button onClick={() => setMasterclassTab('code')} className="ghost-btn">
-                          <ArrowLeft size={12} />
-                          <span>Back to Code</span>
-                        </button>
-                        <button
-                          onClick={() => setMasterclassTab('sparring')}
-                          className="accent-btn"
-                          style={{ padding: '8px 18px', borderRadius: '10px' }}
-                        >
-                          <span>Next: Level 5 — Socratic Sparring Check →</span>
-                          <ArrowRight size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* LEVEL 4: SOCRATIC SPARRING CHECK & MASTERY CERTIFICATION */}
-                  {masterclassTab === 'sparring' && (
-                    <div className="space-y-4 animate-fade-in">
-                      {/* Scenario Box */}
-                      <div className="p-4 rounded-xl bg-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-2))] border-2 border-[var(--tutor)]/50 space-y-2 shadow-xs">
-                        <div className="font-mono text-[11px] uppercase font-bold text-[var(--tutor)] flex items-center gap-1.5">
-                          <GraduationCap size={15} />
-                          <span>Socratic Sparring Challenge Checkpoint</span>
-                        </div>
-                        <p className="text-xs font-semibold text-[var(--ink)] m-0 leading-relaxed font-sans">
-                          {deepDiveData.socraticSparring?.realWorldScenario ||
-                            `Apply the core mechanics of ${deepDiveData.sourceTitle} to a real-world scenario.`}
-                        </p>
-                        <div className="p-3 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)] text-xs text-[var(--ink)] font-bold">
-                          👉 {deepDiveData.socraticSparring?.challengeQuestion || 'How would you apply this model in production?'}
-                        </div>
-                      </div>
-
-                      {/* Interactive Sparring Form */}
-                      <form onSubmit={handleEvaluateSparring} className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold text-[var(--ink)]">
-                            Your Solution / Socratic Answer:
-                          </label>
-                          <VoiceInputButton
-                            onTranscript={(transcript) =>
-                              setSparringAnswer((prev) => (prev ? `${prev} ${transcript}` : transcript))
-                            }
-                          />
-                        </div>
-                        <textarea
-                          placeholder="Type or voice-dictate your step-by-step reasoning plan here..."
-                          value={sparringAnswer}
-                          onChange={(e) => setSparringAnswer(e.target.value)}
-                          rows={4}
-                          className="w-full bg-[var(--surface-2)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs rounded-xl p-3 outline-none leading-relaxed font-mono"
-                          required
-                        />
-
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="submit"
-                            disabled={isEvaluatingSparring || !sparringAnswer.trim()}
-                            className="accent-btn"
-                            style={{ padding: '8px 18px', borderRadius: '10px' }}
-                          >
-                            {isEvaluatingSparring ? (
-                              <>
-                                <Loader2 size={14} className="animate-spin" />
-                                <span>Evaluating Socratic Logic...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Flame size={14} />
-                                <span>Verify Understanding &amp; Spar with Tutor →</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </form>
-
-                      {/* Socratic Evaluation Result */}
-                      {sparringEvaluation && (
-                        <div className="p-4 rounded-xl bg-[var(--surface-2)] border-2 border-emerald-500/40 space-y-3 animate-fade-in">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 size={18} className="text-emerald-500" />
-                              <span className="font-bold text-sm text-[var(--ink)]">
-                                {sparringEvaluation.mastered ? '✓ Source Concept Verified & Mastered!' : 'Feedback & Nuance Review'}
-                              </span>
-                            </div>
-                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
-                              Score: {sparringEvaluation.score || 95}/100
-                            </span>
+                      {/* Practical Application */}
+                      {deepDiveData.practicalApplication && (
+                        <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
+                          <div className="font-mono text-[11px] uppercase font-bold text-[var(--accent)] flex items-center gap-1.5">
+                            <Sparkles size={13} />
+                            <span>Practical Production Takeaway:</span>
                           </div>
-
-                          <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
-                            {sparringEvaluation.coachingVerdict || sparringEvaluation.strengths}
+                          <p className="text-xs text-[var(--ink)] m-0 leading-relaxed font-sans">
+                            {deepDiveData.practicalApplication}
                           </p>
-
-                          {sparringEvaluation.nuanceOrGap && (
-                            <div className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)] text-[11.5px] text-[var(--ink-2)]">
-                              <strong>💡 Pro-Tip &amp; Edge Case:</strong> {sparringEvaluation.nuanceOrGap}
-                            </div>
-                          )}
                         </div>
                       )}
 
-                      {/* Final Masterclass Actions */}
-                      <div className="flex items-center justify-between pt-3 border-t border-[var(--hairline)]">
-                        <button onClick={() => setMasterclassTab('traps')} className="ghost-btn">
-                          <ArrowLeft size={12} />
-                          <span>Back to Traps</span>
-                        </button>
+                      {/* Conversational Launch CTA */}
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-[color-mix(in_srgb,var(--librarian)_15%,var(--surface-2))] to-[var(--surface-2)] border-2 border-[var(--librarian)]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-[var(--ink)] flex items-center gap-1.5">
+                            <BookOpen size={14} className="text-[var(--librarian)]" />
+                            <span>Debate &amp; Apply this Source with the Librarian</span>
+                          </div>
+                          <p className="text-[11px] text-[var(--ink-2)] m-0 font-sans">
+                            Ask questions, test analogies, and explore edge cases in real-time conversation.
+                          </p>
+                        </div>
 
                         <button
-                          onClick={handleSaveDeepDiveToNotes}
-                          className="accent-btn"
+                          onClick={() => {
+                            const prompt = `I've just reviewed "${selectedSourceForDeepDive.title}". Let's discuss how its primary mental model ("${deepDiveData.topMentalModels[0]?.model || 'Core Thesis'}") relates to building my milestone project.`;
+                            setSelectedSourceForDeepDive(null);
+                            handleSendMessage({ preventDefault: () => {} } as any, prompt);
+                          }}
+                          className="accent-btn shrink-0"
                           style={{ padding: '8px 18px', borderRadius: '10px' }}
                         >
-                          <Bookmark size={13} />
-                          <span>Save Full Masterclass to Grounded Notes Vault →</span>
+                          <span>Start Live Discussion at Desk →</span>
+                        </button>
+                      </div>
+
+                      {/* Navigation Footer */}
+                      <div className="pt-2 flex justify-between items-center">
+                        <button onClick={() => setMasterclassTab('mechanics')} className="ghost-btn">
+                          <ArrowLeft size={12} />
+                          <span>Back to Chapter Map</span>
+                        </button>
+                        <button
+                          onClick={handleSaveDeepDiveToNotes}
+                          className="ghost-btn text-xs"
+                        >
+                          <Bookmark size={12} />
+                          <span>Save Guide to Vault Notes</span>
                         </button>
                       </div>
                     </div>
