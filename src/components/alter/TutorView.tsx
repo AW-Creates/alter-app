@@ -44,7 +44,7 @@ import { LessonVideoAudioPlayer } from '../course/LessonVideoAudioPlayer';
 
 export const TutorView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage, targetTutorConcept, sendToEditor } = useJourney();
-  const [tutorMode, setTutorMode] = useState<'masterclass' | 'socratic' | 'feynman' | 'quiz'>('masterclass');
+  const [tutorMode, setTutorMode] = useState<'socratic' | 'masterclass' | 'feynman' | 'quiz'>('socratic');
 
   // Masterclass lesson state
   const [selectedConcept, setSelectedConcept] = useState<string>('');
@@ -91,7 +91,7 @@ export const TutorView: React.FC = () => {
   useEffect(() => {
     if (targetTutorConcept && targetTutorConcept !== selectedConcept) {
       setSelectedConcept(targetTutorConcept);
-      setTutorMode('masterclass');
+      setTutorMode('socratic');
     }
   }, [targetTutorConcept]);
 
@@ -108,6 +108,7 @@ export const TutorView: React.FC = () => {
       const cached = (tutorData.lessons || []).find((l) => l.concept === selectedConcept);
       if (cached) {
         setActiveLesson(cached);
+        if (cached.mastered) setIsClassroomMastered(true);
         setDraftCode(cached.userDraftCode || cached.codeOrTemplate || '');
         setSparringResult(
           cached.tutorEvaluation
@@ -465,16 +466,16 @@ export const TutorView: React.FC = () => {
           </div>
           <div className="segmented">
             <button
-              onClick={() => setTutorMode('masterclass')}
-              className={tutorMode === 'masterclass' ? 'active font-bold text-[var(--tutor)]' : ''}
+              onClick={() => setTutorMode('socratic')}
+              className={tutorMode === 'socratic' ? 'active font-bold text-[var(--tutor)]' : ''}
             >
-              🎓 Zero-to-Hero Lessons
+              💬 1-on-1 Socratic Classroom
             </button>
             <button
-              onClick={() => setTutorMode('socratic')}
-              className={tutorMode === 'socratic' ? 'active' : ''}
+              onClick={() => setTutorMode('masterclass')}
+              className={tutorMode === 'masterclass' ? 'active' : ''}
             >
-              💬 Socratic Dialogue
+              📖 Masterclass Blueprint
             </button>
             <button
               onClick={() => setTutorMode('feynman')}
@@ -494,8 +495,8 @@ export const TutorView: React.FC = () => {
           </div>
         </div>
         <p className="hero-sub">
-          True mastery comes from first-principles deduction, concrete code blueprints, and active sparring.
-          Select any concept below to start your progressive masterclass.
+          True mastery comes from live Socratic sparring, first-principles deduction, and concrete blueprints.
+          Select any concept below to start your live 1-on-1 Socratic classroom session.
         </p>
       </div>
 

@@ -207,6 +207,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
           </div>
         )}
 
+        {/* Live / Demo Mode Status Pill */}
+        <button
+          onClick={() => setIsApiKeyModalOpen(true)}
+          className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs ${
+            apiKey || localStorage.getItem('alter_openrouter_api_key')
+              ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-500'
+              : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-500'
+          }`}
+          title={
+            apiKey || localStorage.getItem('alter_openrouter_api_key')
+              ? 'Live LLM Engine Connected (Gemini / OpenRouter). Click to manage keys.'
+              : 'Running in Local Simulated Demo Mode. Click to connect your Gemini or OpenRouter API key for live AI.'
+          }
+        >
+          {apiKey || localStorage.getItem('alter_openrouter_api_key') ? (
+            <>
+              <ShieldCheck size={12} className="text-emerald-500" />
+              <span>Live AI Active</span>
+            </>
+          ) : (
+            <>
+              <Zap size={12} className="text-amber-500" />
+              <span>Demo Mode (Simulated AI)</span>
+              <span className="underline ml-0.5 text-[10px]">Add Key</span>
+            </>
+          )}
+        </button>
+
         {/* Guide Tour Opener */}
         <button
           onClick={() => setIsOnboardingTourOpen(true)}

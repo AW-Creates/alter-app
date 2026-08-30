@@ -31,6 +31,10 @@ export const setStoredApiKey = (key: string): void => {
   }
 };
 
+export const hasActiveApiKey = (): boolean => {
+  return Boolean(getStoredApiKey() || getStoredOpenRouterKey() || getStoredPerplexityKey());
+};
+
 const extractJsonFromResponse = <T>(text: string): T => {
   try {
     // Look for ```json ... ``` or first [ or {
@@ -66,6 +70,19 @@ export async function callGemini(
   enableSearchGrounding = false
 ): Promise<string> {
   const apiKey = getStoredApiKey();
+  const openRouterKey = getStoredOpenRouterKey();
+
+  // 1. If OpenRouter Key is configured, route to OpenRouter
+  if (openRouterKey && !apiKey) {
+    const openRouterModel = model.includes('pro') ? 'anthropic/claude-3.5-sonnet' : 'anthropic/claude-3.5-sonnet';
+    const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [];
+    if (systemInstruction) {
+      messages.push({ role: 'system', content: systemInstruction });
+    }
+    messages.push({ role: 'user', content: prompt });
+    return await callOpenRouter(messages, openRouterModel, 0.7);
+  }
+
   if (!apiKey) {
     throw new Error('MISSING_API_KEY');
   }
@@ -198,10 +215,9 @@ export async function generateCurriculumWithAI(
   depth: string,
   diagnostic?: DiagnosticAssessment
 ): Promise<AdvisorData> {
-  const apiKey = getStoredApiKey();
-  const perplexityKey = getStoredPerplexityKey();
+  const hasKey = hasActiveApiKey();
 
-  if (!apiKey && !perplexityKey) {
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 1000));
     return getSimulatedCurriculum(topic, destination, diagnostic);
   }
@@ -262,10 +278,9 @@ export async function generateSourcesWithAI(
   destination: string,
   baseline: string
 ): Promise<CuratedSource[]> {
-  const apiKey = getStoredApiKey();
-  const perplexityKey = getStoredPerplexityKey();
+  const hasKey = hasActiveApiKey();
 
-  if (!apiKey && !perplexityKey) {
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 900));
     return getSimulatedSources(topic);
   }
@@ -321,8 +336,8 @@ export async function evaluateFeynmanWithAI(
   concept: string,
   userExplanation: string
 ): Promise<FeynmanSession> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 1000));
     return getSimulatedFeynman(concept, userExplanation);
   }
@@ -349,8 +364,8 @@ export async function generateQuizWithAI(
   topic: string,
   specificFocus: string
 ): Promise<DiagnosticQuiz> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 900));
     return getSimulatedQuiz(topic, specificFocus);
   }
@@ -377,8 +392,8 @@ export async function critiqueTextWithAI(
   draft: string,
   mode: 'logic' | 'clarity' | 'steelman' | 'first_principles'
 ): Promise<EditorReview> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 1000));
     return getSimulatedCritique(draft, mode);
   }
@@ -412,8 +427,8 @@ export async function generateCollisionWithAI(
   topic: string,
   candidateDomain?: string
 ): Promise<DomainCollision> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 800));
     return getSimulatedCollision(topic, candidateDomain);
   }
@@ -437,8 +452,8 @@ export async function teachConceptWithAI(
   destination: string,
   baseline: string
 ): Promise<InteractiveLesson> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 1000));
     return getSimulatedLesson(topic, concept);
   }
@@ -516,28 +531,47 @@ export async function evaluateLessonResponseWithAI(
   challenge: string,
   studentResponse: string
 ): Promise<{ mastered: boolean; score: number; strengths: string; nuanceOrGap: string; coachingVerdict: string }> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 900));
+    
+    // Dynamic Simulated Evaluation: Strict Grading
+    const words = studentResponse.trim().split(/\s+/).filter(Boolean);
+    const isTooShort = words.length < 12;
+    const isVague = studentResponse.toLowerCase().includes('idk') ||
+      studentResponse.toLowerCase().includes('dunno') ||
+      studentResponse.toLowerCase().includes('not sure') ||
+      words.length < 5;
+
+    if (isTooShort || isVague) {
+      return {
+        mastered: false,
+        score: 45,
+        strengths: 'You initiated a response, which shows an initial attempt.',
+        nuanceOrGap: 'Your explanation is too brief and does not demonstrate how the core mechanism handles error boundaries or state recovery.',
+        coachingVerdict: 'Needs Refinement: To unlock verified mastery, explain the specific step-by-step logic and how you prevent failure.'
+      };
+    }
+
     return {
       mastered: true,
-      score: 94,
-      strengths: 'Outstanding first-principles deduction! You clearly identified the state transition invariant and designed an explicit error-recovery boundary.',
-      nuanceOrGap: 'In production systems, consider adding exponential backoff jitter to prevent thundering herd problems during upstream outages.',
-      coachingVerdict: 'Concept Verified & Mastered! You have demonstrated true applied architectural understanding.'
+      score: 92,
+      strengths: `Strong conceptual breakdown! You articulated the primary operational steps and accounted for practical failure conditions.`,
+      nuanceOrGap: 'In live high-throughput environments, consider testing edge-case latency under extreme load.',
+      coachingVerdict: 'Concept Verified & Mastered! You have demonstrated true applied first-principles understanding.'
     };
   }
 
   const prompt = GENERATOR_PROMPTS.evaluateLessonResponse(concept, challenge, studentResponse);
-  const raw = await callGemini(prompt, 'You are a Socratic tutor evaluating conceptual mastery.');
+  const raw = await callGemini(prompt, 'You are a rigorous Socratic examiner. Do not rubber-stamp shallow answers. Demand clear first-principles explanations before granting mastery.');
   const parsed = extractJsonFromResponse<any>(raw);
 
   return {
-    mastered: parsed.mastered ?? true,
-    score: parsed.score ?? 90,
-    strengths: parsed.strengths || 'Strong conceptual logic demonstrated.',
-    nuanceOrGap: parsed.nuanceOrGap || 'Consider stress-testing under extreme load.',
-    coachingVerdict: parsed.coachingVerdict || 'Concept Verified & Mastered.'
+    mastered: parsed.mastered ?? false,
+    score: parsed.score ?? 70,
+    strengths: parsed.strengths || 'Good attempt at framing the answer.',
+    nuanceOrGap: parsed.nuanceOrGap || 'Deepen your explanation of edge-case recovery and invariants.',
+    coachingVerdict: parsed.coachingVerdict || 'Review coaching feedback.'
   };
 }
 
@@ -546,8 +580,8 @@ export async function generateDiagnosticQuestionsWithAI(
   destination: string,
   baseline: string
 ): Promise<DiagnosticQuestion[]> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 600));
     return getSimulatedDiagnosticQuestions(topic, destination);
   }
@@ -579,8 +613,8 @@ export async function conductAdvisorIntakeTurnWithAI(
   isInterviewComplete: boolean;
   turnStage: string;
 }> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 600));
     return getSimulatedAdvisorIntakeTurn(topic, history, userResponse);
   }
@@ -604,8 +638,8 @@ export async function evaluateDiagnosticAnswersWithAI(
   topic: string,
   qaPairs: Array<{ question: string; answer: string; type?: string }>
 ): Promise<DiagnosticAssessment> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 800));
     return getSimulatedDiagnosticEvaluation(topic, qaPairs);
   }
@@ -665,14 +699,14 @@ export async function converseSocraticLessonWithAI(
   checkInQuestion: string;
   isConceptMastered: boolean;
 }> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 700));
     return getSimulatedSocraticTurn(concept, currentStage, studentInput);
   }
 
   const prompt = GENERATOR_PROMPTS.converseSocraticLesson(topic, concept, currentStage, history, studentInput);
-  const raw = await callGemini(prompt, 'You are a lively, interactive Socratic master professor in a 1-on-1 private lesson.');
+  const raw = await callGemini(prompt, 'You are a lively, interactive Socratic master professor in a 1-on-1 private lesson. Hold the student to high standards and do not grant mastery until they demonstrate clear first-principles understanding.');
   const parsed = extractJsonFromResponse<any>(raw);
 
   return {
@@ -689,8 +723,8 @@ export async function synthesizeSourceWithAI(
   author: string,
   topic: string
 ): Promise<SourceDeepDive> {
-  const apiKey = getStoredApiKey();
-  if (!apiKey) {
+  const hasKey = hasActiveApiKey();
+  if (!hasKey) {
     await new Promise((r) => setTimeout(r, 900));
     return getSimulatedSourceDeepDive(sourceTitle, author, topic);
   }
@@ -1319,20 +1353,50 @@ function getSimulatedSocraticTurn(
 } {
   const safeConcept = (concept || '').trim() || 'Core Principles';
 
-  if (!studentInput) {
+  if (!studentInput || studentInput.trim().length === 0) {
     return {
-      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${safeConcept}**! Let's start with first principles.\n\nImagine you are building a house. Before you pick what color to paint the front door, you must lay a rock-solid foundation. In **${safeConcept}**, the rock-solid foundation is understanding the core problem we are trying to solve before adding complex steps.`,
-      stageName: 'Level 1: Core Intuition & Purpose',
-      checkInQuestion: `In your own words: What is the single biggest mistake people make when they first try to master ${safeConcept}?`,
+      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${safeConcept}**! Let's start from first principles.\n\nImagine you are constructing a high-performance system. Before you focus on cosmetic details, you must identify the primary invariant: the single rule that guarantees reliability even when errors occur.\n\nIn **${safeConcept}**, master practitioners build tight feedback loops so they observe state before executing actions.`,
+      stageName: 'Level 1: Core Intuition & Invariant Check',
+      checkInQuestion: `In your own words: What is the single biggest misconception beginners have about ${safeConcept}, and what core mechanism prevents that failure?`,
       isConceptMastered: false
     };
   }
 
+  const words = studentInput.trim().split(/\s+/).filter(Boolean);
+  const isTooBrief = words.length < 8;
+  const isVague = studentInput.toLowerCase().includes('idk') ||
+    studentInput.toLowerCase().includes('dunno') ||
+    studentInput.toLowerCase().includes('not sure') ||
+    words.length < 4;
+
+  if (isTooBrief || isVague) {
+    return {
+      tutorSpeech: `That's a start, but in Socratic dialogue, we need to push past surface keywords.\n\nTo truly grasp **${safeConcept}**, you need to articulate the *why*: what specific steps or safeguards happen under the hood? If you don't define the boundary conditions, the system will fail in production.`,
+      stageName: 'Level 1: Deepen First-Principles Breakdown',
+      tutorFeedbackOnStudent: `⚠️ Your answer is too brief or ambiguous to demonstrate applied mastery. Articulate the step-by-step logic.`,
+      checkInQuestion: `Let's refine: Imagine you are explaining ${safeConcept} to a junior builder. What concrete mechanism or invariant must they enforce to prevent failure?`,
+      isConceptMastered: false
+    };
+  }
+
+  const isLevel2OrHigher = currentStage.includes('Level 2') || currentStage.includes('Level 3') || currentStage.includes('Execution');
+
+  if (!isLevel2OrHigher) {
+    return {
+      tutorSpeech: `🎯 **Solid deduction!** You identified the core dynamic: focusing on explicit state boundaries rather than superficial syntax.\n\nNow let's elevate to **Level 2: Practical Mechanics & Edge-Case Sparring**.\n\nIn real-world deployment, systems rarely operate on the clean happy path. Downstream services time out, inputs arrive malformed, and resource constraints emerge. How your system handles those edge cases defines whether it is production-grade.`,
+      stageName: 'Level 2: Practical Mechanics & Edge-Case Sparring',
+      tutorFeedbackOnStudent: `Strong conceptual intuition! You clearly addressed the foundational problem.`,
+      checkInQuestion: `Scenario Dilemma: If an unexpected failure or timeout occurs while executing ${safeConcept}, what exact fallback path or recovery step should your loop execute to heal without crashing?`,
+      isConceptMastered: false
+    };
+  }
+
+  // Level 2+ Substantive Answer -> Mastery Awarded
   return {
-    tutorSpeech: `🎯 **Excellent deduction!** You hit the nail on the head. Most people get overwhelmed by superficial details instead of focusing on the high-value core outcome.\n\nNow let's look at the practical execution: Master practitioners build tight feedback loops where they test their work in small, manageable milestones rather than trying to do everything at once.`,
-    stageName: 'Level 2: Practical Execution & Quality Guardrails',
-    tutorFeedbackOnStudent: `Great practical intuition! You grasped the core problem immediately.`,
-    checkInQuestion: `Now let's apply this: If you had only 2 hours to build your first deliverable for ${safeConcept}, what single task would you prioritize first?`,
+    tutorSpeech: `🏆 **Mastery Verified!** Outstanding first-principles deduction.\n\nYou correctly identified both the core mechanism and the self-healing recovery boundaries necessary for ${safeConcept}.\n\nYou have unlocked verified concept mastery and are ready to apply this directly in your milestone project!`,
+    stageName: 'Level 3: Verified Concept Mastery',
+    tutorFeedbackOnStudent: `Outstanding applied reasoning! You proved you understand both the foundational invariants and real-world failure recovery.`,
+    checkInQuestion: `You've mastered this concept! Open your code scratchpad or continue to your milestone project deliverable.`,
     isConceptMastered: true
   };
 }
@@ -1941,27 +2005,217 @@ export function getSimulatedSources(topic: string): CuratedSource[] {
 }
 
 function getSimulatedFeynman(concept: string, userExplanation: string): FeynmanSession {
+  const words = userExplanation.trim().split(/\s+/).filter(Boolean);
+  const isTooShort = words.length < 15;
+  const isVague = userExplanation.toLowerCase().includes('idk') ||
+    userExplanation.toLowerCase().includes('dunno') ||
+    userExplanation.toLowerCase().includes('not sure') ||
+    words.length < 6;
+
+  const conceptLower = concept.toLowerCase();
+  const isGarden = conceptLower.includes('garden') || conceptLower.includes('herb') || conceptLower.includes('plant');
+  const isBake = conceptLower.includes('sourdough') || conceptLower.includes('bread') || conceptLower.includes('bake');
+  const isEbook = conceptLower.includes('book') || conceptLower.includes('write') || conceptLower.includes('publish');
+  const isTrade = conceptLower.includes('trade') || conceptLower.includes('forex') || conceptLower.includes('future');
+  const isTech = conceptLower.includes('agent') || conceptLower.includes('react') || conceptLower.includes('code') || conceptLower.includes('api') || conceptLower.includes('saas');
+
+  if (isTooShort || isVague) {
+    return {
+      id: `feynman-${Date.now()}`,
+      concept,
+      userExplanation,
+      clarityScore: 48,
+      accuracyScore: 50,
+      strengths: ['Initial attempt at framing an explanation.'],
+      blindSpots: [
+        'The explanation is too brief or relies on hand-waving assumptions.',
+        'A complete beginner or 10-year-old would not understand the underlying cause-and-effect.'
+      ],
+      simplifiedAnalogy: isGarden
+        ? 'Think of soil like a sponge: if it is constantly soaking in water with no air pockets, plant roots suffocate just like a person underwater.'
+        : isBake
+        ? 'Think of yeast and wild bacteria like tiny workers eating flour sugars and exhaling gas bubbles into an elastic gluten balloon.'
+        : isEbook
+        ? 'Think of your book outline like a blueprint for a house: test if people want to live in the house before building all 10 rooms.'
+        : 'Think of the system like a relay race: every runner must clearly pass the baton to the next without dropping state.',
+      tutorFeedback: '⚠️ Your explanation is too brief. In the Feynman Technique, you must simplify the concept into plain, everyday language that anyone could grasp. Try explaining the exact mechanism step-by-step.',
+      date: new Date().toLocaleDateString()
+    };
+  }
+
   return {
     id: `feynman-${Date.now()}`,
     concept,
     userExplanation,
-    clarityScore: 88,
-    accuracyScore: 84,
+    clarityScore: 90,
+    accuracyScore: 88,
     strengths: [
       'Strong, intuitive grasp of the core mechanism.',
-      'Avoided unnecessary pseudo-technical buzzwords.'
+      'Avoided unnecessary pseudo-technical buzzwords and explained the underlying dynamic.'
     ],
     blindSpots: [
-      'Slightly underspecified how the system handles failure or edge conditions.',
-      'Could make the relationship between input state and final output more explicit.'
+      'Slightly underspecified how the system behaves under extreme edge-case conditions.',
+      'Could make the transition from input trigger to final verified output even more explicit.'
     ],
-    simplifiedAnalogy: `Imagine a busy restaurant kitchen: instead of the chef running to every customer's table (monolithic bottleneck), waiters act as message queues passing tickets back and forth asynchronously.`,
-    tutorFeedback: 'Outstanding explanation! To reach master-level clarity, challenge yourself to explain the exact failure boundary: what happens when the queue fills up?',
+    simplifiedAnalogy: isGarden
+      ? 'Like a sponge that holds moisture while allowing air pockets so roots can breathe freely.'
+      : isBake
+      ? 'Like inflating microscopic gluten balloons at the exact peak of yeast fermentation.'
+      : isEbook
+      ? 'Like testing a single pilot episode before producing an entire 10-episode season.'
+      : isTrade
+      ? 'Like paying a small insurance premium on every transaction to protect against catastrophic loss.'
+      : `Like a kitchen order queue: decoupling state observation from execution to prevent bottlenecks.`,
+    tutorFeedback: 'Outstanding explanation! You demonstrated true first-principles clarity without hiding behind jargon. To reach absolute mastery, challenge yourself with the scenario sparring dilemma below.',
     date: new Date().toLocaleDateString()
   };
 }
 
 function getSimulatedQuiz(topic: string, specificFocus: string): DiagnosticQuiz {
+  const t = (specificFocus || topic || '').toLowerCase();
+  const isGarden = t.includes('garden') || t.includes('herb') || t.includes('plant') || t.includes('botan');
+  const isBake = t.includes('sourdough') || t.includes('bread') || t.includes('baking') || t.includes('ferment');
+  const isEbook = t.includes('book') || t.includes('write') || t.includes('publish') || t.includes('author');
+  const isTrade = t.includes('trade') || t.includes('forex') || t.includes('future') || t.includes('stock') || t.includes('invest');
+  const isDigitalProduct = t.includes('digital product') || t.includes('saas') || t.includes('app') || t.includes('software');
+
+  if (isGarden) {
+    return {
+      id: `quiz-${Date.now()}`,
+      topic: specificFocus || topic,
+      date: new Date().toLocaleDateString(),
+      questions: [
+        {
+          id: 'q-1',
+          question: 'What is the primary physical reason indoor container herbs turn yellow and develop root rot when overwatered?',
+          options: [
+            'Excess water leaches all minerals from the soil in less than 24 hours.',
+            'Water fills the soil pore spaces, starving roots of the oxygen needed for cellular respiration.',
+            'Indoor plants do not absorb water through roots under artificial lighting.',
+            'Water creates too much nitrogen in the potting mix.'
+          ],
+          correctIndex: 1,
+          explanation: 'Roots require oxygen to breathe. When soil is persistently saturated without drainage aeration, root cells suffocate and rot.'
+        },
+        {
+          id: 'q-2',
+          question: 'When harvesting fresh culinary herbs (like basil or mint) to encourage bushy continuous growth, where should you prune?',
+          options: [
+            'Cut the main stem at soil level to force a new root sprout.',
+            'Prune just above a leaf node set, stimulating two lateral branches to grow.',
+            'Strip only the bottom yellow leaves and never touch the top crown.',
+            'Prune all flowers before seeds form, but never cut green stems.'
+          ],
+          correctIndex: 1,
+          explanation: 'Cutting just above a leaf node activates the dormant axillary buds, causing the single stem to split into two bushy branches.'
+        }
+      ]
+    };
+  }
+
+  if (isBake) {
+    return {
+      id: `quiz-${Date.now()}`,
+      topic: specificFocus || topic,
+      date: new Date().toLocaleDateString(),
+      questions: [
+        {
+          id: 'q-1',
+          question: 'What determines the structural strength and open-crumb elasticity of an artisan sourdough loaf during bulk fermentation?',
+          options: [
+            'Adding chemical baking soda to neutralize wild bacteria acids.',
+            'Gluten matrix development through progressive stretch-and-folds and optimal fermentation timing.',
+            'Baking at maximum temperature without pre-heating the Dutch oven.',
+            'Using bleached all-purpose flour with zero protein.'
+          ],
+          correctIndex: 1,
+          explanation: 'Building a strong gluten network via folding and timing the bulk fermentation before over-acidification gives the dough strength to trap fermentation gases.'
+        },
+        {
+          id: 'q-2',
+          question: 'Why is steam or a sealed Dutch oven essential during the first 20 minutes of baking sourdough?',
+          options: [
+            'Steam prevents the dough crust from drying and hardening prematurely, allowing maximum "oven spring" expansion.',
+            'Steam cools down the oven to prevent yeast from dying.',
+            'Steam evaporates all water from the loaf interior.',
+            'Steam burns the crust to create a bitter dark flavor.'
+          ],
+          correctIndex: 0,
+          explanation: 'Steam keeps the outer dough skin supple and gelatinizes starches, allowing internal steam to expand the loaf fully before the crust solidifies.'
+        }
+      ]
+    };
+  }
+
+  if (isEbook) {
+    return {
+      id: `quiz-${Date.now()}`,
+      topic: specificFocus || topic,
+      date: new Date().toLocaleDateString(),
+      questions: [
+        {
+          id: 'q-1',
+          question: 'Before writing a 200-page non-fiction e-book, what is the highest-leverage step to validate reader demand and avoid writing to "crickets"?',
+          options: [
+            'Register a trademark and hire a public relations agency for $5,000.',
+            'Publish a 1-page proposal / waitlist landing page or presale outline to verify buyer intent.',
+            'Write the entire manuscript in secret without showing anyone.',
+            'Print 500 physical hardcover copies in advance.'
+          ],
+          correctIndex: 1,
+          explanation: 'Validating reader demand through waitlist signups or presales ensures you are solving an urgent problem readers are actually willing to pay for.'
+        },
+        {
+          id: 'q-2',
+          question: 'When structuring non-fiction chapters for maximum word-of-mouth recommendations, what framework produces the highest reader completion rate?',
+          options: [
+            'Start each chapter with 20 pages of academic history before mentioning practical solutions.',
+            'Lead with the core mental model, demonstrate tactical implementation, and provide an actionable practice checklist.',
+            'Fill chapters with generic motivational quotes and vague philosophy.',
+            'Never include exercises or summaries.'
+          ],
+          correctIndex: 1,
+          explanation: 'Readers recommend books that create tangible transformations. Clear mental models combined with immediate execution checklists deliver real results.'
+        }
+      ]
+    };
+  }
+
+  if (isTrade) {
+    return {
+      id: `quiz-${Date.now()}`,
+      topic: specificFocus || topic,
+      date: new Date().toLocaleDateString(),
+      questions: [
+        {
+          id: 'q-1',
+          question: 'If you have a $25,000 trading account and follow a disciplined 1% risk management rule, what is your maximum dollar loss on any single trade?',
+          options: [
+            '$250 (1% of total account equity)',
+            '$2,500 (10% of margin deposit)',
+            '$1,000 (standard industry rule of thumb)',
+            'Unlimited, as long as the market eventually recovers'
+          ],
+          correctIndex: 0,
+          explanation: '1% of $25,000 is $250. Position size must be calculated based on stop-loss distance such that total loss cannot exceed $250.'
+        },
+        {
+          id: 'q-2',
+          question: 'Why does placing a Market Order during high-volatility news events often result in severe negative slippage?',
+          options: [
+            'Brokers are required by law to cancel all Market Orders during news.',
+            'Liquidity providers pull resting Limit Orders from the order book, creating wide spreads between Bid and Ask.',
+            'Market orders always guarantee the previous day\'s closing price.',
+            'Slippage only occurs on crypto assets.'
+          ],
+          correctIndex: 1,
+          explanation: 'During fast market events, resting limit orders evaporate. A market order sweeps through thin order book levels, filling at unfavorable prices.'
+        }
+      ]
+    };
+  }
+
+  // Universal First-Principles Quiz Fallback
   return {
     id: `quiz-${Date.now()}`,
     topic: specificFocus || topic,
@@ -1969,27 +2223,27 @@ function getSimulatedQuiz(topic: string, specificFocus: string): DiagnosticQuiz 
     questions: [
       {
         id: 'q-1',
-        question: `When designing a core component in ${specificFocus || topic}, what is the primary structural trade-off between latency and consistency?`,
+        question: `When mastering the foundational principles of ${specificFocus || topic}, what is the primary advantage of building tangible milestone deliverables over passive tutorial consumption?`,
         options: [
-          'High throughput always guarantees instantaneous linearizable consistency.',
-          'Under network partitioning, a distributed system must choose between availability and strict consistency.',
-          'Consistency can be maintained with zero latency overhead using caching alone.',
-          'Partition tolerance is optional in modern networks.'
+          'Passive reading guarantees zero mistakes.',
+          'Building tangible prototypes forces active retrieval, exposes hidden misconceptions, and creates durable mental models.',
+          'Watching video courses is proven to produce faster mastery than hands-on practice.',
+          'Theory must always precede practical execution by at least 6 months.'
         ],
         correctIndex: 1,
-        explanation: 'According to first-principles systems theory (CAP theorem), any distributed state machine facing network partitions must balance immediate availability against linearizable consistency guarantees.'
+        explanation: 'Active execution forces the brain to reconcile theoretical assumptions with real-world constraints, building true applied competence.'
       },
       {
         id: 'q-2',
-        question: 'Which of the following represents a classic anti-pattern when applying first-principles reasoning to this domain?',
+        question: 'Which of the following represents the single biggest trap beginners fall into when approaching this discipline?',
         options: [
-          'Deconstructing problems to basic axioms and building upward.',
-          'Premature optimization based on assumed bottlenecks rather than measured profiles.',
-          'Separating state mutations from side-effect-free pure computations.',
-          'Validating boundary edge cases before happy paths.'
+          'Deconstructing complex challenges into first-principles axioms.',
+          'Premature optimization and getting trapped in "tutorial hell" before building a basic working deliverable.',
+          'Verifying quality against strict real-world standards.',
+          'Asking diagnostic questions to identify knowledge gaps.'
         ],
         correctIndex: 1,
-        explanation: 'Premature optimization creates unnecessary complexity without empirical evidence of necessity, violating simplicity principles.'
+        explanation: 'Getting stuck in endless passive consumption without hands-on feedback creates the illusion of competence while delaying real skill acquisition.'
       }
     ]
   };

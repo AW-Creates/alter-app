@@ -222,9 +222,9 @@ export const OnboardingGuideModal: React.FC = () => {
                   2
                 </div>
                 <div className="text-xs space-y-0.5">
-                  <div className="font-bold text-[var(--ink)]">Learn with the Socratic Tutor</div>
+                  <div className="font-bold text-[var(--ink)]">1-on-1 Socratic Live Classroom</div>
                   <div className="text-[var(--ink-2)]">
-                    Read the step-by-step masterclass, understand the core intuition, and answer the check-in questions to lock in your understanding.
+                    Engage in live turn-by-turn conversational sparring with your Socratic Tutor via voice or text. Get concrete analogies and verify mastery.
                   </div>
                 </div>
               </div>
@@ -252,7 +252,7 @@ export const OnboardingGuideModal: React.FC = () => {
                 className="px-4 py-2 rounded-xl bg-[var(--advisor)] hover:bg-[var(--advisor)]/90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition"
               >
                 <Zap className="w-3.5 h-3.5" />
-                Start Course 1.1 Now
+                Enter Live Classroom Now →
               </button>
             </div>
           </div>
@@ -285,7 +285,7 @@ export const OnboardingGuideModal: React.FC = () => {
               onClick={handleStartLearning}
               className="px-5 py-2.5 rounded-xl bg-[var(--tutor)] hover:bg-[var(--tutor)]/90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition"
             >
-              Begin Course 1.1
+              Enter Live Socratic Classroom →
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
