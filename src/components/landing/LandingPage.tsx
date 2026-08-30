@@ -771,12 +771,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-[var(--ink-3)]">
+          <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-[var(--ink-3)] flex-wrap">
             <span>✓ 100% Free Forever</span>
             <span>•</span>
             <span>✓ Any Topic on Earth</span>
             <span>•</span>
-            <span>✓ No Prior Experience Needed</span>
+            <span>✓ 100% Client-Side Sandbox</span>
+          </div>
+
+          {/* Transparent Live AI vs Demo Mode Engine Disclosure */}
+          <div className="pt-2 max-w-xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[11.5px] font-mono text-[var(--ink-2)] shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>
+                <strong>Zero Lock-in:</strong> Explore pre-built curricula in Demo Mode, or connect your free Gemini / OpenRouter API Key for live AI generation.
+              </span>
+            </div>
           </div>
         </div>
 
@@ -1534,7 +1544,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
-                  <span>Bring-Your-Own Gemini API Key (or demo mode)</span>
+                  <span><strong>100% Client-Side Sandbox:</strong> Connect free Gemini / OpenRouter API Key (or use instant Demo Mode)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />

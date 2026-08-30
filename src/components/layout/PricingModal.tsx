@@ -99,7 +99,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                 </div>
                 <div className="flex items-start gap-2">
                   <Check size={14} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
-                  <span>BYO Gemini API Key / Demo Mode</span>
+                  <span>100% Client-Side Sandbox: Gemini / OpenRouter BYOK (or Demo Mode)</span>
                 </div>
               </div>
             </div>

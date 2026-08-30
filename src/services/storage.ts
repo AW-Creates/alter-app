@@ -10,18 +10,75 @@ export interface StorageMetrics {
   isNearQuota: boolean;
 }
 
+/**
+ * Centralized Schema Migration Layer
+ * Normalizes legacy field names (vaultNotes -> groundedNotes, conceptCards -> flashcards)
+ * and guarantees complete data structures across app versions.
+ */
+export const migrateJourneyData = (j: any): LearningJourney => {
+  if (!j) return j;
+
+  const migrated: LearningJourney = {
+    id: j.id || `journey-${Date.now()}`,
+    title: j.title || j.topic || 'Autodidactic Learning Journey',
+    topic: j.topic || j.title || 'General Knowledge',
+    destination: j.destination || 'Mastery and tangible proof-of-work',
+    baseline: j.baseline || 'Beginner',
+    diagnosticAssessment: j.diagnosticAssessment || j.advisorData?.diagnosticAssessment,
+    hoursPerWeek: typeof j.hoursPerWeek === 'number' ? j.hoursPerWeek : 10,
+    depth: j.depth || 'applied',
+    createdAt: j.createdAt || new Date().toISOString(),
+    lastActive: j.lastActive || j.lastActiveAt || new Date().toISOString(),
+    streakDays: typeof j.streakDays === 'number' ? j.streakDays : 1,
+    advisorData: {
+      overview: j.advisorData?.overview || `Strategic roadmap for ${j.topic || 'learning'}`,
+      estimatedWeeks: typeof j.advisorData?.estimatedWeeks === 'number' ? j.advisorData.estimatedWeeks : 6,
+      phases: j.advisorData?.phases || [],
+      cutList: j.advisorData?.cutList || [],
+      chatHistory: j.advisorData?.chatHistory || []
+    },
+    librarianData: {
+      sources: j.librarianData?.sources || [],
+      groundedNotes: j.librarianData?.groundedNotes || j.librarianData?.vaultNotes || [],
+      flashcards: j.librarianData?.flashcards || j.librarianData?.conceptCards || [],
+      chatHistory: j.librarianData?.chatHistory || []
+    },
+    tutorData: {
+      chatHistory: j.tutorData?.chatHistory || [],
+      feynmanSessions: j.tutorData?.feynmanSessions || [],
+      quizzes: j.tutorData?.quizzes || [],
+      lessons: j.tutorData?.lessons || j.tutorData?.interactiveLessons || []
+    },
+    editorData: {
+      reviews: j.editorData?.reviews || [],
+      chatHistory: j.editorData?.chatHistory || []
+    },
+    roommateData: {
+      chatHistory: j.roommateData?.chatHistory || [],
+      collisions: j.roommateData?.collisions || [],
+      personaVibe: j.roommateData?.personaVibe || 'curious_nerd'
+    }
+  };
+
+  return migrated;
+};
+
 export const getStoredJourneys = (): LearningJourney[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const initial = getInitialSampleJourneys();
+      const initial = getInitialSampleJourneys().map(migrateJourneyData);
       saveJourneys(initial);
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map(migrateJourneyData);
+    }
+    return getInitialSampleJourneys().map(migrateJourneyData);
   } catch (e) {
     console.error('Failed to load journeys from storage', e);
-    return getInitialSampleJourneys();
+    return getInitialSampleJourneys().map(migrateJourneyData);
   }
 };
 

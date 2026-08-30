@@ -23,14 +23,16 @@ import {
   Plus,
   Compass,
   Sparkles,
-  X
+  X,
+  Save,
+  Download
 } from 'lucide-react';
 import { OnboardingGuideModal } from './components/common/OnboardingGuideModal';
 import { AlterPersona } from './types/alter';
 
 export const AppContent: React.FC = () => {
   const { activeJourney, activePersona, setActivePersona, setIsCreateModalOpen } = useJourney();
-  const { user, setIsAuthModalOpen } = useAuth();
+  const { user, setIsAuthModalOpen, exportBackup } = useAuth();
   const [viewMode, setViewMode] = useState<'landing' | 'app'>(activeJourney ? 'app' : 'landing');
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [showSyncBanner, setShowSyncBanner] = useState(true);
@@ -55,15 +57,7 @@ export const AppContent: React.FC = () => {
   ];
 
   if (viewMode === 'landing') {
-    return (
-      <div className="min-h-screen bg-[var(--void)] text-[var(--ink)] font-sans">
-        <LandingPage onEnterApp={() => setViewMode('app')} />
-        <ApiKeyModal />
-        <CreateJourneyModal />
-        <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
-        <AuthModal />
-      </div>
-    );
+    return <LandingPage onEnterApp={() => setViewMode('app')} />;
   }
 
   return (
@@ -74,31 +68,45 @@ export const AppContent: React.FC = () => {
         onOpenPricing={() => setIsPricingOpen(true)}
       />
 
-      {/* Local Storage & Backup Banner */}
-      {user.isGuest && activeJourney && showSyncBanner && (
-        <div className="bg-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-1))] border-b border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] px-4 py-2 flex items-center justify-between text-xs text-[var(--ink)] transition">
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <Sparkles size={14} className="text-[var(--advisor)] flex-shrink-0" />
-            <span className="truncate">
-              Studying <strong>{activeJourney.title}</strong> (Local-First Mode).{' '}
-              <span className="hidden sm:inline text-[var(--ink-2)]">
-                All data is safely saved in this browser. Export JSON anytime for backup.
-              </span>
-            </span>
+      {/* Honest Storage / Cloud Sync Banner (Matches Claude's Behavior Spec & Mockup) */}
+      {activeJourney && showSyncBanner && (
+        <div className="bg-[var(--surface-2)] border-b border-[var(--hairline)] px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[var(--ink)] transition">
+          <div className="flex items-start gap-2.5 overflow-hidden">
+            <Save size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-semibold text-[var(--ink)] text-xs flex items-center gap-2">
+                <span>{user.syncEnabled ? '☁️ Cloud Synced' : 'Saved on this device only'}</span>
+                {!user.syncEnabled && (
+                  <span className="text-[10px] font-mono text-[var(--ink-3)]">· Local Browser Storage</span>
+                )}
+              </div>
+              <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-normal">
+                {user.syncEnabled
+                  ? 'Your learning journeys and progress are automatically synchronized with Supabase.'
+                  : "Cloud sync isn't set up for this deployment. Clearing your browser data will delete this journey."}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+            <button
+              onClick={exportBackup}
+              className="px-3 py-1.5 rounded-lg bg-[var(--surface-1)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-[var(--ink)] font-medium text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+            >
+              <Download size={12} className="text-[var(--accent)]" />
+              <span>Export backup</span>
+            </button>
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3 py-1 rounded-lg bg-[var(--advisor)] text-[#04050a] font-bold text-[11px] hover:brightness-110 shadow-xs transition cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
             >
-              Storage &amp; Backup
+              <span>{user.syncEnabled ? 'Manage Sync' : 'Set up sync'}</span>
             </button>
             <button
               onClick={() => setShowSyncBanner(false)}
-              className="p-1 text-[var(--ink-3)] hover:text-[var(--ink)] transition cursor-pointer"
+              className="p-1 text-[var(--ink-3)] hover:text-[var(--ink)] transition cursor-pointer ml-1"
               title="Dismiss banner"
             >
-              <X size={13} />
+              <X size={14} />
             </button>
           </div>
         </div>

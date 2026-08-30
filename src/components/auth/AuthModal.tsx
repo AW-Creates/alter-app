@@ -120,37 +120,86 @@ export const AuthModal: React.FC = () => {
             </div>
             <div>
               <h3 className="font-display text-lg font-bold text-[var(--ink)] tracking-tight m-0">
-                Scholar Profile &amp; Data Storage
+                {isSupabaseActive ? 'Cloud Sync & Scholar Profile' : 'Set up sync'}
               </h3>
-              <p className="text-xs text-[var(--ink-2)] m-0">
-                Manage your local profile, storage quota, JSON backups &amp; cloud sync.
+              <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
+                {isSupabaseActive
+                  ? 'Your journeys are automatically synced to your Supabase PostgreSQL cloud backend.'
+                  : "This copy of Altor has no cloud backend connected, so account sign-in can't back up your journeys yet."}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Honest Storage Architecture Banner */}
-        <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2 text-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-semibold text-[var(--ink)]">
-              <HardDrive size={15} className="text-[var(--advisor)]" />
-              <span>Storage Mode:</span>
+        {/* OAuth Buttons (Visibly Disabled / Not Connected unless Supabase is configured) */}
+        {!isSupabaseActive && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] opacity-80">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--ink-3)] font-medium">
+                <svg className="w-4 h-4 text-[var(--ink-3)]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+                </svg>
+                <span>Continue with Google</span>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--ink-3)] bg-[var(--surface-3)] px-2 py-0.5 rounded-full border border-[var(--hairline)] font-bold">
+                Not connected
+              </span>
             </div>
-            {isSupabaseActive ? (
-              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-[11px] font-mono font-bold flex items-center gap-1">
-                <Cloud size={12} /> Supabase Cloud Sync (Active)
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] opacity-80">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--ink-3)] font-medium">
+                <Github size={16} className="text-[var(--ink-3)]" />
+                <span>Continue with GitHub</span>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--ink-3)] bg-[var(--surface-3)] px-2 py-0.5 rounded-full border border-[var(--hairline)] font-bold">
+                Not connected
               </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded-md bg-[var(--surface-3)] border border-[var(--hairline)] text-[var(--ink-2)] text-[11px] font-mono font-bold flex items-center gap-1">
-                <Shield size={12} className="text-[var(--advisor)]" /> Local Storage (This Browser)
-              </span>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* "What you can do right now" Section (Matches HTML Mockup) */}
+        <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
+          <div className="text-xs font-semibold text-[var(--ink-2)]">
+            What you can do right now:
           </div>
 
-          {/* Storage Quota Usage Bar */}
-          <div className="space-y-1 pt-1">
+          <div className="space-y-2">
+            <button
+              onClick={exportBackup}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[var(--surface-1)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs text-[var(--ink)] font-medium transition cursor-pointer text-left"
+            >
+              <div className="flex items-center gap-2.5">
+                <Download size={15} className="text-[var(--advisor)]" />
+                <span>Export all journeys as a JSON file</span>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--advisor)] font-bold">1-Click</span>
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[var(--surface-1)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs text-[var(--ink)] font-medium transition cursor-pointer text-left"
+            >
+              <div className="flex items-center gap-2.5">
+                <Upload size={15} className="text-[var(--tutor)]" />
+                <span>Import that file on another device</span>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--tutor)] font-bold">Restore</span>
+            </button>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportFile}
+              accept=".json"
+              className="hidden"
+            />
+          </div>
+
+          {/* Storage Quota Usage Gauge */}
+          <div className="pt-2 border-t border-[var(--hairline)] space-y-1">
             <div className="flex justify-between text-[11px] font-mono text-[var(--ink-3)]">
-              <span>Used: {storageMetrics.formattedUsed} / ~5 MB</span>
+              <span>Local Storage Used: {storageMetrics.formattedUsed} / ~5 MB</span>
               <span>{storageMetrics.estimatedPercentage}% capacity</span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-[var(--surface-3)] overflow-hidden">
@@ -167,43 +216,6 @@ export const AuthModal: React.FC = () => {
                 <span>Storage nearing limit. Export a JSON backup to protect your curricula.</span>
               </p>
             )}
-          </div>
-        </div>
-
-        {/* 1-Click Backup Export / Import */}
-        <div className="p-3.5 rounded-xl bg-gradient-to-r from-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-2))] to-[var(--surface-2)] border border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-[var(--ink)] flex items-center gap-1.5">
-              <Download size={14} className="text-[var(--advisor)]" />
-              <span>Full Data Backup &amp; Portability</span>
-            </div>
-            <span className="text-[10px] font-mono text-[var(--ink-3)]">100% Client-Side</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={exportBackup}
-              className="py-2 px-3 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
-            >
-              <Download size={13} />
-              <span>Export Backup (.json)</span>
-            </button>
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="py-2 px-3 rounded-xl bg-[var(--surface-3)] hover:bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[var(--ink)] text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
-            >
-              <Upload size={13} />
-              <span>Restore Backup</span>
-            </button>
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImportFile}
-              accept=".json"
-              className="hidden"
-            />
           </div>
         </div>
 

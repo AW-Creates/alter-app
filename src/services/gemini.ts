@@ -1328,45 +1328,45 @@ function getSimulatedDiagnosticEvaluation(
     refinedTopic: topic,
     refinedDestination: `Complete a finished, real-world project and master the core foundations of ${topic}`,
     actualBaselineAssessment: isBeginner 
-      ? `Enthusiastic autodidact starting from scratch; ready for a clear, step-by-step foundation with zero jargon.`
-      : `Solid conceptual awareness; ready to fill specific execution gaps and build a polished project.`,
+      ? `Starting from square one on "${topic}". Needs a linear, step-by-step foundation with zero jargon and immediate hands-on wins.`
+      : `Has foundational familiarity with "${topic}". Ready to tackle practical execution workflows and publish a proof-of-work project.`,
     masteredStrengths: [
-      'High motivation and clear goal orientation',
-      'Desire for practical hands-on results over passive theory'
+      qaPairs[0]?.answer ? `Clear milestone objective: "${qaPairs[0].answer.slice(0, 60)}${qaPairs[0].answer.length > 60 ? '...' : ''}"` : 'High motivation and clear goal orientation',
+      qaPairs[1]?.answer ? `Recognizes baseline constraints: "${qaPairs[1].answer.slice(0, 60)}${qaPairs[1].answer.length > 60 ? '...' : ''}"` : 'Desire for practical hands-on results over passive theory'
     ],
     criticalGapsToFill: [
-      'Step-by-step foundational workflow and starter setup',
-      'Hands-on execution confidence and error troubleshooting'
+      qaPairs[2]?.answer ? `Scenario execution refinement: Addressing edge cases in "${qaPairs[2].answer.slice(0, 50)}${qaPairs[2].answer.length > 50 ? '...' : ''}"` : 'Step-by-step foundational workflow and starter setup',
+      `Translating theoretical concepts into a validated Phase 1 deliverable for ${topic}`
     ],
     recommendedStartingPhase: 1,
-    diagnosticScore: isBeginner ? 68 : 84,
-    whyCustomizedExplanation: `We structured your roadmap so every single phase ends with a real, tangible project you can see and touch—ensuring you build real confidence at every step.`,
-    addedCoursesReason: `We added Phase 1 foundational checkpoints to give you an easy, quick win in your first 2 weeks.`,
-    subtractedCoursesReason: `We cut out dry theoretical lectures and confusing jargon so you spend 80% of your time actually building.`,
+    diagnosticScore: isBeginner ? 72 : 86,
+    whyCustomizedExplanation: `Based on your stated objective ("${(qaPairs[0]?.answer || topic).slice(0, 70)}"), we organized your roadmap so Phase 1 delivers an immediate working milestone before tackling advanced scaling.`,
+    addedCoursesReason: `We added Phase 1 foundational checkpoints specifically calibrated for your baseline in ${topic}.`,
+    subtractedCoursesReason: `We cut out passive reading marathons and unnecessary jargon so you spend 80% of your time building tangible proof of work.`,
     recommendedCutList: [
-      'Skip generic superficial video tutorials that talk without demonstrating practical steps',
-      'Avoid passive reading marathons without hands-on practice'
+      `Skip generic theoretical lectures on ${topic} that lack practical implementation steps`,
+      `Avoid spending weeks consuming tutorials without building your Phase 1 milestone`
     ],
     phasesSummary: [
       {
         phaseNumber: 1,
-        title: 'Phase 1: Core Foundations & First Working Prototype',
+        title: `Phase 1: ${topic} Foundations & First Working Milestone`,
         duration: 'Weeks 1-2',
-        tangibleAsset: 'First Working Prototype or Draft Deliverable',
+        tangibleAsset: `First Validated Deliverable for ${topic}`,
         whyThisOrder: 'Validates your core understanding and gives you an immediate tangible win.'
       },
       {
         phaseNumber: 2,
-        title: 'Phase 2: Core Execution & In-Depth Build',
+        title: `Phase 2: Core Execution & Deep Implementation`,
         duration: 'Weeks 3-4',
-        tangibleAsset: 'Complete Functional Milestone System',
+        tangibleAsset: `Complete Functional Milestone System for ${topic}`,
         whyThisOrder: 'Expands your prototype into a robust, comprehensive system.'
       },
       {
         phaseNumber: 3,
-        title: 'Phase 3: Polish, Launch & Real-World Results',
+        title: `Phase 3: Polish, Showcase & Real-World Results`,
         duration: 'Weeks 5-6',
-        tangibleAsset: 'Live Published Deliverable or Final Showcase',
+        tangibleAsset: `Live Published Deliverable for ${topic}`,
         whyThisOrder: 'Brings your project to completion and shares it with real users.'
       }
     ]
