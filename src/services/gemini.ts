@@ -502,6 +502,8 @@ export async function runAgentLoop(task: string, maxIterations = 5) {
       '2. Errors from tools must be fed back as observations for self-healing.',
       '3. Always bound iterations and validate schema contracts.'
     ],
+    audioOverview: parsed.audioOverview,
+    videoDeck: parsed.videoDeck,
     socraticChallenge: parsed.socraticChallenge || 'How would you adapt this architecture to recover when an external API times out after 3 retries?',
     practiceTask: parsed.practiceTask || 'Write a 20-line working prototype of this loop in the scratchpad below and click "Send to Editor" for redline review.',
     mastered: false,
@@ -2163,6 +2165,90 @@ Observe the results of each step immediately. Catching small variations early pr
         `2. Keep the process simple and repeatable before adding variations.`,
         `3. Verify each step before moving on to the next.`
       ],
+      audioOverview: {
+        title: `Deep-Dive Audio Podcast: ${concept}`,
+        duration: '3:30 min podcast',
+        hosts: {
+          host1: 'Dr. Sarah (Lead Strategist)',
+          host2: 'Leo (Curious Builder)'
+        },
+        keyTakeaway: `Focus on mastering the simple, repeatable core routine before adding variations.`,
+        dialogue: [
+          {
+            id: 'line-1',
+            speaker: 'Sarah',
+            text: `Welcome to today's deep-dive podcast! We are talking about "${concept}" in ${topic}.`,
+            timestamp: '0:00'
+          },
+          {
+            id: 'line-2',
+            speaker: 'Leo',
+            text: `Awesome. Sarah, whenever beginners start with "${concept}", they get overwhelmed by all the options. Where should someone actually begin?`,
+            timestamp: '0:18'
+          },
+          {
+            id: 'line-3',
+            speaker: 'Sarah',
+            text: `You start by getting the setup right. 80% of success here happens in the preparation stage before you even begin the main task.`,
+            timestamp: '0:45'
+          },
+          {
+            id: 'line-4',
+            speaker: 'Leo',
+            text: `That is huge. So keep it simple, test early, and verify your output against the standard checklist!`,
+            timestamp: '1:10'
+          }
+        ]
+      },
+      videoDeck: {
+        title: `Visual Masterclass: ${concept}`,
+        totalSlides: 4,
+        slides: [
+          {
+            slideNumber: 1,
+            title: `1. Core Foundation & Metaphor`,
+            subtitle: `Intuition for ${concept}`,
+            bulletPoints: [
+              `Why traditional tutorials overcomplicate ${concept}.`,
+              `The core foundation: preparation dictates 80% of results.`
+            ],
+            visualDiagram: `[ 1. Preparation ] ──► [ 2. Deliberate Execution ] ──► [ 3. Verification ]`,
+            voiceoverScript: `Welcome to this visual walkthrough. In this lesson we focus strictly on the high-leverage steps.`
+          },
+          {
+            slideNumber: 2,
+            title: `2. Execution Protocol & Best Practices`,
+            subtitle: `Step-by-Step Practical Routine`,
+            bulletPoints: [
+              `Follow the proven standard protocol methodically.`,
+              `Do not skip setup steps or rush the verification.`
+            ],
+            visualDiagram: `┌────────────────────────────────────────┐\n│ STEP 1: Verify Initial Workspace Setup │\n│ STEP 2: Execute Core Value Action       │\n│ STEP 3: Inspect Quality Output         │\n└────────────────────────────────────────┘`,
+            voiceoverScript: `Here is your standard execution flow. Keep every step simple and consistent.`
+          },
+          {
+            slideNumber: 3,
+            title: `3. Practical Action Checklist`,
+            subtitle: `Day-1 Execution Template`,
+            bulletPoints: [
+              `Review prerequisites and workspace checklist.`,
+              `Execute with focus and log your observations.`
+            ],
+            codeSnippet: `// Practical Checklist\n[ ] Setup verified\n[ ] Action executed\n[ ] Quality checked against milestone`,
+            voiceoverScript: `Use this checklist to complete your hands-on exercise.`
+          },
+          {
+            slideNumber: 4,
+            title: `4. Traps to Skip & Capstone Goal`,
+            subtitle: `The Anti-Fluff Cut List`,
+            bulletPoints: [
+              `Avoid expensive gimmicks or premature variations.`,
+              `Submit your deliverable for Editor review.`
+            ],
+            voiceoverScript: `Keep your focus sharp, avoid unnecessary fluff, and test your understanding below.`
+          }
+        ]
+      },
       socraticChallenge: `If unexpected conditions arise during your execution of ${concept}, what is the first check you should perform to get back on track?`,
       practiceTask: `Complete the action checklist above and write your 1-paragraph summary in the scratchpad to review with the Editor.`,
       mastered: false,
@@ -2274,6 +2360,99 @@ export async function executeMasteryLoop(task: string, maxSteps = 5): Promise<st
       `2. Errors from external tools must be treated as valuable observation state for self-healing.`,
       `3. Always bound iterations and enforce strict schema boundaries.`
     ],
+    audioOverview: {
+      title: `Deep-Dive Audio Podcast: ${concept}`,
+      duration: '4:15 min podcast',
+      hosts: {
+        host1: 'Dr. Sarah (Lead Strategist)',
+        host2: 'Leo (Curious Builder)'
+      },
+      keyTakeaway: `Master the core first-principles loop of ${concept} before optimizing secondary details.`,
+      dialogue: [
+        {
+          id: 'line-1',
+          speaker: 'Sarah',
+          text: `Welcome back everyone! Today we are breaking down "${concept}" for builders mastering ${topic}.`,
+          timestamp: '0:00'
+        },
+        {
+          id: 'line-2',
+          speaker: 'Leo',
+          text: `Awesome. Sarah, whenever engineers first encounter "${concept}", they often try to copy massive boilerplate frameworks. What is the actual core mental model?`,
+          timestamp: '0:18'
+        },
+        {
+          id: 'line-3',
+          speaker: 'Sarah',
+          text: `Think of it like an air traffic control loop. You have inbound sensor events, an explicit routing rule, and an immutable state update. If you isolate side-effects from pure state transitions, debugging becomes effortless.`,
+          timestamp: '0:45'
+        },
+        {
+          id: 'line-4',
+          speaker: 'Leo',
+          text: `That makes total sense! And when an external API fails, you treat that error as an observation to self-correct rather than crashing the system.`,
+          timestamp: '1:12'
+        },
+        {
+          id: 'line-5',
+          speaker: 'Sarah',
+          text: `Exactly. Let's look at the starter blueprint on Slide 3 and test yourself on the Socratic challenge!`,
+          timestamp: '1:35'
+        }
+      ]
+    },
+    videoDeck: {
+      title: `Visual Masterclass: ${concept}`,
+      totalSlides: 4,
+      slides: [
+        {
+          slideNumber: 1,
+          title: `1. The Big Picture & Mental Model`,
+          subtitle: `Intuition for ${concept}`,
+          bulletPoints: [
+            `Why conventional tutorials make ${concept} overly complex.`,
+            `The core insight: Decouple pure state transitions from side effects.`
+          ],
+          visualDiagram: `┌────────────────────────────────────────┐\n│ CORE FOUNDATION: ${concept.toUpperCase()} \n├────────────────────────────────────────┤\n│  Input ──► State Loop ──► Proof of Work│\n└────────────────────────────────────────┘`,
+          voiceoverScript: `Welcome to this visual masterclass. Here is the first-principles architecture loop.`
+        },
+        {
+          slideNumber: 2,
+          title: `2. Architecture & Mechanics`,
+          subtitle: `The Step-by-Step System Flow`,
+          bulletPoints: [
+            `Pillar 1: Explicit Input & State Contracts.`,
+            `Pillar 2: Deterministic execution with error boundaries.`,
+            `Pillar 3: Fast feedback loops for continuous validation.`
+          ],
+          visualDiagram: `[ Event Payload ]\n       │\n       ▼\n[ Pure Reducer / Evaluator ] ──► ( Automated Checks )\n       │\n       ▼\n[ Verified State Store ]`,
+          voiceoverScript: `Notice how every state transition passes through explicit validation before execution.`
+        },
+        {
+          slideNumber: 3,
+          title: `3. Tactical Implementation Blueprint`,
+          subtitle: `Executable Code Template`,
+          bulletPoints: [
+            `Step 1: Enforce strict schema constraints.`,
+            `Step 2: Catch errors and convert them to actionable observations.`,
+            `Step 3: Enforce maximum step boundaries to prevent infinite loops.`
+          ],
+          codeSnippet: `// Production Loop Pattern for ${concept}\nexport async function executeStep(state, action) {\n  if (!state) throw new Error("State missing");\n  const result = await processAction(state, action);\n  return { ...state, result, updatedAt: Date.now() };\n}`,
+          voiceoverScript: `Review the starter implementation on the right. You can copy this directly into your scratchpad.`
+        },
+        {
+          slideNumber: 4,
+          title: `4. Traps to Cut & Capstone Challenge`,
+          subtitle: `The Anti-Fluff Cut List`,
+          bulletPoints: [
+            `⚠️ Avoid giant monolithic wrappers that hide errors.`,
+            `⚠️ Always bound iterations and validate schemas.`,
+            `🎯 Build and submit your prototype to the Analytical Editor.`
+          ],
+          voiceoverScript: `Keep your cut list in mind, avoid premature complexity, and test your understanding with the Socratic challenge below.`
+        }
+      ]
+    },
     socraticChallenge: `Imagine you deployed this ${concept} architecture in production and an upstream service suddenly returns HTTP 429 Rate Limits. How would you design the loop to handle backoff and jitter without blowing through your maximum step budget?`,
     practiceTask: `Write a 20-line working prototype of this loop in the scratchpad below and click "Send to Editor" for redline review.`,
     mastered: false,

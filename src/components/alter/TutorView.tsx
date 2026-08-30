@@ -40,6 +40,7 @@ import {
 import { VoiceInputButton } from '../common/VoiceInputButton';
 import { dispatchWebhookEvent } from '../../services/webhooks';
 import { FeynmanEvaluation, QuizQuestion, InteractiveLesson, LiveClassroomTurn } from '../../types/alter';
+import { LessonVideoAudioPlayer } from '../course/LessonVideoAudioPlayer';
 
 export const TutorView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage, targetTutorConcept, sendToEditor } = useJourney();
@@ -590,6 +591,14 @@ export const TutorView: React.FC = () => {
                   <span>Refresh Lesson</span>
                 </button>
               </div>
+
+              {/* Multimedia Masterclass Audio & Video Player */}
+              <LessonVideoAudioPlayer
+                concept={activeLesson.concept}
+                topic={activeJourney.topic}
+                audioOverview={activeLesson.audioOverview}
+                videoDeck={activeLesson.videoDeck}
+              />
 
               {/* 5-Level Progress Stepper */}
               <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-3 overflow-x-auto gap-1">

@@ -37,6 +37,7 @@ import {
 } from '../../services/gemini';
 import { CuratedSource, ReadingStatus, SourceDeepDive } from '../../types/alter';
 import { VoiceInputButton } from '../common/VoiceInputButton';
+import { LessonVideoAudioPlayer } from '../course/LessonVideoAudioPlayer';
 
 export const LibrarianView: React.FC = () => {
   const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona } = useJourney();
@@ -635,6 +636,12 @@ export const LibrarianView: React.FC = () => {
 
                 {/* Masterclass Content Area */}
                 <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 text-xs leading-relaxed">
+                  {/* Multimedia Masterclass Player */}
+                  <LessonVideoAudioPlayer
+                    concept={selectedSourceForDeepDive.title}
+                    topic={activeJourney.topic}
+                  />
+
                   {/* LEVEL 0: PLAIN INTUITION & LAYMAN ANALOGY */}
                   {masterclassTab === 'intuition' && (
                     <div className="space-y-4 animate-fade-in">

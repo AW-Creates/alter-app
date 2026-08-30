@@ -141,6 +141,42 @@ export interface DiagnosticQuiz {
   date: string;
 }
 
+export interface PodcastDialogueLine {
+  id: string;
+  speaker: 'Sarah' | 'Leo';
+  text: string;
+  timestamp?: string; // e.g. "0:15"
+}
+
+export interface DeepDiveAudioOverview {
+  title: string;
+  duration: string; // e.g. "4:30 min podcast"
+  hosts: {
+    host1: string; // e.g. "Dr. Sarah (Senior Strategist)"
+    host2: string; // e.g. "Leo (Curious Builder)"
+  };
+  dialogue: PodcastDialogueLine[];
+  keyTakeaway: string;
+}
+
+export interface LessonSlide {
+  slideNumber: number;
+  title: string;
+  subtitle?: string;
+  bulletPoints: string[];
+  visualDiagram?: string;
+  codeSnippet?: string;
+  voiceoverScript: string;
+}
+
+export interface LessonVideoDeck {
+  title: string;
+  totalSlides: number;
+  slides: LessonSlide[];
+  videoUrl?: string; // Optional curated video embed link
+  videoPlatform?: 'youtube' | 'vimeo' | 'loom' | 'interactive';
+}
+
 export interface InteractiveLesson {
   id: string;
   concept: string;
@@ -163,6 +199,10 @@ export interface InteractiveLesson {
   howMastersUseIt?: string;
   commonPitfalls?: string[];
   cutListFluff?: string;
+
+  // Multimedia Additions: NotebookLM Audio & Video Deck
+  audioOverview?: DeepDiveAudioOverview;
+  videoDeck?: LessonVideoDeck;
 
   mastered?: boolean;
   studentResponse?: string;

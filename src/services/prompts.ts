@@ -409,6 +409,78 @@ Respond ONLY with a valid JSON object matching this schema:
     "Takeaway 2: Tactical execution habit",
     "Takeaway 3: Failure mode to avoid"
   ],
+  "audioOverview": {
+    "title": "Deep-Dive Audio Podcast: ${concept}",
+    "duration": "4 min podcast",
+    "hosts": {
+      "host1": "Dr. Sarah (Lead Strategist)",
+      "host2": "Leo (Curious Builder)"
+    },
+    "keyTakeaway": "Master the core feedback loop before premature complexity",
+    "dialogue": [
+      {
+        "id": "line-1",
+        "speaker": "Sarah",
+        "text": "Conversational intro breaking down the topic...",
+        "timestamp": "0:00"
+      },
+      {
+        "id": "line-2",
+        "speaker": "Leo",
+        "text": "Asking a pragmatic question about common traps...",
+        "timestamp": "0:25"
+      },
+      {
+        "id": "line-3",
+        "speaker": "Sarah",
+        "text": "Explaining the concrete analogy and first-principles fix...",
+        "timestamp": "0:50"
+      },
+      {
+        "id": "line-4",
+        "speaker": "Leo",
+        "text": "Summarizing the tactical action step...",
+        "timestamp": "1:15"
+      }
+    ]
+  },
+  "videoDeck": {
+    "title": "Masterclass Lecture Slides: ${concept}",
+    "totalSlides": 4,
+    "slides": [
+      {
+        "slideNumber": 1,
+        "title": "1. Core Intuition & The Big Picture",
+        "subtitle": "Zero-Jargon Foundation",
+        "bulletPoints": ["Key point 1", "Key point 2"],
+        "visualDiagram": "ASCII Diagram or Flow",
+        "voiceoverScript": "Voiceover narration for this slide..."
+      },
+      {
+        "slideNumber": 2,
+        "title": "2. Architecture & System Flow",
+        "subtitle": "Step-by-step mechanics",
+        "bulletPoints": ["Key point 1", "Key point 2"],
+        "visualDiagram": "ASCII System Architecture",
+        "voiceoverScript": "Voiceover narration for this slide..."
+      },
+      {
+        "slideNumber": 3,
+        "title": "3. Tactical Implementation Blueprint",
+        "subtitle": "Actionable starter template",
+        "bulletPoints": ["Step 1", "Step 2"],
+        "codeSnippet": "// Starter blueprint code or action plan",
+        "voiceoverScript": "Voiceover narration for this slide..."
+      },
+      {
+        "slideNumber": 4,
+        "title": "4. Traps to Avoid & Milestone Checkpoint",
+        "subtitle": "What to cut and your proof of work deliverable",
+        "bulletPoints": ["Trap 1", "Trap 2"],
+        "voiceoverScript": "Voiceover narration for this slide..."
+      }
+    ]
+  },
   "socraticChallenge": "A sharp, diagnostic Socratic sparring question or scenario where the student must apply this concept to solve a real dilemma",
   "practiceTask": "A concrete 10-minute micro-exercise or deliverable to test and cement this concept right now in the scratchpad"
 }
