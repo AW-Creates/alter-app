@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { VoiceInputButton } from '../common/VoiceInputButton';
-import { chatWithPersona, critiqueTextWithAI } from '../../services/gemini';
+import { chatWithPersona, critiqueTextWithAI, hasActiveApiKey } from '../../services/gemini';
 import { TextCritique } from '../../types/alter';
 
 export const EditorView: React.FC = () => {
@@ -99,10 +99,21 @@ export const EditorView: React.FC = () => {
       {/* Left Column: Draft Submission & Critique */}
       <div>
         <form onSubmit={handleRunCritique} className="card" style={{ marginBottom: critiqueResult ? '16px' : 0 }}>
-          <p className="card-label" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--ink)' }}>
-            <FileEdit size={15} color="var(--accent)" strokeWidth={2} />
-            SUBMIT DRAFT FOR EDITORIAL PRESSURE-TEST
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="card-label m-0 flex items-center gap-2 text-[var(--ink)]">
+              <FileEdit size={15} color="var(--accent)" strokeWidth={2} />
+              SUBMIT DRAFT FOR EDITORIAL PRESSURE-TEST
+            </p>
+            {hasActiveApiKey() ? (
+              <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2 py-0.5 rounded font-bold">
+                🛡️ Live AI Analysis
+              </span>
+            ) : (
+              <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)] px-2 py-0.5 rounded font-bold">
+                ⚡ Local Analytical Engine
+              </span>
+            )}
+          </div>
 
           <div className="segmented" style={{ width: 'fit-content', marginBottom: '8px' }}>
             <button

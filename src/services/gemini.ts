@@ -2250,39 +2250,90 @@ function getSimulatedQuiz(topic: string, specificFocus: string): DiagnosticQuiz 
 }
 
 function getSimulatedCritique(draft: string, mode: string): EditorReview {
+  const cleanDraft = (draft || '').trim();
+  const words = cleanDraft.split(/\s+/).filter(Boolean);
+  const sentences = cleanDraft.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 5);
+
+  const redlines: Array<{ id: string; originalText: string; improvedText: string; critiqueReason: string }> = [];
+  let revised = cleanDraft;
+
+  // 1. Detect and fix real wordy clichés in the student's actual text
+  const cliches: Array<{ regex: RegExp; replacement: string; reason: string }> = [
+    { regex: /\bin order to\b/gi, replacement: 'to', reason: 'Eliminates unnecessary filler and sharpens impact.' },
+    { regex: /\bdue to the fact that\b/gi, replacement: 'because', reason: 'Replaces passive wordiness with direct causality.' },
+    { regex: /\bat the present time\b/gi, replacement: 'currently', reason: 'Simplifies verbose temporal phrasing.' },
+    { regex: /\bit is important to note that\b/gi, replacement: 'notably,', reason: 'Removes throat-clearing meta-commentary.' },
+    { regex: /\bbasically\b/gi, replacement: '', reason: 'Removes hedge word that weakens assertion authority.' },
+    { regex: /\breally\b/gi, replacement: '', reason: 'Removes conversational intensifier.' },
+    { regex: /\bvery\b/gi, replacement: '', reason: 'Replaces generic modifier with strong primary verbs.' }
+  ];
+
+  cliches.forEach((item, idx) => {
+    if (item.regex.test(cleanDraft)) {
+      const matchSentence = sentences.find((s) => item.regex.test(s));
+      if (matchSentence) {
+        const cleanedSentence = matchSentence.replace(item.regex, item.replacement).replace(/\s+/g, ' ').trim();
+        redlines.push({
+          id: `r-${idx + 1}`,
+          originalText: matchSentence,
+          improvedText: cleanedSentence,
+          critiqueReason: item.reason
+        });
+        revised = revised.replace(matchSentence, cleanedSentence);
+      }
+    }
+  });
+
+  // 2. If no clichés matched, pick the longest sentence to tighten
+  if (redlines.length === 0 && sentences.length > 0) {
+    const longestSentence = sentences.reduce((max, curr) => (curr.length > max.length ? curr : max), sentences[0]);
+    if (longestSentence.length > 30) {
+      const tightened = longestSentence.replace(/, and /, '; ').replace(/ which is /gi, ' — ');
+      redlines.push({
+        id: 'r-1',
+        originalText: longestSentence,
+        improvedText: tightened,
+        critiqueReason: 'Tightens sentence structure and accelerates reader pacing.'
+      });
+      revised = revised.replace(longestSentence, tightened);
+    }
+  }
+
+  // 3. Dynamic scoring based on length and structure
+  const isVeryShort = words.length < 15;
+  const overallScore = isVeryShort ? 58 : Math.min(94, Math.max(72, 85 - redlines.length * 4));
+
+  const logicFlaws: string[] = [];
+  if (isVeryShort) {
+    logicFlaws.push('The draft is too brief to substantiate its core claims. Add supporting empirical reasoning.');
+  } else {
+    logicFlaws.push('The argument moves quickly from premise to conclusion without addressing counter-evidence.');
+    if (words.length > 60) {
+      logicFlaws.push('Consider breaking complex compound sentences into punchy single-idea assertions.');
+    }
+  }
+
+  const counterarguments: string[] = [
+    `A skeptical reviewer could question whether the proposed approach holds under strict resource constraints or adverse conditions.`
+  ];
+
   return {
     id: `review-${Date.now()}`,
-    title: draft.slice(0, 30) + '...',
-    submittedDraft: draft,
+    title: cleanDraft.slice(0, 30) + (cleanDraft.length > 30 ? '...' : ''),
+    submittedDraft: cleanDraft,
     mode: mode as any,
-    overallScore: 82,
-    verdict: 'Compelling core argument, but relies on unproven implicit assumptions in paragraph 1 and contains slight phrasing redundancy.',
+    overallScore,
+    verdict: isVeryShort
+      ? 'Initial draft thesis identified, but requires substantive expansion and clearer empirical grounding.'
+      : `Promising thesis with solid clarity (${words.length} words analyzed). Refined ${redlines.length} phrasing inefficiencies to maximize punch.`,
     strengths: [
-      'Clear overarching thesis with high relevance.',
-      'Energetic flow and direct voice.'
+      `Clear overarching goal and direct voice (${words.length} words).`,
+      'Focused subject matter without excessive topic drift.'
     ],
-    logicFlaws: [
-      'The transition between the problem premise and the proposed solution assumes causality where only correlation was shown.',
-      'Lacks explicit boundary conditions: under what scenarios would this hypothesis fail?'
-    ],
-    counterarguments: [
-      'A skeptic could argue that resource constraints in real-world scenarios make this ideal model impractical without compromise.'
-    ],
-    redlines: [
-      {
-        id: 'r-1',
-        originalText: 'In order to really achieve success in this area...',
-        improvedText: 'To succeed in this domain...',
-        critiqueReason: 'Eliminates filler words and sharpens punch.'
-      },
-      {
-        id: 'r-2',
-        originalText: 'It is basically obvious that...',
-        improvedText: 'First-principles evidence shows that...',
-        critiqueReason: 'Replaces colloquial hand-waving with an empirical grounding statement.'
-      }
-    ],
-    revisedVersion: `To succeed in this domain, we must anchor our system in proven first-principles. Rather than relying on surface-level heuristics, an intentional architecture decouples execution from orchestration, ensuring long-term resilience.`,
+    logicFlaws,
+    counterarguments,
+    redlines,
+    revisedVersion: revised || cleanDraft,
     date: new Date().toLocaleDateString()
   };
 }

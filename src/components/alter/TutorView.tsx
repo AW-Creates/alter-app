@@ -51,6 +51,7 @@ export const TutorView: React.FC = () => {
   const [isGeneratingLesson, setIsGeneratingLesson] = useState(false);
   const [activeLesson, setActiveLesson] = useState<InteractiveLesson | null>(null);
   const [masterclassTab, setMasterclassTab] = useState<'intuition' | 'mechanics' | 'code' | 'traps' | 'sparring'>('intuition');
+  const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false);
   
   // Socratic sparring state
   const [sparringResponse, setSparringResponse] = useState('');
@@ -1113,24 +1114,43 @@ export const TutorView: React.FC = () => {
         </div>
       )}
 
-      {/* Mode 2: Live 1-on-1 Socratic Classroom */}
+      {/* Mode 2: Live 1-on-1 Socratic Classroom (Chat-First UI) */}
       {tutorMode === 'socratic' && (
-        <div className="space-y-6">
-          {/* Concept Selector Bar */}
-          <div className="card space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <GraduationCap size={16} className="text-[var(--tutor)]" />
-                <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">
-                  Select a Concept for Live 1-on-1 Socratic Lesson:
-                </h3>
+        <div className="space-y-4 max-w-4xl mx-auto">
+          {/* Main Socratic Chat Card Container */}
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-xl overflow-hidden flex flex-col">
+            {/* Header: Persona + Concept Title + Mastery Pill */}
+            <div className="p-4 border-b border-[var(--hairline)] bg-[var(--surface-2)]/80 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-mono text-[var(--ink-3)] uppercase tracking-wider font-semibold">
+                  Tutor · Live Socratic Session
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold font-display text-[var(--ink)] m-0">
+                  {selectedConcept || 'First Principles'}
+                </h2>
               </div>
-              <span className="text-xs font-mono text-[var(--ink-3)]">
-                {(tutorData.lessons || []).filter((l) => l.mastered).length} / {allConcepts.length} Mastered
-              </span>
+
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 text-xs font-mono font-bold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>
+                    {(tutorData.lessons || []).filter((l) => l.mastered).length} of {allConcepts.length} concepts mastered
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleInitClassroom(selectedConcept)}
+                  disabled={isClassroomLoading}
+                  className="ghost-btn text-xs p-1.5"
+                  title="Restart Live Socratic Session"
+                >
+                  <RotateCcw size={13} />
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-1">
+            {/* Slim Horizontally Scrollable Concept Pill Row */}
+            <div className="px-4 py-2.5 border-b border-[var(--hairline)] bg-[var(--surface-1)] flex items-center gap-2 overflow-x-auto no-scrollbar">
               {allConcepts.map((concept, idx) => {
                 const isMastered = (tutorData.lessons || []).some(
                   (l) => l.concept === concept && l.mastered
@@ -1144,141 +1164,97 @@ export const TutorView: React.FC = () => {
                       setSelectedConcept(concept);
                       handleInitClassroom(concept);
                     }}
-                    className={`px-3 py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-2 border ${
+                    className={`px-3 py-1 rounded-full text-xs font-mono font-medium transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                       isSelected
-                        ? 'bg-[var(--surface-3)] text-[var(--tutor)] border-[var(--tutor)] shadow-sm font-bold'
+                        ? 'bg-[var(--tutor)] text-[#04050a] font-bold shadow-xs'
                         : isMastered
-                        ? 'bg-[var(--surface-1)] text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                        : 'bg-[var(--surface-1)] text-[var(--ink-2)] border-[var(--hairline)] hover:border-[var(--hairline-strong)] hover:text-[var(--ink)]'
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                        : 'bg-[var(--surface-2)] text-[var(--ink-2)] border border-[var(--hairline)] hover:border-[var(--hairline-strong)] hover:text-[var(--ink)]'
                     }`}
                   >
                     <span>{concept}</span>
-                    {isMastered && (
-                      <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px] font-bold">
-                        ✓
-                      </span>
-                    )}
+                    {isMastered && <span className="font-bold">✓</span>}
                   </button>
                 );
               })}
             </div>
-          </div>
 
-          {/* Live Classroom Dialogue Container */}
-          <div className="card p-0 overflow-hidden border-2 border-[var(--tutor)]/40 bg-[var(--surface-1)] shadow-xl flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-[var(--hairline)] bg-[var(--surface-2)]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-                <div>
-                  <div className="text-[10px] font-mono text-[var(--tutor)] uppercase font-bold tracking-wider">
-                    LIVE SOCRATIC CLASSROOM (1-ON-1 INTERACTIVE)
-                  </div>
-                  <h3 className="font-display text-sm sm:text-base font-bold text-[var(--ink)] m-0">
-                    Teaching: {selectedConcept || 'First Principles'}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {isClassroomMastered && (
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-xs font-bold font-mono flex items-center gap-1">
-                    <CheckCircle2 size={13} />
-                    <span>✓ Concept Mastered</span>
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => handleInitClassroom(selectedConcept)}
-                  disabled={isClassroomLoading}
-                  className="ghost-btn text-xs"
-                >
-                  <RotateCcw size={12} />
-                  <span>Restart Lesson</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Dialogue Turns Stream */}
-            <div className="p-5 space-y-4 max-h-[550px] overflow-y-auto bg-[var(--surface-1)]">
+            {/* Conversational Message Stream */}
+            <div className="p-4 sm:p-6 space-y-4 min-h-[380px] max-h-[520px] overflow-y-auto bg-[var(--surface-1)]">
               {classroomTurns.length === 0 && !isClassroomLoading ? (
-                <div className="text-center py-12 space-y-3">
-                  <Lightbulb size={32} className="text-[var(--tutor)] mx-auto opacity-60" />
-                  <p className="font-bold text-sm text-[var(--ink)]">
-                    Ready to start your 1-on-1 Socratic lesson on "{selectedConcept}"?
+                <div className="text-center py-16 space-y-3">
+                  <Lightbulb size={36} className="text-[var(--tutor)] mx-auto opacity-70" />
+                  <p className="font-bold text-base text-[var(--ink)]">
+                    Ready to explore "{selectedConcept}" with your Tutor?
                   </p>
-                  <p className="text-xs text-[var(--ink-3)] max-w-md mx-auto">
-                    The Socratic Tutor will teach you turn-by-turn with plain analogies, live code blueprints, and interactive check-in probes.
+                  <p className="text-xs text-[var(--ink-2)] max-w-md mx-auto leading-relaxed">
+                    Your Socratic Tutor will guide you turn-by-turn with plain-English analogies, targeted questions, and practical challenge scenarios.
                   </p>
                   <button
                     type="button"
                     onClick={() => handleInitClassroom(selectedConcept)}
                     className="accent-btn mx-auto"
-                    style={{ padding: '8px 20px', borderRadius: '10px' }}
+                    style={{ padding: '9px 22px', borderRadius: '12px' }}
                   >
-                    <Play size={13} />
-                    <span>Start Live Lesson →</span>
+                    <Play size={13} fill="currentColor" />
+                    <span>Begin Socratic Dialogue →</span>
                   </button>
                 </div>
               ) : (
                 classroomTurns.map((turn, tIdx) => (
-                  <div key={turn.id || tIdx} className="space-y-2.5 animate-fade-in">
+                  <div key={turn.id || tIdx} className="space-y-1 animate-fade-in">
                     {turn.speaker === 'tutor' ? (
-                      <div className="space-y-2">
-                        {/* Stage Tag */}
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-md bg-[var(--tutor)]/20 text-[var(--tutor)] flex items-center justify-center text-[10px] font-bold font-mono">
-                            T
-                          </div>
-                          <span className="text-[10px] font-mono font-bold text-[var(--tutor)] uppercase tracking-wider">
-                            {turn.stageName || 'Socratic Professor'}
-                          </span>
-                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
-                            {turn.timestamp}
-                          </span>
+                      /* Tutor Left Message Bubble */
+                      <div className="max-w-[88%] space-y-1">
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--ink-3)]">
+                          <span className="font-bold text-[var(--tutor)]">Tutor</span>
+                          {turn.stageName && (
+                            <>
+                              <span>·</span>
+                              <span className="text-[10px] uppercase">{turn.stageName}</span>
+                            </>
+                          )}
+                          <span>·</span>
+                          <span className="text-[10px]">{turn.timestamp}</span>
                         </div>
 
-                        {/* Optional Tutor Feedback on previous student answer */}
+                        {/* Optional Tutor Feedback on Previous Student Answer */}
                         {turn.tutorFeedback && (
-                          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-[var(--ink)] space-y-1">
+                          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-[var(--ink)] space-y-1 mb-1">
                             <div className="font-mono text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1">
                               <Sparkles size={11} />
-                              <span>Socratic Evaluation of Your Previous Response:</span>
+                              <span>Evaluation &amp; Feedback:</span>
                             </div>
                             <p className="m-0 leading-relaxed font-sans">{turn.tutorFeedback}</p>
                           </div>
                         )}
 
-                        {/* Tutor Main Content */}
-                        <div className="p-4 rounded-2xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink)] leading-relaxed space-y-2 shadow-xs">
+                        <div className="p-3.5 sm:p-4 rounded-2xl rounded-bl-sm bg-[var(--surface-2)] border border-[var(--hairline)] text-xs sm:text-[13px] text-[var(--ink)] leading-relaxed shadow-2xs">
                           <MarkdownRenderer content={turn.content} />
                         </div>
 
-                        {/* Active Check-In Question container */}
+                        {/* Check-In Question Banner */}
                         {turn.checkInQuestion && tIdx === classroomTurns.length - 1 && !isClassroomMastered && (
-                          <div className="p-4 rounded-xl bg-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-2))] border-2 border-[var(--tutor)] space-y-2 shadow-sm animate-pulse-subtle">
-                            <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase font-bold text-[var(--tutor)]">
-                              <HelpCircle size={14} />
-                              <span>Socratic Check-In Probe (Your Turn):</span>
+                          <div className="mt-2 p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--tutor)_12%,var(--surface-2))] border-2 border-[var(--tutor)] space-y-1.5 shadow-xs">
+                            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase font-bold text-[var(--tutor)]">
+                              <HelpCircle size={13} />
+                              <span>Your Turn to Spar:</span>
                             </div>
-                            <p className="font-bold text-xs sm:text-sm text-[var(--ink)] m-0 leading-relaxed font-sans">
+                            <p className="font-bold text-xs sm:text-sm text-[var(--ink)] m-0 leading-relaxed">
                               {turn.checkInQuestion}
                             </p>
                           </div>
                         )}
                       </div>
                     ) : (
-                      /* Student Response Bubble */
-                      <div className="flex flex-col items-end space-y-1 pl-8">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono text-[var(--ink-3)]">
-                            {turn.timestamp}
-                          </span>
-                          <span className="text-[10px] font-mono font-bold text-[var(--ink-2)]">
-                            You (Scholar)
-                          </span>
+                      /* Student Right Message Bubble */
+                      <div className="max-w-[88%] ml-auto space-y-1">
+                        <div className="flex items-center justify-end gap-2 text-[11px] font-mono text-[var(--ink-3)]">
+                          <span className="text-[10px]">{turn.timestamp}</span>
+                          <span>·</span>
+                          <span className="font-bold text-[var(--ink-2)]">You</span>
                         </div>
-                        <div className="p-3.5 rounded-2xl bg-[var(--tutor)] text-[#04050a] font-medium text-xs max-w-[90%] shadow-xs leading-relaxed">
+                        <div className="p-3.5 sm:p-4 rounded-2xl rounded-br-sm bg-[var(--tutor)] text-[#04050a] font-medium text-xs sm:text-[13px] shadow-xs leading-relaxed ml-auto">
                           {turn.content}
                         </div>
                       </div>
@@ -1287,21 +1263,26 @@ export const TutorView: React.FC = () => {
                 ))
               )}
 
+              {/* Typing Indicator */}
               {isClassroomLoading && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] text-xs text-[var(--ink-2)] font-mono animate-pulse">
-                  <Loader2 size={14} className="animate-spin text-[var(--tutor)]" />
-                  <span>Socratic Professor is listening &amp; formulating next pedagogical stage...</span>
+                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[var(--surface-2)] border border-[var(--hairline)] rounded-2xl rounded-bl-sm w-fit text-xs text-[var(--ink-2)] animate-fade-in shadow-2xs">
+                  <span className="font-medium text-[11px] text-[var(--ink-3)]">Tutor is thinking &amp; typing</span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--tutor)] animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--tutor)] animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--tutor)] animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </span>
                 </div>
               )}
 
-              {/* Mastered Banner */}
+              {/* Mastered Card */}
               {isClassroomMastered && (
-                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-[var(--tutor)]/20 border-2 border-emerald-500 space-y-2.5 animate-fade-in">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-[var(--tutor)]/20 border-2 border-emerald-500 space-y-2 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Award size={20} className="text-emerald-500" />
                       <span className="font-bold text-sm text-[var(--ink)]">
-                        🏆 Concept Mastered &amp; Verified by Socratic Professor!
+                        🏆 Concept Mastered &amp; Verified!
                       </span>
                     </div>
                     <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
@@ -1309,7 +1290,7 @@ export const TutorView: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed">
-                    You have successfully mastered the core fundamentals, practical steps, and troubleshooting for <strong>{selectedConcept}</strong>.
+                    You have successfully demonstrated applied first-principles mastery of <strong>{selectedConcept}</strong>.
                   </p>
                   <div className="pt-2 flex justify-end">
                     <button
@@ -1334,54 +1315,157 @@ export const TutorView: React.FC = () => {
               )}
             </div>
 
-            {/* Interactive Bottom Response Footer */}
-            {!isClassroomMastered && classroomTurns.length > 0 && (
-              <div className="p-4 border-t border-[var(--hairline)] bg-[var(--surface-2)] space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-mono text-[var(--ink-3)] font-semibold">
-                    💡 Respond to the Professor (Type or click microphone to speak):
-                  </label>
-                  <VoiceInputButton
-                    onTranscript={(t) =>
-                      setClassroomAnswer((prev) => (prev ? `${prev} ${t}` : t))
-                    }
-                  />
+            {/* Input Bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitClassroomAnswer();
+              }}
+              className="p-3 sm:p-4 border-t border-[var(--hairline)] bg-[var(--surface-2)] flex items-center gap-2"
+            >
+              <VoiceInputButton
+                onTranscript={(t) =>
+                  setClassroomAnswer((prev) => (prev ? `${prev} ${t}` : t))
+                }
+              />
+              <input
+                type="text"
+                placeholder="Explain your reasoning or ask a clarifying question..."
+                value={classroomAnswer}
+                onChange={(e) => setClassroomAnswer(e.target.value)}
+                disabled={isClassroomLoading}
+                className="flex-1 bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs sm:text-sm rounded-xl px-3.5 py-2.5 outline-none font-sans"
+              />
+              <button
+                type="submit"
+                disabled={!classroomAnswer.trim() || isClassroomLoading}
+                className="w-10 h-10 rounded-xl bg-[var(--tutor)] hover:brightness-110 text-[#04050a] flex items-center justify-center transition disabled:opacity-40 shadow-xs cursor-pointer shrink-0"
+                aria-label="Send message to Tutor"
+              >
+                {isClassroomLoading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <ArrowRight size={16} strokeWidth={2.5} />
+                )}
+              </button>
+            </form>
+
+            {/* Reference Notes Bottom Trigger */}
+            <div className="px-4 py-2.5 border-t border-[var(--hairline)] bg-[var(--surface-1)] text-center">
+              <button
+                type="button"
+                onClick={() => setIsNotesDrawerOpen(true)}
+                className="w-full flex items-center justify-center gap-2 text-xs text-[var(--ink-2)] hover:text-[var(--tutor)] font-medium transition cursor-pointer py-1"
+              >
+                <FileText size={14} className="text-[var(--tutor)]" />
+                <span>📖 View reference notes, slides &amp; blueprint for this concept</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Slide-Over Reference Notes Drawer Modal */}
+          {isNotesDrawerOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
+              <div className="relative w-full max-w-3xl rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-2xl p-6 md:p-8 text-[var(--ink)] my-6 max-h-[90vh] overflow-y-auto space-y-5">
+                <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-3">
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={18} className="text-[var(--tutor)]" />
+                    <h3 className="font-display text-lg font-bold text-[var(--ink)] m-0">
+                      Reference Notes &amp; Blueprint: {selectedConcept}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setIsNotesDrawerOpen(false)}
+                    className="p-1.5 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--ink-2)] hover:text-[var(--ink)] border border-[var(--hairline)] transition"
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                <div className="flex gap-2">
-                  <textarea
-                    placeholder="Explain your deduction or reasoning to the Socratic Professor..."
-                    value={classroomAnswer}
-                    onChange={(e) => setClassroomAnswer(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitClassroomAnswer();
-                      }
-                    }}
-                    rows={2}
-                    className="flex-1 bg-[var(--surface-1)] border border-[var(--hairline)] focus:border-[var(--tutor)] text-[var(--ink)] text-xs rounded-xl p-2.5 outline-none resize-none font-sans leading-relaxed"
-                  />
+                {activeLesson ? (
+                  <div className="space-y-6">
+                    {/* Multimedia Lecture Player */}
+                    <LessonVideoAudioPlayer
+                      concept={activeLesson.concept}
+                      topic={activeJourney.topic}
+                      lessonTitle={activeLesson.lessonTitle}
+                      plainEnglishAnalogy={activeLesson.plainEnglishAnalogy}
+                      coreExplanation={activeLesson.coreExplanation || activeLesson.laymanExplanation}
+                      socraticChallenge={activeLesson.socraticChallenge}
+                      audioOverview={activeLesson.audioOverview}
+                      directLectureAudio={activeLesson.directLectureAudio}
+                      videoDeck={activeLesson.videoDeck}
+                      onMasteryEarned={() => {
+                        updateActiveJourney((prev) => {
+                          const existing = prev.tutorData.lessons || [];
+                          const updated = existing.map((l) =>
+                            l.concept === activeLesson.concept ? { ...l, mastered: true, userScore: 96 } : l
+                          );
+                          return {
+                            ...prev,
+                            tutorData: {
+                              ...prev.tutorData,
+                              lessons: updated
+                            }
+                          };
+                        });
+                      }}
+                    />
 
-                  <button
-                    type="button"
-                    onClick={() => handleSubmitClassroomAnswer()}
-                    disabled={!classroomAnswer.trim() || isClassroomLoading}
-                    className="px-4 py-2 rounded-xl bg-[var(--tutor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-1.5 transition disabled:opacity-50 shadow-sm cursor-pointer self-end h-[58px]"
-                  >
-                    {isClassroomLoading ? (
-                      <Loader2 size={15} className="animate-spin" />
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        <span className="hidden sm:inline">Submit →</span>
-                      </>
+                    {/* Intuition & Analogy */}
+                    <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
+                      <div className="text-xs font-mono uppercase font-bold text-[var(--tutor)] flex items-center gap-1.5">
+                        <Lightbulb size={13} />
+                        <span>Core Plain-English Analogy</span>
+                      </div>
+                      <p className="text-xs text-[var(--ink)] leading-relaxed m-0 font-sans">
+                        {activeLesson.plainEnglishAnalogy}
+                      </p>
+                    </div>
+
+                    {/* Code / Action Blueprint */}
+                    {activeLesson.codeOrTemplate && (
+                      <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2">
+                        <div className="text-xs font-mono uppercase font-bold text-[var(--editor)] flex items-center gap-1.5">
+                          <Code2 size={13} />
+                          <span>Implementation Blueprint</span>
+                        </div>
+                        <div className="p-3 rounded-lg bg-black/40 font-mono text-xs text-emerald-400 overflow-x-auto whitespace-pre">
+                          {activeLesson.codeOrTemplate}
+                        </div>
+                      </div>
                     )}
+
+                    {/* Traps & Fluff to Skip */}
+                    {activeLesson.cutListFluff && (
+                      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-1.5">
+                        <div className="text-xs font-mono uppercase font-bold text-amber-500 flex items-center gap-1.5">
+                          <AlertTriangle size={13} />
+                          <span>Traps &amp; Cognitive Fluff to Skip</span>
+                        </div>
+                        <p className="text-xs text-[var(--ink-2)] leading-relaxed m-0 font-sans">
+                          {activeLesson.cutListFluff}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-xs text-[var(--ink-3)]">
+                    Loading lesson blueprint notes...
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-[var(--hairline)] flex justify-end">
+                  <button
+                    onClick={() => setIsNotesDrawerOpen(false)}
+                    className="accent-btn text-xs px-5 py-2"
+                  >
+                    Back to Live Socratic Chat →
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

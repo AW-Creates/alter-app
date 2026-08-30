@@ -25,7 +25,7 @@ import {
   Package,
   Target
 } from 'lucide-react';
-import { generateCurriculumWithAI, chatWithPersona } from '../../services/gemini';
+import { generateCurriculumWithAI, chatWithPersona, hasActiveApiKey } from '../../services/gemini';
 import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
@@ -33,11 +33,15 @@ export const AdvisorView: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showRegenConfirmModal, setShowRegenConfirmModal] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
 
   if (!activeJourney) return null;
 
   const { advisorData } = activeJourney;
+
+  // Count completed checkpoints
+  const completedCount = advisorData.phases.filter((p) => p.completed).length;
 
   // Identify active phase: first incomplete phase, or the first phase
   const activePhase = advisorData.phases.find((p) => !p.completed) || advisorData.phases[0];
@@ -121,7 +125,16 @@ export const AdvisorView: React.FC = () => {
     }
   };
 
-  const handleRegenerateCurriculum = async () => {
+  const handleTriggerRegenerate = () => {
+    if (completedCount > 0) {
+      setShowRegenConfirmModal(true);
+    } else {
+      executeRegenerate(false);
+    }
+  };
+
+  const executeRegenerate = async (preserveProgress: boolean) => {
+    setShowRegenConfirmModal(false);
     if (isRegenerating) return;
     setIsRegenerating(true);
     try {
@@ -132,15 +145,38 @@ export const AdvisorView: React.FC = () => {
         activeJourney.hoursPerWeek,
         activeJourney.depth
       );
-      updateActiveJourney((prev) => ({
-        ...prev,
-        advisorData: {
-          ...newAdvisorData,
-          chatHistory: prev.advisorData.chatHistory
+
+      updateActiveJourney((prev) => {
+        let finalPhases = newAdvisorData.phases;
+        if (preserveProgress) {
+          // Carry over completed status for matching phase numbers
+          finalPhases = newAdvisorData.phases.map((newP, idx) => {
+            const oldP = prev.advisorData.phases[idx];
+            if (oldP && oldP.completed) {
+              return {
+                ...newP,
+                completed: true,
+                checkpoint: {
+                  ...newP.checkpoint,
+                  completed: true
+                }
+              };
+            }
+            return newP;
+          });
         }
-      }));
+
+        return {
+          ...prev,
+          advisorData: {
+            ...newAdvisorData,
+            phases: finalPhases,
+            chatHistory: prev.advisorData.chatHistory
+          }
+        };
+      });
     } catch (err) {
-      console.error('Failed to regenerate curriculum', err);
+      console.error('Failed to regenerate syllabus', err);
     } finally {
       setIsRegenerating(false);
     }
@@ -181,7 +217,7 @@ export const AdvisorView: React.FC = () => {
                 <span>🎓 How Altor Works (1-Min Tour)</span>
               </button>
               <button
-                onClick={handleRegenerateCurriculum}
+                onClick={handleTriggerRegenerate}
                 disabled={isRegenerating}
                 className="ghost-btn"
               >
@@ -200,6 +236,51 @@ export const AdvisorView: React.FC = () => {
           </p>
         </div>
 
+        {/* Regeneration Safety Confirmation Modal */}
+        {showRegenConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in">
+            <div className="relative w-full max-w-md rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-2xl p-6 text-[var(--ink)] space-y-4">
+              <div className="flex items-center gap-3 text-amber-500">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-[var(--ink)] m-0">Regenerate Syllabus?</h3>
+                  <p className="text-xs text-[var(--ink-2)] m-0">You have {completedCount} completed checkpoint{completedCount > 1 ? 's' : ''}.</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[var(--ink-2)] leading-relaxed">
+                Regenerating will redesign your learning path. Would you like to preserve your completed checkpoints or start completely fresh?
+              </p>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={() => executeRegenerate(true)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+                >
+                  <CheckCircle2 size={14} />
+                  <span>Preserve Progress (Update Unfinished Phases)</span>
+                </button>
+
+                <button
+                  onClick={() => executeRegenerate(false)}
+                  className="w-full py-2 px-4 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-amber-500 font-semibold text-xs border border-[var(--hairline)] transition cursor-pointer"
+                >
+                  <span>Reset Everything (Start Fresh From Phase 1)</span>
+                </button>
+
+                <button
+                  onClick={() => setShowRegenConfirmModal(false)}
+                  className="w-full py-2 px-4 rounded-xl text-[var(--ink-3)] hover:text-[var(--ink)] text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* All Phases Mastered Capstone Banner */}
         {advisorData.phases.length > 0 && advisorData.phases.every((p) => p.completed) && (
           <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-amber-500/15 to-[var(--surface-2)] border-2 border-emerald-500/50 shadow-md space-y-2 animate-fade-in">
@@ -210,42 +291,6 @@ export const AdvisorView: React.FC = () => {
             <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed font-sans">
               You have completed all {advisorData.phases.length} phases of <strong>{activeJourney.topic}</strong>, validated your milestone deliverables, and mastered the core principles. Ready to publish your capstone project or begin a new domain mastery!
             </p>
-          </div>
-        )}
-
-        {/* Diagnostic Calibration Profile Card */}
-        {activeJourney.diagnosticAssessment && (
-          <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3 animate-fade-in">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Target size={15} className="text-[var(--advisor)]" />
-                <span className="font-bold text-xs text-[var(--ink)]">
-                  🎯 Your Calibrated Learning Strategy &amp; Starting Level
-                </span>
-              </div>
-              <span className="text-[10px] font-mono uppercase bg-[var(--advisor)]/20 text-[var(--advisor)] px-2 py-0.5 rounded font-bold">
-                {activeJourney.diagnosticAssessment.actualBaselineAssessment}
-              </span>
-            </div>
-
-            <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed font-sans">
-              {activeJourney.diagnosticAssessment.whyCustomizedExplanation || 'Curriculum custom-tailored to bridge your exact knowledge gaps.'}
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              {activeJourney.diagnosticAssessment.addedCoursesReason && (
-                <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                  <span className="font-bold font-mono text-[10px] block mb-0.5">🟢 ADDED TO FILL GAPS:</span>
-                  <span className="text-[11.5px] leading-snug">{activeJourney.diagnosticAssessment.addedCoursesReason}</span>
-                </div>
-              )}
-              {activeJourney.diagnosticAssessment.subtractedCoursesReason && (
-                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300">
-                  <span className="font-bold font-mono text-[10px] block mb-0.5">🟡 CUT OUT TO SAVE TIME:</span>
-                  <span className="text-[11.5px] leading-snug">{activeJourney.diagnosticAssessment.subtractedCoursesReason}</span>
-                </div>
-              )}
-            </div>
           </div>
         )}
 
@@ -262,121 +307,97 @@ export const AdvisorView: React.FC = () => {
                 </span>
               </div>
               <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
-                Phase {activePhase.phaseNumber}: {activePhase.title}
+                {activePhase.title}
               </h3>
-              <p className="text-xs text-[var(--ink-2)] m-0 leading-relaxed max-w-xl font-sans">
-                Next goal: Master <strong>{activePhase.coreConcepts?.[0] || 'core foundations'}</strong> &amp; complete the <em>{activePhase.checkpoint?.title || 'project milestone deliverable'}</em>.
+              <p className="text-xs text-[var(--ink-2)] line-clamp-1 m-0 font-sans">
+                {activePhase.objective}
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
-              <button
-                onClick={() => handleStartPhaseBriefing(activePhase)}
-                className="accent-btn"
-                style={{ padding: '8px 14px', borderRadius: '10px' }}
-                title="Get custom step-by-step briefing from your Advisor"
-              >
-                <Sparkles size={13} />
-                <span>Advisor Briefing</span>
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                const firstConcept = activePhase.courses?.[0]?.title || activePhase.coreConcepts?.[0] || 'Core Principles';
+                navigateToTutorConcept(firstConcept);
+              }}
+              className="accent-btn shrink-0"
+              style={{ padding: '8px 18px', borderRadius: '10px' }}
+            >
+              <GraduationCap size={14} />
+              <span>Enter Live Socratic Classroom →</span>
+            </button>
           </div>
         )}
 
-        {/* Strategic Overview Brief */}
-        {advisorData.overview && (
-          <div className="card">
-            <p className="card-label">Advisor strategic brief</p>
-            <p className="hero-sub" style={{ maxWidth: 'none' }}>
-              {advisorData.overview}
-            </p>
-          </div>
-        )}
-
-        {/* Chronological Curriculum Phases */}
+        {/* Phase List */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Layers size={16} className="text-[var(--advisor)]" />
-              <h3 className="font-display font-semibold text-base text-[var(--ink)] m-0">
-                Curriculum Phases &amp; Action Playbooks
-              </h3>
-            </div>
-            <span className="text-xs font-mono text-[var(--ink-3)]">
-              {advisorData.phases.filter((p) => p.completed).length} / {advisorData.phases.length} Phases Mastered
-            </span>
-          </div>
-
           {advisorData.phases.map((phase) => {
-            const isActive = phase.id === activePhase?.id;
-            const isCompleted = phase.completed;
-            const isSelected = phase.id === currentFocusedPhaseId;
+            const isFocused = phase.id === currentFocusedPhaseId;
 
             return (
               <div
                 key={phase.id}
                 className={`card transition-all ${
-                  isActive
-                    ? 'border-[var(--advisor)] shadow-md bg-[var(--surface-1)]'
-                    : isCompleted
-                    ? 'border-[var(--tutor)]/50 bg-[var(--surface-1)]/70'
-                    : 'border-[var(--hairline)] bg-[var(--surface-1)]'
+                  isFocused
+                    ? 'border-2 border-[var(--advisor)] shadow-md bg-[var(--surface-1)]'
+                    : 'border border-[var(--hairline)] hover:border-[var(--hairline-strong)] opacity-90'
                 }`}
-                style={{
-                  borderLeft: isCompleted
-                    ? '4px solid var(--tutor)'
-                    : isActive
-                    ? '4px solid var(--advisor)'
-                    : '4px solid var(--hairline-strong)'
-                }}
               >
                 {/* Phase Header */}
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[var(--surface-2)] text-[var(--ink)] border border-[var(--hairline)]">
-                      Phase {phase.phaseNumber}
-                    </span>
-                    <h4 className="m-0 font-display font-bold text-base text-[var(--ink)]">
-                      {phase.title}
-                    </h4>
-
-                    {isActive && (
-                      <span className="text-[10.5px] font-mono uppercase bg-[color-mix(in_srgb,var(--advisor)_14%,transparent)] text-[var(--advisor)] border border-[color-mix(in_srgb,var(--advisor)_30%,transparent)] px-2 py-0.5 rounded-full font-bold">
-                        ● Current Focus
-                      </span>
-                    )}
-
-                    {isCompleted && (
-                      <span className="text-[10.5px] font-mono uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                        <Check size={11} strokeWidth={3} /> Verified Mastered
-                      </span>
-                    )}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--hairline)]">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleCheckpoint(phase.id)}
+                      className="p-1 rounded-lg hover:bg-[var(--surface-2)] transition cursor-pointer text-[var(--advisor)]"
+                      title={phase.completed ? 'Mark phase incomplete' : 'Mark phase complete'}
+                    >
+                      {phase.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-[var(--ink-3)]" />
+                      )}
+                    </button>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono uppercase bg-[var(--surface-2)] text-[var(--ink-3)] border border-[var(--hairline)] px-2 py-0.5 rounded font-bold">
+                          Phase {phase.phaseNumber}
+                        </span>
+                        <span className="text-xs font-mono text-[var(--ink-3)]">
+                          {phase.duration}
+                        </span>
+                        {phase.completed && (
+                          <span className="text-[10px] font-mono bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
+                            ✓ Completed
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-display text-base font-bold text-[var(--ink)] m-0 mt-0.5">
+                        {phase.title}
+                      </h3>
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => toggleCheckpoint(phase.id)}
-                    className="p-1.5 text-[var(--ink-3)] hover:text-[var(--tutor)] transition cursor-pointer bg-transparent border-none"
-                    title={isCompleted ? 'Mark phase incomplete' : 'Mark phase complete'}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 size={20} className="text-[var(--tutor)]" />
-                    ) : (
-                      <Circle size={20} className="text-[var(--ink-3)] hover:text-[var(--ink-2)]" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleStartPhaseBriefing(phase)}
+                      className="ghost-btn text-xs"
+                      title="Advisor Kickoff Briefing"
+                    >
+                      <Sparkles size={12} className="text-[var(--advisor)]" />
+                      <span>Advisor Briefing</span>
+                    </button>
+                  </div>
                 </div>
 
-                <p className="source-row" style={{ marginTop: '2px', marginBottom: '8px' }}>
-                  ⏱️ {phase.duration} · {phase.objective}
+                {/* Phase Objective */}
+                <p className="text-xs text-[var(--ink-2)] mt-3 leading-relaxed font-sans m-0">
+                  {phase.objective}
                 </p>
 
-                {/* Tangible Asset Preview */}
+                {/* Tangible Checkpoint Deliverable Box */}
                 {(phase.tangibleAsset || phase.checkpoint?.tangibleAsset) && (
-                  <div className="mb-3 p-2.5 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_10%,var(--surface-2))] border border-[color-mix(in_srgb,var(--advisor)_22%,transparent)] flex items-center gap-2.5 text-xs text-[var(--ink)]">
-                    <div className="w-6 h-6 rounded-lg bg-[var(--advisor)]/20 text-[var(--advisor)] flex items-center justify-center flex-shrink-0">
-                      <Package size={13} />
-                    </div>
-                    <div className="flex-1">
+                  <div className="mt-3 p-3 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_10%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] flex items-start gap-2.5">
+                    <Package size={16} className="text-[var(--advisor)] shrink-0 mt-0.5" />
+                    <div className="text-xs space-y-0.5">
                       <span className="text-[10px] font-mono uppercase font-bold text-[var(--advisor)] block">
                         Tangible Proof-of-Work Asset Created in this Phase:
                       </span>
@@ -389,29 +410,8 @@ export const AdvisorView: React.FC = () => {
 
                 {/* Phase Courses Directory */}
                 <div className="mt-4 pt-4 border-t border-[var(--hairline)] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-3)] font-bold flex items-center gap-1.5">
-                      <GraduationCap size={13} className="text-[var(--tutor)]" />
-                      <span>Phase {phase.phaseNumber} Structured Course Curriculum:</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-[var(--tutor)] font-semibold">
-                      Complete in order (1.1 ➔ 1.2 ➔ 1.3)
-                    </span>
-                  </div>
-
-                  {/* Sequential Course Cards */}
                   <div className="space-y-2">
-                    {(phase.courses && phase.courses.length > 0
-                      ? phase.courses
-                      : (phase.coreConcepts || []).map((concept, idx) => ({
-                          id: `c-${phase.phaseNumber}-${idx + 1}`,
-                          courseNumber: `${phase.phaseNumber}.${idx + 1}`,
-                          title: concept,
-                          description: `Master the foundational concepts and practical execution of ${concept}.`,
-                          estimatedMinutes: 10 + idx * 2,
-                          completed: phase.completed
-                        }))
-                    ).map((course, idx) => (
+                    {(phase.courses || []).map((course, idx) => (
                       <div
                         key={course.id || idx}
                         className="p-3.5 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] hover:border-[var(--tutor)]/60 transition flex items-start gap-3 group"
@@ -439,10 +439,10 @@ export const AdvisorView: React.FC = () => {
                               className="px-3 py-1.5 rounded-lg bg-[var(--tutor)] hover:bg-[var(--tutor)]/90 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                             >
                               <Play size={11} fill="currentColor" />
-                              <span>Start Course {course.courseNumber || `${phase.phaseNumber}.${idx + 1}`} →</span>
+                              <span>Start Socratic Lesson →</span>
                             </button>
                             <span className="text-[10px] text-[var(--ink-3)] font-mono">
-                              Step-by-Step Interactive Masterclass
+                              Live 1-on-1 Socratic Classroom
                             </span>
                           </div>
                         </div>
@@ -513,9 +513,15 @@ export const AdvisorView: React.FC = () => {
               <span className="text-[10px] font-mono uppercase bg-[rgba(234,176,84,0.1)] text-[var(--editor)] border border-[rgba(234,176,84,0.25)] px-1.5 py-0.5 rounded font-semibold">
                 Sandeep Swadia Rule
               </span>
-              <span className="text-[10px] font-mono uppercase bg-[color-mix(in_srgb,var(--advisor)_10%,transparent)] text-[var(--advisor)] border border-[color-mix(in_srgb,var(--advisor)_25%,transparent)] px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
-                <Globe size={10} /> Live Grounded
-              </span>
+              {hasActiveApiKey() ? (
+                <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
+                  <Globe size={10} /> Live Grounded
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono uppercase bg-[var(--surface-3)] text-[var(--ink-3)] border border-[var(--hairline)] px-1.5 py-0.5 rounded font-semibold flex items-center gap-1">
+                  <Sparkles size={10} /> Curated Baseline
+                </span>
+              )}
             </div>
             <div className="space-y-2.5">
               {advisorData.cutList.map((item) => (
