@@ -21,22 +21,21 @@ export default {
           900: '#0c4a6e',
           950: '#082f49',
         },
-        // Persona accents — used as accents/glows, not fill colors. Kept
-        // slightly desaturated for a premium feel rather than neon.
-        advisor: '#5eb8f5',   // Sky blue
-        librarian: '#2dd4bf', // Teal (was too close to advisor's blue before)
-        tutor: '#5fdb9e',     // Emerald / mint
-        editor: '#eab054',    // Amber / gold
-        roommate: '#ee7fb8',  // Rose / pink
-        // Elevation scale — layered surfaces instead of one flat panel color
+        // Persona accents — dynamically mapped to CSS variables for Light & Dark mode
+        advisor: 'var(--advisor)',
+        librarian: 'var(--librarian)',
+        tutor: 'var(--tutor)',
+        editor: 'var(--editor)',
+        roommate: 'var(--roommate)',
+        // Elevation scale — layered surfaces mapped to CSS tokens
         surface: {
-          void: '#04050a',
-          1: '#0a0d16',
-          2: '#0e131f',
-          3: '#131a29',
+          void: 'var(--void)',
+          1: 'var(--surface-1)',
+          2: 'var(--surface-2)',
+          3: 'var(--surface-3)',
         },
-        hairline: 'rgba(255,255,255,0.07)',
-        'hairline-strong': 'rgba(255,255,255,0.13)',
+        hairline: 'var(--hairline)',
+        'hairline-strong': 'var(--hairline-strong)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],

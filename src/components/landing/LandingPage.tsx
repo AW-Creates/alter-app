@@ -665,7 +665,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       <header className="sticky top-0 z-50 bg-[var(--surface-1)]/90 backdrop-blur-md border-b border-[var(--hairline)] px-6 py-4 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2a3550] to-[#10141d] border border-white/[0.13] flex items-center justify-center font-display font-bold text-sm text-[var(--advisor)] shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-600 to-indigo-700 dark:from-[#2a3550] dark:to-[#10141d] border border-sky-400/30 dark:border-white/[0.13] flex items-center justify-center font-display font-bold text-sm text-white shadow-sm">
               A
             </div>
             <div className="font-display font-semibold text-lg text-[var(--ink)] tracking-tight flex items-center gap-2">
@@ -691,7 +691,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             {/* Sign In / Profile Button */}
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3.5 py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-medium text-[var(--ink-2)] hover:text-[var(--ink)] transition flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-medium text-[var(--ink-2)] hover:text-[var(--ink)] transition flex items-center gap-1.5 cursor-pointer"
             >
               <User size={13} />
               <span>{user.isGuest ? 'Sign In / Sync' : user.username}</span>
@@ -699,7 +699,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={onEnterApp}
-              className="px-4 py-2 rounded-lg bg-[var(--surface-3)] hover:border-[var(--accent)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-xs font-semibold shadow-sm hover:shadow-md transition flex items-center gap-1.5 cursor-pointer"
             >
               <span>Launch App</span>
               <ArrowRight size={13} />
@@ -709,18 +709,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       </header>
 
       {/* 2. Hero Section with Interactive Custom Goal Bar */}
-      <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[radial-gradient(circle,rgba(94,184,245,0.12),transparent_70%)]" />
+      <section className="relative pt-20 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+        {/* Ambient Multi-Orb Glow & Subtle Dot Grid */}
+        <div className="pointer-events-none absolute inset-0 -top-20 overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(#0284c7_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.05] dark:opacity-[0.10]" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[750px] h-[500px] bg-[radial-gradient(circle,rgba(2,132,199,0.16)_0%,rgba(13,148,136,0.08)_50%,transparent_70%)] dark:bg-[radial-gradient(circle,rgba(94,184,245,0.15)_0%,transparent_70%)]" />
+          <div className="absolute top-10 right-10 w-[450px] h-[400px] bg-[radial-gradient(circle,rgba(190,24,93,0.07)_0%,transparent_60%)] dark:bg-transparent" />
+          <div className="absolute top-10 left-10 w-[450px] h-[400px] bg-[radial-gradient(circle,rgba(5,150,105,0.07)_0%,transparent_60%)] dark:bg-transparent" />
+        </div>
         
         <div className="text-center space-y-6 max-w-4xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] text-xs font-mono text-[var(--advisor)] tracking-wide font-semibold">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-xs font-mono text-[var(--advisor)] tracking-wide font-semibold shadow-2xs">
             <Sparkles size={13} className="text-[var(--advisor)]" />
             <span>YOUR AUTODIDACTIC AI UNIVERSITY · 100% PRIVATE CLIENT-SIDE SANDBOX</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--ink)] leading-[1.1]">
             Type Any Goal. <br />
-            <span className="bg-gradient-to-r dark:from-white dark:via-slate-200 from-slate-900 via-slate-800 to-[var(--advisor)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-slate-900 via-indigo-950 to-sky-600 dark:from-white dark:via-slate-200 dark:to-[var(--advisor)] bg-clip-text text-transparent">
               Five AI Mentors Teach You Step-by-Step.
             </span>
           </h1>
@@ -732,7 +738,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           {/* Interactive Custom Topic Search/Creation Bar (Star of Hero) */}
           <div className="pt-2 max-w-2xl mx-auto">
             <form onSubmit={handleCustomSubmit} className="relative flex items-center">
-              <div className="relative w-full flex items-center bg-[var(--surface-1)] border-2 border-[var(--advisor)] rounded-2xl shadow-md focus-within:shadow-xl transition">
+              <div className="relative w-full flex items-center bg-[var(--surface-1)] border-2 border-sky-500/80 dark:border-[var(--advisor)] rounded-2xl shadow-card focus-within:shadow-xl focus-within:border-sky-500 transition">
                 <Search size={18} className="absolute left-4 text-[var(--advisor)] pointer-events-none" />
                 <input
                   type="text"
@@ -743,7 +749,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 px-4 py-2.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                  className="absolute right-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[var(--advisor)] to-blue-600 hover:brightness-110 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>Build Syllabus</span>
                   <Zap size={13} />
@@ -751,22 +757,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               </div>
             </form>
 
-            {/* Suggestions Chips */}
-            <div className="flex items-center flex-wrap justify-center gap-2 mt-3 text-xs">
+            {/* Suggestions Chips with Vibrant Persona Tints */}
+            <div className="flex items-center flex-wrap justify-center gap-2 mt-3.5 text-xs">
               <span className="text-[var(--ink-3)] font-mono text-[11px]">Or try:</span>
-              {heroSuggestions.map((sug) => (
-                <button
-                  key={sug.value}
-                  onClick={() => handleSelectSuggestion(sug.value)}
-                  className={`px-2.5 py-1 rounded-lg text-[11.5px] transition cursor-pointer ${
-                    simTopic === sug.value
-                      ? 'bg-[var(--advisor)] text-[#04050a] font-semibold'
-                      : 'bg-[var(--surface-1)] text-[var(--ink-2)] hover:text-[var(--ink)] border border-[var(--hairline)]'
-                  }`}
-                >
-                  {sug.label}
-                </button>
-              ))}
+              {heroSuggestions.map((sug, idx) => {
+                const tintStyles = [
+                  'bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-300 hover:bg-amber-500/20',
+                  'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-300 hover:bg-emerald-500/20',
+                  'bg-blue-500/10 border-blue-500/30 text-blue-900 dark:text-blue-300 hover:bg-blue-500/20',
+                  'bg-orange-500/10 border-orange-500/30 text-orange-900 dark:text-orange-300 hover:bg-orange-500/20',
+                  'bg-purple-500/10 border-purple-500/30 text-purple-900 dark:text-purple-300 hover:bg-purple-500/20',
+                  'bg-sky-500/10 border-sky-500/30 text-sky-900 dark:text-sky-300 hover:bg-sky-500/20',
+                  'bg-teal-500/10 border-teal-500/30 text-teal-900 dark:text-teal-300 hover:bg-teal-500/20',
+                ];
+                const isSelected = simTopic === sug.value;
+                return (
+                  <button
+                    key={sug.value}
+                    onClick={() => handleSelectSuggestion(sug.value)}
+                    className={`px-3 py-1.5 rounded-lg text-[11.5px] transition cursor-pointer border font-medium ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white font-semibold shadow-sm border-transparent ring-2 ring-sky-400/40'
+                        : `${tintStyles[idx % tintStyles.length]} shadow-2xs`
+                    }`}
+                  >
+                    {sug.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -780,7 +798,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
           {/* Transparent Live AI vs Demo Mode Engine Disclosure */}
           <div className="pt-2 max-w-xl mx-auto">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[11.5px] font-mono text-[var(--ink-2)] shadow-2xs">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-[11.5px] font-mono text-[var(--ink-2)] shadow-card">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
                 <span>
@@ -795,21 +813,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
 
         {/* 2.5 Live Custom Curriculum Simulator Output */}
-        <div className="mt-12 relative z-10 max-w-5xl mx-auto rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-card">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
+        <div className="mt-12 relative z-10 max-w-5xl mx-auto rounded-2xl bg-gradient-to-b from-white via-sky-50/20 to-slate-50/70 dark:from-[var(--surface-2)] dark:to-[var(--surface-1)] border border-sky-200/80 dark:border-[var(--hairline-strong)] p-6 sm:p-8 shadow-card overflow-hidden">
+          {/* Decorative Top Accent Bar */}
+          <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-teal-400 to-amber-400 absolute top-0 left-0" />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5 pt-1">
             <div>
-              <div className="flex items-center gap-2 text-xs font-mono text-[var(--advisor)] uppercase tracking-wider mb-1 font-semibold">
+              <div className="flex items-center gap-2 text-xs font-mono text-[var(--advisor)] uppercase tracking-wider mb-1 font-bold">
                 <Radio size={14} className="animate-pulse text-[var(--advisor)]" />
                 Live Generated Curriculum Preview
               </div>
-              <h3 className="font-display text-xl font-bold text-[var(--ink)] m-0">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-[var(--ink)] m-0">
                 Curriculum for: <span className="text-[var(--advisor)]">"{simTopic}"</span>
               </h3>
             </div>
 
             <button
               onClick={() => handleLaunchWithTopic()}
-              className="px-4 py-2 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs shadow-md hover:shadow-lg transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto cursor-pointer"
             >
               <span>Launch Full University for "{simTopic}" →</span>
             </button>
@@ -818,8 +839,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           {/* Simulator Content Display */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
             <div className="lg:col-span-7 space-y-4">
-              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)]">
-                <div className="text-[11px] font-mono uppercase text-[var(--ink-3)] tracking-wider mb-1 font-semibold">
+              <div className="p-4 rounded-xl bg-white dark:bg-[var(--surface-1)] border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
+                <div className="text-[11px] font-mono uppercase text-sky-800 dark:text-[var(--ink-3)] tracking-wider mb-1 font-bold">
                   1. Strategic Advisor Brief (Your Big Picture)
                 </div>
                 <p className="text-sm text-[var(--ink)] leading-relaxed m-0 font-sans">
@@ -828,52 +849,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               </div>
 
               {/* 3-PHASE STEP-BY-STEP LEARNING ROADMAP */}
-              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-l-2 border-[var(--hairline)] border-l-[var(--advisor)] space-y-3">
+              <div className="p-4 rounded-xl bg-white dark:bg-[var(--surface-1)] border-2 border-sky-200/90 dark:border-[var(--hairline)] dark:border-l-[var(--advisor)] space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] font-mono uppercase text-[var(--advisor)] tracking-wider font-semibold">
+                  <div className="text-[11px] font-mono uppercase text-sky-700 dark:text-[var(--advisor)] tracking-wider font-bold">
                     2. Your Complete 3-Phase Roadmap (What You'll Actually Build &amp; Why)
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  {currentSim.phases.map((ph, idx) => (
-                    <div key={idx} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-xs text-[var(--ink)] font-sans">
-                          Phase {ph.phaseNumber}: {ph.title}
-                        </span>
-                        <span className="font-mono text-[10px] text-[var(--advisor)] font-bold px-2 py-0.5 rounded bg-[var(--surface-1)]">
-                          {ph.duration}
-                        </span>
+                <div className="space-y-2.5">
+                  {currentSim.phases.map((ph, idx) => {
+                    const phaseColors = [
+                      'bg-sky-50/70 border-sky-200/80',
+                      'bg-emerald-50/70 border-emerald-200/80',
+                      'bg-purple-50/70 border-purple-200/80'
+                    ];
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-3.5 rounded-xl border ${phaseColors[idx % phaseColors.length]} dark:bg-[var(--surface-2)] dark:border-[var(--hairline)] space-y-1`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-[var(--ink)] font-sans">
+                            Phase {ph.phaseNumber}: {ph.title}
+                          </span>
+                          <span className="font-mono text-[10.5px] font-bold px-2 py-0.5 rounded bg-white dark:bg-[var(--surface-1)] text-[var(--advisor)] border border-slate-200/60 dark:border-white/5 shadow-2xs">
+                            {ph.duration}
+                          </span>
+                        </div>
+                        <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-relaxed font-sans">
+                          🎯 <strong className="text-[var(--ink)]">Deliverable:</strong> {ph.checkpoint}
+                        </p>
                       </div>
-                      <p className="text-[11.5px] text-[var(--ink-2)] m-0 leading-relaxed">
-                        🎯 <strong className="text-[var(--ink)]">What You Build (Real-World Proof):</strong> {ph.checkpoint}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Why this sequence explanation */}
-                <div className="p-2.5 rounded-lg bg-[var(--advisor)]/10 border border-[var(--advisor)]/20 text-[11px] text-[var(--ink-2)] font-sans leading-relaxed">
-                  💡 <strong className="text-[var(--advisor)]">Why this specific sequence?</strong> {currentSim.whyThisOrder}
+                <div className="p-3 rounded-lg bg-sky-100/70 dark:bg-[var(--advisor)]/10 border border-sky-200 dark:border-[var(--advisor)]/20 text-[11.5px] text-slate-800 dark:text-[var(--ink-2)] font-sans leading-relaxed">
+                  💡 <strong className="text-sky-800 dark:text-[var(--advisor)] font-bold">Why this specific sequence?</strong> {currentSim.whyThisOrder}
                 </div>
               </div>
             </div>
 
             <div className="lg:col-span-5 space-y-3">
-              <div className="p-4 rounded-xl bg-[var(--surface-1)] border border-[rgba(234,176,84,0.35)] space-y-2">
-                <div className="flex items-center gap-1.5 text-[var(--editor)] text-xs font-semibold">
-                  <ShieldAlert size={14} />
+              <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-[var(--surface-1)] border-2 border-amber-300/80 dark:border-[rgba(234,176,84,0.35)] shadow-2xs space-y-2">
+                <div className="flex items-center gap-1.5 text-amber-800 dark:text-[var(--editor)] text-xs font-bold">
+                  <ShieldAlert size={15} />
                   <span>3. The Sandeep Swadia "Cut List" (What to Skip)</span>
                 </div>
-                <p className="text-[11px] text-[var(--ink-3)] m-0">
+                <p className="text-[11px] text-amber-900/80 dark:text-[var(--ink-3)] m-0 font-medium">
                   Save 40+ hours by ignoring generic tutorials, dry theory, and non-essential fluff:
                 </p>
-                <div className="space-y-1.5 text-[11.5px] text-[var(--ink-2)] pl-2">
+                <div className="space-y-1.5 text-[11.5px] text-[var(--ink-2)] pl-1">
                   {currentSim.cutList.map((cut, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5">
-                      <span className="text-rose-500 font-mono font-bold">✕</span>
-                      <span>{cut}</span>
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-rose-600 font-mono font-bold">✕</span>
+                      <span className="text-slate-800 dark:text-[var(--ink-2)] font-medium">{cut}</span>
                     </div>
                   ))}
                 </div>
@@ -886,16 +917,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                     setDiagnosticTopic(customGoalInput.trim() || simTopic);
                     setIsDiagnosticModalOpen(true);
                   }}
-                  className="flex-1 py-3 px-4 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] text-xs font-bold flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
                 >
                   <Target size={14} />
-                  <span>🎓 Chat with Advisor to Personalize Roadmap (Recommended) →</span>
+                  <span>🎓 Chat with Advisor to Personalize Roadmap →</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleLaunchWithTopic()}
-                  className="py-3 px-4 rounded-xl bg-[var(--surface-3)] hover:border-[var(--advisor)] border border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  className="py-3 px-4 rounded-xl bg-white hover:bg-slate-100 dark:bg-[var(--surface-3)] dark:hover:bg-[var(--surface-2)] border border-slate-200 dark:border-[var(--hairline-strong)] text-xs font-semibold text-[var(--ink)] flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
                 >
                   <span>Quick Launch →</span>
                 </button>
@@ -908,7 +939,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       {/* 3. "How Altor Actually Teaches You" (Demystifying the 5 Faculty) */}
       <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
+          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-bold">
             HOW IT ACTUALLY WORKS
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
@@ -919,12 +950,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </p>
         </div>
 
-        {/* 4 Clear Step Cards */}
+        {/* 4 Clear Step Cards with Authentic Persona Colors */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {/* Step 1 */}
-          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
+          {/* Step 1: Advisor */}
+          <div className="card p-6 bg-gradient-to-b from-white to-sky-50/40 dark:from-[var(--surface-1)] dark:to-[var(--surface-1)] border border-sky-200/80 hover:border-sky-400 dark:border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card rounded-2xl transition">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--advisor)_12%,transparent)] border border-[color-mix(in_srgb,var(--advisor)_35%,transparent)] flex items-center justify-center text-[var(--advisor)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-700 dark:text-[var(--advisor)] font-bold text-sm">
                 1
               </div>
               <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
@@ -934,16 +965,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 Your <strong>Academic Advisor</strong> organizes your goal into clear, chronological phases (Phase 1 → Phase 2 → Phase 3) and tells you exactly what confusing fluff to skip.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--advisor)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
+            <div className="text-[11px] font-mono text-sky-800 dark:text-[var(--advisor)] bg-sky-100/60 dark:bg-[var(--surface-2)] p-2.5 rounded-lg border border-sky-200/60 dark:border-[var(--hairline)]">
               ✓ Step-by-step ordered timeline<br />
               ✓ Zero tutorial overload
             </div>
           </div>
 
-          {/* Step 2 */}
-          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
+          {/* Step 2: Librarian */}
+          <div className="card p-6 bg-gradient-to-b from-white to-teal-50/40 dark:from-[var(--surface-1)] dark:to-[var(--surface-1)] border border-teal-200/80 hover:border-teal-400 dark:border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card rounded-2xl transition">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--librarian)_12%,transparent)] border border-[color-mix(in_srgb,var(--librarian)_35%,transparent)] flex items-center justify-center text-[var(--librarian)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-700 dark:text-[var(--librarian)] font-bold text-sm">
                 2
               </div>
               <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
@@ -953,16 +984,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 No need to read 500-page dry textbooks alone. Your <strong>Librarian</strong> summarizes the key mental models and notes directly into your private notebook.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--librarian)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
+            <div className="text-[11px] font-mono text-teal-800 dark:text-[var(--librarian)] bg-teal-100/60 dark:bg-[var(--surface-2)] p-2.5 rounded-lg border border-teal-200/60 dark:border-[var(--hairline)]">
               ✓ Top 1% seminal resources<br />
               ✓ Pre-digested flashcards
             </div>
           </div>
 
-          {/* Step 3 */}
-          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
+          {/* Step 3: Tutor */}
+          <div className="card p-6 bg-gradient-to-b from-white to-emerald-50/40 dark:from-[var(--surface-1)] dark:to-[var(--surface-1)] border border-emerald-200/80 hover:border-emerald-400 dark:border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card rounded-2xl transition">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--tutor)_12%,transparent)] border border-[color-mix(in_srgb,var(--tutor)_35%,transparent)] flex items-center justify-center text-[var(--tutor)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-700 dark:text-[var(--tutor)] font-bold text-sm">
                 3
               </div>
               <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
@@ -972,16 +1003,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 Your <strong>Socratic Tutor</strong> explains tricky concepts in plain English ("explain like I'm 10"), answers questions in Office Hours, and checks your understanding with gentle quizzes.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--tutor)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
+            <div className="text-[11px] font-mono text-emerald-800 dark:text-[var(--tutor)] bg-emerald-100/60 dark:bg-[var(--surface-2)] p-2.5 rounded-lg border border-emerald-200/60 dark:border-[var(--hairline)]">
               ✓ "Explain like I'm 10" drills<br />
               ✓ 24/7 Office Hours homework help
             </div>
           </div>
 
-          {/* Step 4 */}
-          <div className="card p-6 bg-[var(--surface-1)] border border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card">
+          {/* Step 4: Roommate / Editor */}
+          <div className="card p-6 bg-gradient-to-b from-white to-rose-50/40 dark:from-[var(--surface-1)] dark:to-[var(--surface-1)] border border-rose-200/80 hover:border-rose-400 dark:border-[var(--hairline)] space-y-3.5 flex flex-col justify-between shadow-card rounded-2xl transition">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--roommate)_12%,transparent)] border border-[color-mix(in_srgb,var(--roommate)_35%,transparent)] flex items-center justify-center text-[var(--roommate)] font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-700 dark:text-[var(--roommate)] font-bold text-sm">
                 4
               </div>
               <h3 className="font-display text-base font-bold text-[var(--ink)] m-0">
@@ -991,7 +1022,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 You build real things (a published e-book, a garden harvest, an investment sheet, or a coded app). Your <strong>Editor</strong> polishes your work and your <strong>Roommate</strong> keeps it creative.
               </p>
             </div>
-            <div className="text-[11px] font-mono text-[var(--roommate)] bg-[var(--surface-2)] p-2.5 rounded-lg border border-[var(--hairline)]">
+            <div className="text-[11px] font-mono text-rose-800 dark:text-[var(--roommate)] bg-rose-100/60 dark:bg-[var(--surface-2)] p-2.5 rounded-lg border border-rose-200/60 dark:border-[var(--hairline)]">
               ✓ Real tangible deliverables<br />
               ✓ Public portfolio proof card
             </div>
@@ -999,8 +1030,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
 
         {/* A 15-Minute Day in the Life Storyboard */}
-        <div className="mt-14 max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono text-[var(--tutor)] uppercase tracking-wider font-semibold">
+        <div className="mt-14 max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl bg-white dark:bg-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline-strong)] shadow-card space-y-4">
+          <div className="flex items-center gap-2 text-xs font-mono text-emerald-700 dark:text-[var(--tutor)] uppercase tracking-wider font-bold">
             <Clock size={15} />
             <span>A 15-Minute Daily Session in Altor</span>
           </div>
@@ -1009,25 +1040,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs text-[var(--ink-2)]">
-            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+            <div className="p-3.5 rounded-xl bg-sky-50/60 dark:bg-[var(--surface-2)] border border-sky-100 dark:border-[var(--hairline)] space-y-1.5">
               <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
-                <span className="text-[var(--advisor)] font-mono">01</span>
+                <span className="text-[var(--advisor)] font-mono font-bold">01</span>
                 <span>Minutes 1–3</span>
               </div>
               <p className="text-[var(--ink-2)] m-0">Check today's phase task &amp; review 2 bite-sized mental model notes.</p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+            <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-[var(--surface-2)] border border-emerald-100 dark:border-[var(--hairline)] space-y-1.5">
               <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
-                <span className="text-[var(--tutor)] font-mono">02</span>
+                <span className="text-[var(--tutor)] font-mono font-bold">02</span>
                 <span>Minutes 4–10</span>
               </div>
               <p className="text-[var(--ink-2)] m-0">Chat 1-on-1 with your Tutor, practice a Feynman explanation, and take a quick 2-question quiz.</p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-1.5">
+            <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-[var(--surface-2)] border border-amber-100 dark:border-[var(--hairline)] space-y-1.5">
               <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
-                <span className="text-[var(--editor)] font-mono">03</span>
+                <span className="text-[var(--editor)] font-mono font-bold">03</span>
                 <span>Minutes 11–15</span>
               </div>
               <p className="text-[var(--ink-2)] m-0">Draft your milestone homework (writing, plan, recipe, or code) and get instant critique from your Editor.</p>
@@ -1039,7 +1070,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       {/* 4. Expanded Multidisciplinary Showcase (What You Can Master) */}
       <section id="examples" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)] font-semibold">
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-700 dark:text-[var(--tutor)] font-bold">
             EXPLORE REAL EXAMPLES
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
@@ -1062,10 +1093,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
                 activeCategory === cat.id
-                  ? 'bg-[var(--surface-3)] text-[var(--ink)] border border-[var(--hairline-strong)] shadow-sm font-semibold'
-                  : 'bg-[var(--surface-1)] text-[var(--ink-3)] border border-[var(--hairline)] hover:text-[var(--ink)]'
+                  ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-sm ring-2 ring-sky-300/50'
+                  : 'bg-white dark:bg-[var(--surface-1)] text-[var(--ink-2)] border border-slate-200 dark:border-[var(--hairline)] hover:text-[var(--ink)] shadow-2xs'
               }`}
             >
               {cat.label}
@@ -1080,14 +1111,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             return (
               <div
                 key={cs.id}
-                className="card p-6 flex flex-col justify-between bg-[var(--surface-1)] border border-[var(--hairline)] hover:border-[var(--hairline-strong)] transition space-y-4 shadow-card"
+                className="card p-6 flex flex-col justify-between bg-white dark:bg-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline)] hover:border-sky-300 dark:hover:border-[var(--hairline-strong)] transition space-y-4 shadow-card rounded-2xl"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className={`text-[10px] font-mono uppercase tracking-wider font-semibold ${cs.color}`}>
+                    <span className={`text-[10.5px] font-mono uppercase tracking-wider font-bold ${cs.color}`}>
                       {cs.tag}
                     </span>
-                    <Icon size={16} className={cs.color} />
+                    <Icon size={18} className={cs.color} />
                   </div>
 
                   <h4 className="font-display text-base font-bold text-[var(--ink)] m-0 leading-snug">
@@ -1105,11 +1136,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
 
                 <div className="pt-3 border-t border-[var(--hairline)]">
-                  <div className="text-[10px] font-mono text-[var(--tutor)] uppercase mb-1 font-semibold">
-                    ✓ What You Actually Build (Proof of Work):
-                  </div>
-                  <div className="text-xs text-[var(--ink)] font-medium leading-snug">
-                    {cs.proofOfWork}
+                  <div className="p-3 rounded-xl bg-emerald-50/80 dark:bg-[var(--surface-2)] border border-emerald-200/70 dark:border-[var(--hairline)]">
+                    <div className="text-[10px] font-mono text-emerald-800 dark:text-[var(--tutor)] uppercase mb-1 font-bold">
+                      ✓ Shipped Milestone Proof of Work:
+                    </div>
+                    <div className="text-xs text-slate-900 dark:text-[var(--ink)] font-semibold leading-snug">
+                      {cs.proofOfWork}
+                    </div>
                   </div>
                   <button
                     onClick={() => {
@@ -1120,7 +1153,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         cutList: [cs.advisorCut]
                       });
                     }}
-                    className="mt-3 w-full py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition flex items-center justify-center gap-1.5"
+                    className="mt-3 w-full py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-[var(--surface-2)] dark:hover:bg-[var(--surface-3)] border border-slate-200 dark:border-[var(--hairline)] text-xs font-bold text-[var(--ink)] transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <span>Start Learning "{cs.title}" →</span>
                   </button>
@@ -1134,7 +1167,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       {/* 5. Meet Your 5 AI Faculty Mentors */}
       <section id="faculty" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
+          <span className="text-xs font-mono uppercase tracking-widest text-sky-700 dark:text-[var(--advisor)] font-bold">
             YOUR 5-PERSON MENTOR BOARD
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
@@ -1148,31 +1181,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         {/* Tab Buttons */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
           {[
-            { id: 'advisor' as AlterPersona, letter: 'A', name: 'Academic Advisor', color: 'text-[var(--advisor)]', border: 'border-[var(--advisor)]' },
-            { id: 'librarian' as AlterPersona, letter: 'L', name: 'Knowledge Librarian', color: 'text-[var(--librarian)]', border: 'border-[var(--librarian)]' },
-            { id: 'tutor' as AlterPersona, letter: 'T', name: 'Socratic Tutor', color: 'text-[var(--tutor)]', border: 'border-[var(--tutor)]' },
-            { id: 'editor' as AlterPersona, letter: 'E', name: 'Analytical Editor', color: 'text-[var(--editor)]', border: 'border-[var(--editor)]' },
-            { id: 'roommate' as AlterPersona, letter: 'R', name: 'Creative Roommate', color: 'text-[var(--roommate)]', border: 'border-[var(--roommate)]' }
-          ].map((fac) => (
-            <button
-              key={fac.id}
-              onClick={() => setActiveFacultyTab(fac.id)}
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-xs font-medium transition ${
-                activeFacultyTab === fac.id
-                  ? `bg-[var(--surface-3)] ${fac.color} ${fac.border} shadow-sm font-semibold`
-                  : 'bg-[var(--surface-1)] text-[var(--ink-3)] border-[var(--hairline)] hover:text-[var(--ink)]'
-              }`}
-            >
-              <span className="w-5 h-5 rounded-md font-mono text-[10px] font-bold flex items-center justify-center bg-[var(--surface-2)]">
-                {fac.letter}
-              </span>
-              <span>{fac.name}</span>
-            </button>
-          ))}
+            { id: 'advisor' as AlterPersona, letter: 'A', name: 'Academic Advisor' },
+            { id: 'librarian' as AlterPersona, letter: 'L', name: 'Knowledge Librarian' },
+            { id: 'tutor' as AlterPersona, letter: 'T', name: 'Socratic Tutor' },
+            { id: 'editor' as AlterPersona, letter: 'E', name: 'Analytical Editor' },
+            { id: 'roommate' as AlterPersona, letter: 'R', name: 'Creative Roommate' }
+          ].map((fac) => {
+            const isSelected = activeFacultyTab === fac.id;
+            return (
+              <button
+                key={fac.id}
+                onClick={() => setActiveFacultyTab(fac.id)}
+                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                  isSelected
+                    ? fac.id === 'advisor' ? 'bg-sky-50 border-sky-500 text-sky-800 shadow-sm ring-2 ring-sky-200/60 dark:bg-[var(--surface-3)] dark:text-[var(--advisor)]'
+                    : fac.id === 'librarian' ? 'bg-teal-50 border-teal-500 text-teal-800 shadow-sm ring-2 ring-teal-200/60 dark:bg-[var(--surface-3)] dark:text-[var(--librarian)]'
+                    : fac.id === 'tutor' ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm ring-2 ring-emerald-200/60 dark:bg-[var(--surface-3)] dark:text-[var(--tutor)]'
+                    : fac.id === 'editor' ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-sm ring-2 ring-amber-200/60 dark:bg-[var(--surface-3)] dark:text-[var(--editor)]'
+                    : 'bg-rose-50 border-rose-500 text-rose-800 shadow-sm ring-2 ring-rose-200/60 dark:bg-[var(--surface-3)] dark:text-[var(--roommate)]'
+                    : 'bg-white dark:bg-[var(--surface-1)] text-[var(--ink-3)] border-slate-200 dark:border-[var(--hairline)] hover:text-[var(--ink)] shadow-2xs'
+                }`}
+              >
+                <span className="w-5 h-5 rounded-md font-mono text-[10px] font-bold flex items-center justify-center bg-black/5 dark:bg-[var(--surface-2)]">
+                  {fac.letter}
+                </span>
+                <span>{fac.name}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Faculty Panel Preview */}
-        <div className="max-w-5xl mx-auto rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline-strong)] p-6 sm:p-8 shadow-card">
+        <div className="max-w-5xl mx-auto rounded-2xl bg-white dark:bg-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline-strong)] p-6 sm:p-8 shadow-card">
           {activeFacultyTab === 'advisor' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate-fade-in">
               <div className="space-y-4">
@@ -1194,15 +1234,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
+              <div className="p-5 rounded-xl bg-sky-50/60 dark:bg-[var(--surface-2)] border border-sky-100 dark:border-[var(--hairline)] space-y-3">
                 <div className="flex justify-between items-center text-xs text-[var(--ink-3)] font-mono border-b border-[var(--hairline)] pb-2">
                   <span>Advisor Office Hours</span>
-                  <span className="text-[var(--advisor)]">Live Strategy Session</span>
+                  <span className="text-[var(--advisor)] font-bold">Live Strategy Session</span>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--surface-1)] text-xs text-[var(--ink)] leading-relaxed font-sans border border-[var(--hairline)]">
+                <div className="p-3 rounded-lg bg-white dark:bg-[var(--surface-1)] text-xs text-[var(--ink)] leading-relaxed font-sans border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
                   "I've configured your 6-week curriculum for E-Book Publishing. We are skipping traditional publisher query letters and going straight to reader pain validation and Gumroad pre-orders."
                 </div>
-                <div className="p-2.5 rounded-lg bg-[var(--surface-3)] text-[11px] text-[var(--advisor)] font-mono font-semibold">
+                <div className="p-2.5 rounded-lg bg-sky-100/80 dark:bg-[var(--surface-3)] text-[11px] text-sky-800 dark:text-[var(--advisor)] font-mono font-bold">
                   → Checkpoint 1: Ship a 10-chapter outline with a live Gumroad pre-order landing page.
                 </div>
               </div>
@@ -1230,11 +1270,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
-                <div className="source-card m-0 bg-[var(--surface-1)]">
+              <div className="p-5 rounded-xl bg-teal-50/60 dark:bg-[var(--surface-2)] border border-teal-100 dark:border-[var(--hairline)] space-y-3">
+                <div className="source-card m-0 bg-white dark:bg-[var(--surface-1)] border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
                   <div className="source-head">
                     <div>
-                      <p className="source-title text-sm text-[var(--ink)]">Write Useful Books</p>
+                      <p className="source-title text-sm text-[var(--ink)] font-bold">Write Useful Books</p>
                       <p className="source-author text-xs text-[var(--ink-2)]">Rob Fitzpatrick</p>
                     </div>
                     <span className="signal-badge">Signal 10/10</span>
@@ -1268,18 +1308,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
+              <div className="p-5 rounded-xl bg-emerald-50/60 dark:bg-[var(--surface-2)] border border-emerald-100 dark:border-[var(--hairline)] space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)]">
-                    <span className="text-[10px] font-mono text-[var(--ink-3)] uppercase">Clarity</span>
-                    <div className="text-lg font-bold font-display text-[var(--tutor)]">98/100</div>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-[var(--surface-1)] border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
+                    <span className="text-[10px] font-mono text-[var(--ink-3)] uppercase font-bold">Clarity</span>
+                    <div className="text-lg font-bold font-display text-emerald-700 dark:text-[var(--tutor)]">98/100</div>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)]">
-                    <span className="text-[10px] font-mono text-[var(--ink-3)] uppercase">Blind Spots</span>
-                    <div className="text-lg font-bold font-display text-[var(--advisor)]">0 Found</div>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-[var(--surface-1)] border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
+                    <span className="text-[10px] font-mono text-[var(--ink-3)] uppercase font-bold">Blind Spots</span>
+                    <div className="text-lg font-bold font-display text-sky-700 dark:text-[var(--advisor)]">0 Found</div>
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--surface-1)] text-xs text-[var(--ink-2)] italic border border-[var(--hairline)]">
+                <div className="p-3 rounded-lg bg-white dark:bg-[var(--surface-1)] text-xs text-[var(--ink-2)] italic border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
                   "Clarity Verified: You articulated the core problem-solution thesis cleanly in two crisp sentences."
                 </div>
               </div>
@@ -1307,12 +1347,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-2.5 font-mono text-xs">
-                <div className="text-[var(--editor)] font-semibold flex items-center gap-1.5">
+              <div className="p-5 rounded-xl bg-amber-50/60 dark:bg-[var(--surface-2)] border border-amber-100 dark:border-[var(--hairline)] space-y-2.5 font-mono text-xs">
+                <div className="text-amber-800 dark:text-[var(--editor)] font-bold flex items-center gap-1.5">
                   <ShieldAlert size={14} />
                   Steelmanned Counterargument:
                 </div>
-                <p className="text-[11.5px] text-[var(--ink)] font-sans leading-relaxed m-0 p-3 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)]">
+                <p className="text-[11.5px] text-[var(--ink)] font-sans leading-relaxed m-0 p-3 rounded-lg bg-white dark:bg-[var(--surface-1)] border border-slate-200/80 dark:border-[var(--hairline)] shadow-2xs">
                   "If your e-book pricing exceeds $30 without included templates, digital friction will reduce checkout conversions by 40%."
                 </p>
               </div>
@@ -1339,9 +1379,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--surface-2)] border border-[var(--hairline)] space-y-3">
-                <div className="p-3 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline)] text-xs text-[var(--ink)]">
-                  <span className="font-bold text-[var(--roommate)]">Collision: Book Launches × Viral Growth Loops</span>
+              <div className="p-5 rounded-xl bg-rose-50/60 dark:bg-[var(--surface-2)] border border-rose-100 dark:border-[var(--hairline)] space-y-3">
+                <div className="p-3 rounded-lg bg-white dark:bg-[var(--surface-1)] border border-slate-200/80 dark:border-[var(--hairline)] text-xs text-[var(--ink)] shadow-2xs">
+                  <span className="font-bold text-rose-700 dark:text-[var(--roommate)]">Collision: Book Launches × Viral Growth Loops</span>
                   <p className="mt-1 text-[11.5px] text-[var(--ink-2)] italic leading-relaxed m-0">
                     "Embed a free bonus chapter accessible only if the reader shares their personalized quote card on social media."
                   </p>
@@ -1354,12 +1394,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
       {/* 6. Public Proof-of-Work Showcase */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--hairline-strong)] p-8 sm:p-12 shadow-card relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-20 -right-20 w-80 h-80 bg-[radial-gradient(circle,rgba(94,184,245,0.15),transparent_70%)]" />
+        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-white via-sky-50/25 to-slate-50/70 dark:from-[var(--surface-2)] dark:to-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline-strong)] p-8 sm:p-12 shadow-card relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-20 -right-20 w-80 h-80 bg-[radial-gradient(circle,rgba(2,132,199,0.12),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(94,184,245,0.15),transparent_70%)]" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
             <div className="lg:col-span-6 space-y-4">
-              <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
+              <span className="text-xs font-mono uppercase tracking-widest text-sky-700 dark:text-[var(--advisor)] font-bold">
                 VERIFIABLE CREDENTIALS
               </span>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-[var(--ink)] tracking-tight">
@@ -1369,12 +1409,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 Every milestone checkpoint you complete generates a permanent, verifiable proof card. Share your live portfolio on Twitter, LinkedIn, or client proposals.
               </p>
               <div className="flex items-center gap-3 pt-2">
-                <div className="px-3.5 py-1.5 rounded-lg bg-[var(--surface-1)] border border-[var(--hairline-strong)] text-xs font-mono text-[var(--ink)]">
+                <div className="px-3.5 py-1.5 rounded-lg bg-white dark:bg-[var(--surface-1)] border border-slate-200 dark:border-[var(--hairline-strong)] text-xs font-mono text-[var(--ink)] shadow-2xs font-semibold">
                   altor.app/@{user.username || 'scholar'}
                 </div>
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="text-xs text-[var(--advisor)] hover:underline flex items-center gap-1 font-semibold"
+                  className="text-xs text-[var(--advisor)] hover:underline flex items-center gap-1 font-bold cursor-pointer"
                 >
                   <span>Claim Handle</span>
                   <ExternalLink size={12} />
@@ -1383,35 +1423,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             <div className="lg:col-span-6">
-              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5 space-y-3.5 shadow-card">
+              <div className="rounded-2xl bg-white dark:bg-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline)] p-5 space-y-3.5 shadow-card">
                 <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-[color-mix(in_srgb,var(--advisor)_18%,transparent)] text-[var(--advisor)] font-bold text-xs flex items-center justify-center font-display">
+                    <div className="w-8 h-8 rounded-full bg-sky-500/15 text-sky-700 dark:text-[var(--advisor)] font-bold text-xs flex items-center justify-center font-display border border-sky-500/30">
                       A
                     </div>
                     <div>
-                      <div className="font-semibold text-xs text-[var(--ink)]">Alex Vance</div>
+                      <div className="font-bold text-xs text-[var(--ink)]">Alex Vance</div>
                       <div className="text-[10px] text-[var(--ink-3)] font-mono">3 Mastered Disciplines · 42 Checkpoints</div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-[color-mix(in_srgb,var(--tutor)_15%,transparent)] text-[var(--tutor)] text-[10px] font-mono border border-[color-mix(in_srgb,var(--tutor)_30%,transparent)] font-semibold">
+                  <span className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-800 dark:text-[var(--tutor)] text-[10px] font-mono border border-emerald-500/30 font-bold">
                     Verified Fellow
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs space-y-1">
+                <div className="space-y-2.5">
+                  <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-[var(--surface-2)] border border-emerald-200/60 dark:border-[var(--hairline)] text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-[var(--ink)]">Digital Product Strategy Guide</span>
-                      <span className="text-[10px] font-mono text-[var(--tutor)] font-semibold">100% Passed</span>
+                      <span className="font-bold text-[var(--ink)]">Digital Product Strategy Guide</span>
+                      <span className="text-[10px] font-mono text-emerald-800 dark:text-[var(--tutor)] font-bold">100% Passed</span>
                     </div>
                     <p className="text-[11px] text-[var(--ink-2)] m-0">Live Product: gumroad.com/alex/digital-creator-playbook (100 Pre-Orders)</p>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--hairline)] text-xs space-y-1">
+                  <div className="p-3 rounded-xl bg-sky-50/70 dark:bg-[var(--surface-2)] border border-sky-200/60 dark:border-[var(--hairline)] text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-[var(--ink)]">ESP32 Telemetry Firmware</span>
-                      <span className="text-[10px] font-mono text-[var(--advisor)] font-semibold">100% Passed</span>
+                      <span className="font-bold text-[var(--ink)]">ESP32 Telemetry Firmware</span>
+                      <span className="text-[10px] font-mono text-sky-800 dark:text-[var(--advisor)] font-bold">100% Passed</span>
                     </div>
                     <p className="text-[11px] text-[var(--ink-2)] m-0">Repository: github.com/alex/esp32-sensor-node (Deep Sleep &lt;15µA)</p>
                   </div>
@@ -1425,7 +1465,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       {/* 7. Comparison Matrix */}
       <section id="matrix" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--tutor)] font-semibold">
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-700 dark:text-[var(--tutor)] font-bold">
             THE VALUE ARBITRAGE
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
@@ -1437,44 +1477,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
 
         <div className="max-w-4xl mx-auto overflow-x-auto">
-          <table className="w-full text-left border-collapse border border-[var(--hairline)] rounded-2xl overflow-hidden bg-[var(--surface-1)] shadow-card">
+          <table className="w-full text-left border-collapse border border-slate-200 dark:border-[var(--hairline)] rounded-2xl overflow-hidden bg-white dark:bg-[var(--surface-1)] shadow-card">
             <thead>
-              <tr className="border-b border-[var(--hairline)] bg-[var(--surface-2)] text-xs font-mono uppercase tracking-wider text-[var(--ink-3)]">
+              <tr className="border-b border-slate-200 dark:border-[var(--hairline)] bg-slate-50 dark:bg-[var(--surface-2)] text-xs font-mono uppercase tracking-wider text-[var(--ink-3)]">
                 <th className="p-4 sm:p-5">Dimension</th>
-                <th className="p-4 sm:p-5 text-rose-500 font-bold">Traditional University</th>
-                <th className="p-4 sm:p-5 text-[var(--advisor)] font-bold">Altor (University in a Box)</th>
+                <th className="p-4 sm:p-5 text-rose-600 dark:text-rose-500 font-bold">Traditional University</th>
+                <th className="p-4 sm:p-5 text-sky-700 dark:text-[var(--advisor)] font-bold">Altor (University in a Box)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--hairline)] text-xs sm:text-sm">
+            <tbody className="divide-y divide-slate-100 dark:divide-[var(--hairline)] text-xs sm:text-sm">
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Annual Cost</td>
+                <td className="p-4 sm:p-5 font-bold text-[var(--ink)]">Annual Cost</td>
                 <td className="p-4 sm:p-5 text-[var(--ink-3)]">$50,000 – $80,000 / year (Debt)</td>
-                <td className="p-4 sm:p-5 text-[var(--tutor)] font-semibold">$0 Free — $15 / month</td>
+                <td className="p-4 sm:p-5 bg-sky-50/40 dark:bg-[var(--surface-2)]/40 text-emerald-800 dark:text-[var(--tutor)] font-bold">$0 Free — $15 / month</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Pacing &amp; Duration</td>
+                <td className="p-4 sm:p-5 font-bold text-[var(--ink)]">Pacing &amp; Duration</td>
                 <td className="p-4 sm:p-5 text-[var(--ink-3)]">Rigid 4-Year Monolith</td>
-                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">Self-Driven Hyper-Velocity (4–8 Weeks)</td>
+                <td className="p-4 sm:p-5 bg-sky-50/40 dark:bg-[var(--surface-2)]/40 text-[var(--ink)] font-semibold">Self-Driven Hyper-Velocity (4–8 Weeks)</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Curriculum Freshness</td>
+                <td className="p-4 sm:p-5 font-bold text-[var(--ink)]">Curriculum Freshness</td>
                 <td className="p-4 sm:p-5 text-[var(--ink-3)]">3 to 5-year-old slides</td>
-                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">Real-Time First-Principles &amp; Fresh Sources</td>
+                <td className="p-4 sm:p-5 bg-sky-50/40 dark:bg-[var(--surface-2)]/40 text-[var(--ink)] font-semibold">Real-Time First-Principles &amp; Fresh Sources</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Feedback Frequency</td>
+                <td className="p-4 sm:p-5 font-bold text-[var(--ink)]">Feedback Frequency</td>
                 <td className="p-4 sm:p-5 text-[var(--ink-3)]">TA grading once per month</td>
-                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">24/7 Instant Socratic &amp; Logic Sparring</td>
+                <td className="p-4 sm:p-5 bg-sky-50/40 dark:bg-[var(--surface-2)]/40 text-[var(--ink)] font-semibold">24/7 Instant Socratic &amp; Logic Sparring</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Signal-to-Noise Ratio</td>
+                <td className="p-4 sm:p-5 font-bold text-[var(--ink)]">Signal-to-Noise Ratio</td>
                 <td className="p-4 sm:p-5 text-[var(--ink-3)]">Bloated general education credits</td>
-                <td className="p-4 sm:p-5 text-[var(--ink)] font-medium">Ruthless "Cut List" (Skip 90% commodity noise)</td>
+                <td className="p-4 sm:p-5 bg-sky-50/40 dark:bg-[var(--surface-2)]/40 text-[var(--ink)] font-semibold">Ruthless "Cut List" (Skip 90% commodity noise)</td>
               </tr>
               <tr>
-                <td className="p-4 sm:p-5 font-semibold text-[var(--ink)]">Proof of Mastery</td>
+                <td className="p-4 sm:p-5 font-bold text-[var(--ink)]">Proof of Mastery</td>
                 <td className="p-4 sm:p-5 text-[var(--ink-3)]">Paper Diploma</td>
-                <td className="p-4 sm:p-5 text-[var(--advisor)] font-semibold">Shipped Checkpoint Artifacts &amp; Projects</td>
+                <td className="p-4 sm:p-5 bg-sky-50/40 dark:bg-[var(--surface-2)]/40 text-sky-800 dark:text-[var(--advisor)] font-bold">Shipped Checkpoint Artifacts &amp; Projects</td>
               </tr>
             </tbody>
           </table>
@@ -1484,7 +1524,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       {/* 8. Pricing Tiers */}
       <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--hairline)]">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-10">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--advisor)] font-semibold">
+          <span className="text-xs font-mono uppercase tracking-widest text-sky-700 dark:text-[var(--advisor)] font-bold">
             TRANSPARENT VALUE
           </span>
           <h2 className="font-display text-3xl sm:text-5xl font-bold text-[var(--ink)] tracking-tight">
@@ -1507,7 +1547,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 onClick={() => setBillingCycle('annual')}
                 className={billingCycle === 'annual' ? 'active' : ''}
               >
-                Annual <span className="text-[10px] text-[var(--tutor)] ml-1 font-mono">SAVE 20%</span>
+                Annual <span className="text-[10px] text-emerald-700 dark:text-[var(--tutor)] ml-1 font-mono font-bold">SAVE 20%</span>
               </button>
             </div>
           </div>
@@ -1516,42 +1556,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         {/* Pricing Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
           {/* Free Scholar */}
-          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-8 flex flex-col justify-between shadow-card hover:border-[var(--hairline-strong)] transition">
+          <div className="rounded-2xl bg-white dark:bg-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline)] p-8 flex flex-col justify-between shadow-card hover:border-slate-300 dark:hover:border-[var(--hairline-strong)] transition">
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--ink-3)] tracking-wider font-semibold">Free Scholar</span>
+                <span className="text-xs font-mono uppercase text-[var(--ink-3)] tracking-wider font-bold">Free Scholar</span>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className="text-4xl font-display font-bold text-[var(--ink)]">$0</span>
-                  <span className="text-xs text-[var(--ink-3)]">/ forever</span>
+                  <span className="text-xs text-[var(--ink-3)] font-semibold">/ forever</span>
                 </div>
                 <p className="text-xs text-[var(--ink-2)] mt-2 font-sans">
                   The complete autodidactic learning suite. Master any subject with zero paywalls.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-6 font-sans">
+              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-slate-200 dark:border-[var(--hairline)] pt-6 font-sans">
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span><strong>Full access to all 5 AI Faculty</strong> (Advisor, Librarian, Tutor, Editor, Roommate)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span>Up to <strong>2 active concurrent learning journeys</strong></span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span>Complete curriculum generation &amp; The Sandeep Swadia Cut List</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span>Socratic dialogue &amp; text-based Feynman Technique drills</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span><strong>100% Client-Side Sandbox:</strong> Connect free Gemini / OpenRouter API Key (or use instant Demo Mode)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--tutor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
                   <span>Local offline vault &amp; JSON data export/import</span>
                 </div>
               </div>
@@ -1559,58 +1599,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={() => handleLaunchWithTopic()}
-              className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition"
+              className="mt-8 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[var(--surface-2)] dark:hover:bg-[var(--surface-3)] border border-slate-200 dark:border-[var(--hairline)] text-xs font-bold text-[var(--ink)] transition cursor-pointer shadow-2xs"
             >
               Start Free Today
             </button>
           </div>
 
           {/* Pro Autodidact */}
-          <div className="relative rounded-2xl bg-gradient-to-b from-[var(--surface-2)] to-[var(--surface-1)] border-2 border-[var(--advisor)] p-8 flex flex-col justify-between shadow-card transform lg:-translate-y-2">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[var(--advisor)] text-[#04050a] text-[10.5px] font-mono font-bold uppercase tracking-wider shadow-md">
+          <div className="relative rounded-2xl bg-gradient-to-b from-sky-50/90 via-white to-blue-50/40 dark:from-[var(--surface-2)] dark:to-[var(--surface-1)] border-2 border-sky-500 p-8 flex flex-col justify-between shadow-xl ring-4 ring-sky-100 dark:ring-sky-950/40 transform lg:-translate-y-2">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-[10.5px] font-mono font-bold uppercase tracking-wider shadow-md">
               Most Popular
             </div>
 
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--advisor)] tracking-wider font-semibold">Pro Autodidact</span>
+                <span className="text-xs font-mono uppercase text-sky-800 dark:text-[var(--advisor)] tracking-wider font-bold">Pro Autodidact</span>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className="text-4xl font-display font-bold text-[var(--ink)]">
                     {billingCycle === 'annual' ? '$12' : '$15'}
                   </span>
-                  <span className="text-xs text-[var(--ink-3)]">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
+                  <span className="text-xs text-[var(--ink-3)] font-semibold">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
                 </div>
                 <p className="text-xs text-[var(--ink-2)] mt-2 font-sans">
                   For creators, investors, engineers, and knowledge workers who demand peak cognitive velocity.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-6 font-sans">
-                <div className="text-[11px] font-mono text-[var(--advisor)] uppercase font-bold">
+              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-sky-200 dark:border-[var(--hairline)] pt-6 font-sans">
+                <div className="text-[11px] font-mono text-sky-800 dark:text-[var(--advisor)] uppercase font-bold">
                   Everything in Free, plus:
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-sky-700 dark:text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span><strong>Unlimited active learning journeys</strong> &amp; full historical archive</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-sky-700 dark:text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span><strong>Encrypted Cloud Vault Sync</strong> across Mac, Windows, iPad, iPhone, Android</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-sky-700 dark:text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span>🎙️ <strong>Live Audio Voice Socratic Sparring</strong> (Audio Feynman drills on the go)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-sky-700 dark:text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span>⚡ <strong>Hosted Frontier Reasoning Models</strong> (Claude 3.5 Sonnet / DeepSeek R1) included</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-sky-700 dark:text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span>📑 <strong>1-Click Export to Obsidian, Notion &amp; Markdown Graphs</strong></span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--advisor)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-sky-700 dark:text-[var(--advisor)] flex-shrink-0 mt-0.5" />
                   <span>🌐 <strong>Automated Public Proof-of-Work Portfolios</strong> (altor.app/@you)</span>
                 </div>
               </div>
@@ -1618,46 +1658,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={() => handleLaunchWithTopic()}
-              className="mt-8 w-full py-3.5 rounded-xl bg-[var(--advisor)] hover:brightness-110 text-[#04050a] font-bold text-xs shadow-md transition transform hover:-translate-y-0.5"
+              className="mt-8 w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 cursor-pointer"
             >
               Start 14-Day Pro Trial
             </button>
           </div>
 
           {/* Fellow Quad */}
-          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-8 flex flex-col justify-between shadow-card hover:border-[var(--hairline-strong)] transition">
+          <div className="rounded-2xl bg-white dark:bg-[var(--surface-1)] border border-slate-200/90 dark:border-[var(--hairline)] p-8 flex flex-col justify-between shadow-card hover:border-slate-300 dark:hover:border-[var(--hairline-strong)] transition">
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-mono uppercase text-[var(--roommate)] tracking-wider font-semibold">Fellow Quad</span>
+                <span className="text-xs font-mono uppercase text-rose-700 dark:text-[var(--roommate)] tracking-wider font-bold">Fellow Quad</span>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className="text-4xl font-display font-bold text-[var(--ink)]">
                     {billingCycle === 'annual' ? '$24' : '$29'}
                   </span>
-                  <span className="text-xs text-[var(--ink-3)]">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
+                  <span className="text-xs text-[var(--ink-3)] font-semibold">/ month {billingCycle === 'annual' && '(billed annually)'}</span>
                 </div>
                 <p className="text-xs text-[var(--ink-2)] mt-2 font-sans">
                   For study groups, research labs, team upskilling, and elite polymaths.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-[var(--hairline)] pt-6 font-sans">
-                <div className="text-[11px] font-mono text-[var(--roommate)] uppercase font-bold">
+              <div className="space-y-3 text-xs text-[var(--ink)] border-t border-slate-200 dark:border-[var(--hairline)] pt-6 font-sans">
+                <div className="text-[11px] font-mono text-rose-700 dark:text-[var(--roommate)] uppercase font-bold">
                   Everything in Pro, plus:
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-rose-700 dark:text-[var(--roommate)] flex-shrink-0 mt-0.5" />
                   <span>👥 <strong>Collaborative Quad Study Rooms</strong> (Co-spar with up to 4 study partners)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-rose-700 dark:text-[var(--roommate)] flex-shrink-0 mt-0.5" />
                   <span>📜 <strong>Verifiable Cryptographic Proof-of-Mastery Credentials</strong></span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-rose-700 dark:text-[var(--roommate)] flex-shrink-0 mt-0.5" />
                   <span>🧠 <strong>Custom Historical Persona Calibration</strong> (Feynman, von Neumann mode)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Check size={16} className="text-[var(--roommate)] flex-shrink-0 mt-0.5" />
+                  <Check size={16} className="text-rose-700 dark:text-[var(--roommate)] flex-shrink-0 mt-0.5" />
                   <span>⚡ <strong>Dedicated High-Throughput Inference &amp; Beta Access</strong></span>
                 </div>
               </div>
@@ -1665,7 +1705,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
             <button
               onClick={() => handleLaunchWithTopic()}
-              className="mt-8 w-full py-3 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--hairline)] text-xs font-semibold text-[var(--ink)] transition"
+              className="mt-8 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[var(--surface-2)] dark:hover:bg-[var(--surface-3)] border border-slate-200 dark:border-[var(--hairline)] text-xs font-bold text-[var(--ink)] transition cursor-pointer shadow-2xs"
             >
               Explore Fellow Quad
             </button>
@@ -1675,21 +1715,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
       {/* 9. The Manifesto & Final CTA */}
       <section id="manifesto" className="py-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative">
-        <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(circle,rgba(95,219,158,0.1),transparent_70%)]" />
+        <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(circle,rgba(2,132,199,0.12),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(95,219,158,0.1),transparent_70%)]" />
 
         <div className="space-y-6 relative z-10">
           <blockquote className="font-display text-2xl sm:text-4xl font-semibold text-[var(--ink)] leading-relaxed italic max-w-3xl mx-auto">
             "In an age of infinite AI leverage, the self-directed mind inherits the world. The passive consumer inherits obsolete knowledge."
           </blockquote>
 
-          <p className="text-xs font-mono text-[var(--ink-3)] tracking-widest uppercase">
+          <p className="text-xs font-mono text-[var(--ink-3)] tracking-widest uppercase font-bold">
             — The Altor Autodidactic Creed
           </p>
 
           <div className="pt-8">
             <button
               onClick={() => handleLaunchWithTopic()}
-              className="px-10 py-5 rounded-2xl bg-gradient-to-r from-[var(--advisor)] to-[var(--tutor)] text-[#04050a] font-bold text-base shadow-lg transition transform hover:-translate-y-1 hover:brightness-110 flex items-center gap-2.5 mx-auto"
+              className="px-10 py-5 rounded-2xl bg-gradient-to-r from-sky-600 via-blue-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-bold text-base shadow-xl hover:shadow-2xl hover:brightness-105 transition transform hover:-translate-y-1 flex items-center gap-2.5 mx-auto cursor-pointer"
             >
               <GraduationCap size={20} />
               <span>Enter the Academy Free →</span>

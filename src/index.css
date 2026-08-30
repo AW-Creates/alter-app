@@ -37,24 +37,28 @@
 [data-theme="light"],
 html.light,
 body.light {
-  --void: #f8fafc;
+  --void: #f4f6fb;
   --surface-1: #ffffff;
-  --surface-2: #f1f5f9;
-  --surface-3: #e2e8f0;
-  --hairline: rgba(15, 23, 42, 0.08);
-  --hairline-strong: rgba(15, 23, 42, 0.15);
-  --ink: #0f172a;
-  --ink-2: #334155;
-  --ink-3: #475569;
+  --surface-2: #edf2f9;
+  --surface-3: #e2e9f3;
+  --hairline: rgba(15, 23, 42, 0.09);
+  --hairline-strong: rgba(15, 23, 42, 0.17);
+  --ink: #0b1329;
+  --ink-2: #2d3b55;
+  --ink-3: #52637f;
 
   --advisor: #0284c7;    /* Deep Celestial Cerulean */
   --librarian: #0d9488;  /* Deep Teal */
   --tutor: #059669;      /* Deep Scholar Emerald */
-  --editor: #b45309;      /* Deep Amber / Ochre (WCAG AA Compliant 5.2:1) */
-  --roommate: #be185d;    /* Deep Vibrant Berry */
+  --editor: #b45309;     /* Deep Amber / Ochre */
+  --roommate: #be185d;   /* Deep Vibrant Berry */
 
-  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.05), 0 10px 25px -5px rgba(15, 23, 42, 0.08);
-  --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 20px 30px -10px rgba(15, 23, 42, 0.12);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.05), 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 20px 35px -10px rgba(15, 23, 42, 0.13), 0 0 0 1px rgba(15, 23, 42, 0.07);
+}
+
+[data-theme="light"] .accent-btn {
+  color: #ffffff;
 }
 
 [data-theme="light"] .topnav {
