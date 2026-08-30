@@ -640,6 +640,10 @@ export const LibrarianView: React.FC = () => {
                   <LessonVideoAudioPlayer
                     concept={selectedSourceForDeepDive.title}
                     topic={activeJourney.topic}
+                    lessonTitle={deepDiveData?.sourceTitle || selectedSourceForDeepDive.title}
+                    plainEnglishAnalogy={deepDiveData?.plainEnglishIntuition?.coreMetaphor || deepDiveData?.bigIdea}
+                    coreExplanation={deepDiveData?.mechanicsAndAnatomy?.deepExplanationMarkdown || deepDiveData?.bigIdea}
+                    socraticChallenge={deepDiveData?.socraticSparring?.challengeQuestion}
                   />
 
                   {/* LEVEL 0: PLAIN INTUITION & LAYMAN ANALOGY */}

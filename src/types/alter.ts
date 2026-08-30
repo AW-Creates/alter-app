@@ -177,6 +177,20 @@ export interface LessonVideoDeck {
   videoPlatform?: 'youtube' | 'vimeo' | 'loom' | 'interactive';
 }
 
+export interface DirectTutorAudioLesson {
+  title: string;
+  duration: string;
+  tutorName: string; // e.g. "Professor Athena"
+  tutorRole: string; // e.g. "Socratic Master Tutor"
+  keyTakeaway: string;
+  lectureTranscript: Array<{
+    id: string;
+    section: string; // e.g. "1. Intuition & Metaphor"
+    text: string;
+    timestamp: string;
+  }>;
+}
+
 export interface InteractiveLesson {
   id: string;
   concept: string;
@@ -200,8 +214,9 @@ export interface InteractiveLesson {
   commonPitfalls?: string[];
   cutListFluff?: string;
 
-  // Multimedia Additions: NotebookLM Audio & Video Deck
+  // Multimedia Additions: Direct 1-on-1 Lecture & Video Deck
   audioOverview?: DeepDiveAudioOverview;
+  directLectureAudio?: DirectTutorAudioLesson;
   videoDeck?: LessonVideoDeck;
 
   mastered?: boolean;

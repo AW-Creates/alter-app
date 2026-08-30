@@ -596,8 +596,28 @@ export const TutorView: React.FC = () => {
               <LessonVideoAudioPlayer
                 concept={activeLesson.concept}
                 topic={activeJourney.topic}
+                lessonTitle={activeLesson.lessonTitle}
+                plainEnglishAnalogy={activeLesson.plainEnglishAnalogy}
+                coreExplanation={activeLesson.coreExplanation || activeLesson.laymanExplanation}
+                socraticChallenge={activeLesson.socraticChallenge}
                 audioOverview={activeLesson.audioOverview}
+                directLectureAudio={activeLesson.directLectureAudio}
                 videoDeck={activeLesson.videoDeck}
+                onMasteryEarned={() => {
+                  updateActiveJourney((prev) => {
+                    const existing = prev.tutorData.lessons || [];
+                    const updated = existing.map((l) =>
+                      l.concept === activeLesson.concept ? { ...l, mastered: true, userScore: 96 } : l
+                    );
+                    return {
+                      ...prev,
+                      tutorData: {
+                        ...prev.tutorData,
+                        lessons: updated
+                      }
+                    };
+                  });
+                }}
               />
 
               {/* 5-Level Progress Stepper */}
