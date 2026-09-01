@@ -732,7 +732,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </h1>
 
           <p className="text-base sm:text-xl text-[var(--ink-2)] max-w-2xl mx-auto leading-relaxed font-sans">
-            Master any subject from scratch. Explore instantly in <strong>Simulated Demo Mode</strong>, or connect your free <strong>Gemini / OpenRouter API Key</strong> for live 1-on-1 AI Socratic sparring and customized curriculum generation.
+            Master any subject from scratch. Start instantly with <strong>5 free live AI lessons</strong> — no signup, no key. Connect your own <strong>Gemini / OpenRouter API Key</strong> afterward for unlimited 1-on-1 Socratic sparring and custom curriculum generation.
           </p>
 
           {/* Interactive Custom Topic Search/Creation Bar (Star of Hero) */}
@@ -791,9 +791,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           <div className="flex items-center justify-center gap-6 pt-2 text-xs font-mono text-[var(--ink-3)] flex-wrap">
             <span>✓ 100% Free Forever</span>
             <span>•</span>
-            <span>✓ Zero Server Tracking</span>
+            <span>✓ No Account Required</span>
             <span>•</span>
-            <span>✓ Demo Mode or Live AI BYOK</span>
+            <span>✓ 5 Free AI Lessons Daily, No Key Needed</span>
           </div>
 
           {/* Transparent Live AI vs Demo Mode Engine Disclosure */}
@@ -802,7 +802,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
                 <span>
-                  <strong>Demo Mode</strong> (Simulated) · <strong>Live Mode</strong> (BYO Key)
+                  <strong>Free Tier</strong> (5/day, live AI) · <strong>BYOK</strong> (unlimited) · <strong>Demo</strong> (offline fallback)
                 </span>
               </div>
               <span className="text-[10.5px] text-[var(--ink-3)] font-sans">
@@ -1588,7 +1588,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />
-                  <span><strong>100% Client-Side Sandbox:</strong> Connect free Gemini / OpenRouter API Key (or use instant Demo Mode)</span>
+                  <span><strong>Try instantly, no key needed:</strong> 5 free live AI lessons/day, or connect your own Gemini / OpenRouter key for unlimited use</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check size={16} className="text-emerald-700 dark:text-[var(--tutor)] flex-shrink-0 mt-0.5" />

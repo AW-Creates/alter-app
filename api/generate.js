@@ -1,10 +1,38 @@
 // Vercel Serverless Function: /api/generate
+import { kv } from '@vercel/kv';
+
 const DAILY_LIMIT = 5;
 const MODEL = 'gemini-2.0-flash';
 const MAX_PROMPT_CHARS = 25000;
 
-// In-memory usage map for serverless instances
+// In-memory usage map for serverless instances (fallback if KV is unprovisioned or fails)
 const memStore = new Map();
+
+async function getUsage(usageKey) {
+  try {
+    if (process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL) {
+      const val = await kv.get(usageKey);
+      if (val !== null && val !== undefined) {
+        return typeof val === 'number' ? val : parseInt(val, 10) || 0;
+      }
+    }
+  } catch (_e) {
+    // Graceful fallback to memory store
+  }
+  return memStore.get(usageKey) || 0;
+}
+
+async function incrementUsage(usageKey, count) {
+  try {
+    if (process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL) {
+      // 26-hour TTL so per-day keys clean themselves up instead of accumulating forever
+      await kv.set(usageKey, count, { ex: 60 * 60 * 26 });
+    }
+  } catch (_e) {
+    // Graceful fallback to memory store
+  }
+  memStore.set(usageKey, count);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,7 +43,7 @@ export default async function handler(req, res) {
   const today = new Date().toISOString().slice(0, 10);
   const usageKey = `${guestId}:${today}`;
 
-  const currentUsage = memStore.get(usageKey) || 0;
+  const currentUsage = await getUsage(usageKey);
   if (currentUsage >= DAILY_LIMIT) {
     return res.status(429).json({
       message: `You've used your ${DAILY_LIMIT} free requests for today. Add your own Gemini API key for unlimited access.`
@@ -103,7 +131,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    memStore.set(usageKey, currentUsage + 1);
+    await incrementUsage(usageKey, currentUsage + 1);
 
     return res.status(200).json({
       text,

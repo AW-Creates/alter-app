@@ -1,10 +1,35 @@
 // Netlify Serverless Function: /.netlify/functions/generate
+import { getStore } from '@netlify/blobs';
+
 const DAILY_LIMIT = 5;
 const MODEL = 'gemini-2.0-flash';
 const MAX_PROMPT_CHARS = 25000;
 
-// In-memory usage map for function instances
+// In-memory usage map for function instances (fallback if Blobs is unprovisioned or fails)
 const memStore = new Map();
+
+async function getUsage(usageKey) {
+  try {
+    const store = getStore('shared-api-usage');
+    const val = await store.get(usageKey);
+    if (val !== null && val !== undefined) {
+      return parseInt(val, 10) || 0;
+    }
+  } catch (_e) {
+    // Graceful fallback to memory store
+  }
+  return memStore.get(usageKey) || 0;
+}
+
+async function incrementUsage(usageKey, count) {
+  try {
+    const store = getStore('shared-api-usage');
+    await store.set(usageKey, String(count));
+  } catch (_e) {
+    // Graceful fallback to memory store
+  }
+  memStore.set(usageKey, count);
+}
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
@@ -18,7 +43,7 @@ export async function handler(event) {
   const today = new Date().toISOString().slice(0, 10);
   const usageKey = `${guestId}:${today}`;
 
-  const currentUsage = memStore.get(usageKey) || 0;
+  const currentUsage = await getUsage(usageKey);
   if (currentUsage >= DAILY_LIMIT) {
     return {
       statusCode: 429,
@@ -101,15 +126,33 @@ export async function handler(event) {
     }
 
     const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      return {
+        statusCode: response.status,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: errData?.error?.message || `Upstream Gemini API error (${response.status})`
+        })
+      };
+    }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    memStore.set(usageKey, currentUsage + 1);
+    await incrementUsage(usageKey, currentUsage + 1);
 
     return {
       statusCode: response.status,
