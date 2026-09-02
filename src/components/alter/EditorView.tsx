@@ -16,16 +16,18 @@ import { chatWithPersona, critiqueTextWithAI, hasActiveApiKey, getGenerationTier
 import { TextCritique } from '../../types/alter';
 
 export const EditorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage, editorDraftPayload } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, editorDraftPayload, setIsApiKeyModalOpen } = useJourney();
   const [draftText, setDraftText] = useState('');
   const [critiqueMode, setCritiqueMode] = useState<'logic' | 'clarity' | 'steelman' | 'first_principles'>('logic');
   const [isCritiquing, setIsCritiquing] = useState(false);
   const [critiqueResult, setCritiqueResult] = useState<TextCritique | null>(null);
+  const [critiqueError, setCritiqueError] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (editorDraftPayload && editorDraftPayload !== draftText) {
+    if (editorDraftPayload) {
       setDraftText(editorDraftPayload);
-      setCritiqueMode('first_principles');
+      setCritiqueResult(null);
+      setCritiqueError(null);
     }
   }, [editorDraftPayload]);
 
@@ -43,11 +45,21 @@ export const EditorView: React.FC = () => {
     if (!draftText.trim() || isCritiquing) return;
 
     setIsCritiquing(true);
+    setCritiqueError(null);
     try {
       const result = await critiqueTextWithAI(draftText, critiqueMode);
       setCritiqueResult(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Critique failed', err);
+      if (err?.message === 'UNCONFIGURED_SERVER_KEY' || err?.message?.includes('UNCONFIGURED_SERVER_KEY')) {
+        setCritiqueError(
+          'Shared live AI proxy is not configured on this host (missing GEMINI_SHARED_API_KEY). Add your personal Gemini or OpenRouter key in Settings for live editorial audits.'
+        );
+      } else if (err?.message?.includes('free requests')) {
+        setCritiqueError(err.message);
+      } else {
+        setCritiqueError(`Editorial audit error: ${err?.message || 'Check connection.'}`);
+      }
     } finally {
       setIsCritiquing(false);
     }
@@ -175,6 +187,22 @@ export const EditorView: React.FC = () => {
             className="draft-area"
             required
           />
+
+          {critiqueError && (
+            <div className="my-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs text-amber-500 animate-fade-in">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={15} className="mt-0.5 flex-shrink-0" />
+                <span className="leading-relaxed">{critiqueError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsApiKeyModalOpen(true)}
+                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs transition cursor-pointer flex-shrink-0 whitespace-nowrap"
+              >
+                Configure Key
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"

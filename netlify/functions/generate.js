@@ -43,17 +43,6 @@ export async function handler(event) {
   const today = new Date().toISOString().slice(0, 10);
   const usageKey = `${guestId}:${today}`;
 
-  const currentUsage = await getUsage(usageKey);
-  if (currentUsage >= DAILY_LIMIT) {
-    return {
-      statusCode: 429,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: `You've used your ${DAILY_LIMIT} free requests for today. Add your own Gemini API key for unlimited access.`
-      })
-    };
-  }
-
   const apiKey =
     process.env.GEMINI_SHARED_API_KEY ||
     process.env.GEMINI_API_KEY ||
@@ -70,8 +59,32 @@ export async function handler(event) {
     };
   }
 
+  let body = {};
   try {
-    const body = JSON.parse(event.body || '{}');
+    body = JSON.parse(event.body || '{}');
+  } catch (_e) {}
+
+  // Zero-cost health check ping (does not count towards user quota)
+  if (body?.prompt === 'health_check_ping') {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ok', configured: true })
+    };
+  }
+
+  const currentUsage = await getUsage(usageKey);
+  if (currentUsage >= DAILY_LIMIT) {
+    return {
+      statusCode: 429,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `You've used your ${DAILY_LIMIT} free requests for today. Add your own Gemini API key for unlimited access.`
+      })
+    };
+  }
+
+  try {
     const {
       prompt,
       systemInstruction,

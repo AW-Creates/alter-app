@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { exportAllData, importAllData } from '../../services/storage';
 import { downloadObsidianMarkdown, downloadNotionCSV } from '../../services/exporter';
+import { checkSharedServerHealth, isSharedServerUnconfigured } from '../../services/sharedApi';
 import { ThemeToggle } from '../common/ThemeToggle';
 
 interface NavbarProps {
@@ -72,6 +73,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isMoreMenuOpen]);
+
+  // Silently verify if server proxy has shared key configured without charging user quota
+  useEffect(() => {
+    if (!apiKey && !localStorage.getItem('alter_openrouter_api_key')) {
+      checkSharedServerHealth();
+    }
+  }, [apiKey]);
 
   const personas: { id: AlterPersona; label: string; letter: string; colorVar: string; icon: any }[] = [
     { id: 'advisor', label: 'Advisor', letter: 'A', colorVar: 'var(--advisor)', icon: GraduationCap },
@@ -210,6 +218,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
         {/* Live / Shared / Demo Mode Status Pill */}
         {(() => {
           const hasPersonalKey = Boolean(apiKey || localStorage.getItem('alter_openrouter_api_key'));
+          const isUnconfigured = isSharedServerUnconfigured();
           const usage = JSON.parse(localStorage.getItem('altor_shared_usage_cache_v1') || '{"remaining":5}');
           const remaining = typeof usage.remaining === 'number' ? usage.remaining : 5;
 
@@ -226,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
             );
           }
 
-          if (remaining > 0) {
+          if (!isUnconfigured && remaining > 0) {
             return (
               <button
                 onClick={() => setIsApiKeyModalOpen(true)}
@@ -243,7 +252,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLanding, onOpenPricing }) 
             <button
               onClick={() => setIsApiKeyModalOpen(true)}
               className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-500"
-              title="Daily free quota reached. Running in Simulated Demo Mode. Click to add your own API key."
+              title={
+                isUnconfigured
+                  ? 'Shared server key unconfigured. Running in Demo Mode. Click to add your own Gemini or OpenRouter API key.'
+                  : 'Daily free quota reached. Running in Simulated Demo Mode. Click to add your own API key.'
+              }
             >
               <Zap size={12} className="text-amber-500" />
               <span>Demo Mode</span>

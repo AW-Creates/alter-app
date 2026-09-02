@@ -29,12 +29,13 @@ import { generateCurriculumWithAI, chatWithPersona, hasActiveApiKey, getGenerati
 import { dispatchWebhookEvent } from '../../services/webhooks';
 
 export const AdvisorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona, navigateToTutorConcept, setIsOnboardingTourOpen } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, setActivePersona, navigateToTutorConcept, setIsOnboardingTourOpen, setIsApiKeyModalOpen } = useJourney();
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [showRegenConfirmModal, setShowRegenConfirmModal] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
+  const [advisorError, setAdvisorError] = useState<string | null>(null);
 
   if (!activeJourney) return null;
 
@@ -137,6 +138,7 @@ export const AdvisorView: React.FC = () => {
     setShowRegenConfirmModal(false);
     if (isRegenerating) return;
     setIsRegenerating(true);
+    setAdvisorError(null);
     try {
       const newAdvisorData = await generateCurriculumWithAI(
         activeJourney.topic,
@@ -175,8 +177,17 @@ export const AdvisorView: React.FC = () => {
           }
         };
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to regenerate syllabus', err);
+      if (err?.message === 'UNCONFIGURED_SERVER_KEY' || err?.message?.includes('UNCONFIGURED_SERVER_KEY')) {
+        setAdvisorError(
+          'Shared live AI proxy is not configured on this host (missing GEMINI_SHARED_API_KEY). Add your personal Gemini or OpenRouter key in Settings to regenerate your syllabus with live AI.'
+        );
+      } else if (err?.message?.includes('free requests')) {
+        setAdvisorError(err.message);
+      } else {
+        setAdvisorError(`Syllabus generation error: ${err?.message || 'Check connection.'}`);
+      }
     } finally {
       setIsRegenerating(false);
     }
@@ -235,6 +246,23 @@ export const AdvisorView: React.FC = () => {
             <span className="capitalize font-medium text-[var(--ink)]">{activeJourney.depth}</span>.
           </p>
         </div>
+
+        {/* Advisor Error Alert Banner */}
+        {advisorError && (
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-500 animate-fade-in">
+            <div className="flex items-start gap-2">
+              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+              <span className="leading-relaxed">{advisorError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsApiKeyModalOpen(true)}
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs transition cursor-pointer flex-shrink-0 whitespace-nowrap shadow-xs"
+            >
+              Configure Key
+            </button>
+          </div>
+        )}
 
         {/* Regeneration Safety Confirmation Modal */}
         {showRegenConfirmModal && (

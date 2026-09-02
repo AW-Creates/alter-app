@@ -43,13 +43,6 @@ export default async function handler(req, res) {
   const today = new Date().toISOString().slice(0, 10);
   const usageKey = `${guestId}:${today}`;
 
-  const currentUsage = await getUsage(usageKey);
-  if (currentUsage >= DAILY_LIMIT) {
-    return res.status(429).json({
-      message: `You've used your ${DAILY_LIMIT} free requests for today. Add your own Gemini API key for unlimited access.`
-    });
-  }
-
   const apiKey =
     process.env.GEMINI_SHARED_API_KEY ||
     process.env.GEMINI_API_KEY ||
@@ -59,6 +52,18 @@ export default async function handler(req, res) {
     return res.status(503).json({
       error: 'UNCONFIGURED_SERVER_KEY',
       message: 'No GEMINI_SHARED_API_KEY environment variable configured on server.'
+    });
+  }
+
+  // Zero-cost health check ping (does not count towards user quota)
+  if (req.body?.prompt === 'health_check_ping') {
+    return res.status(200).json({ status: 'ok', configured: true });
+  }
+
+  const currentUsage = await getUsage(usageKey);
+  if (currentUsage >= DAILY_LIMIT) {
+    return res.status(429).json({
+      message: `You've used your ${DAILY_LIMIT} free requests for today. Add your own Gemini API key for unlimited access.`
     });
   }
 

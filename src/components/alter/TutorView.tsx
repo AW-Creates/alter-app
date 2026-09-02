@@ -43,7 +43,7 @@ import { FeynmanEvaluation, QuizQuestion, InteractiveLesson, LiveClassroomTurn }
 import { LessonVideoAudioPlayer } from '../course/LessonVideoAudioPlayer';
 
 export const TutorView: React.FC = () => {
-  const { activeJourney, updateActiveJourney, addChatMessage, targetTutorConcept, sendToEditor } = useJourney();
+  const { activeJourney, updateActiveJourney, addChatMessage, targetTutorConcept, sendToEditor, setIsApiKeyModalOpen } = useJourney();
   const [tutorMode, setTutorMode] = useState<'socratic' | 'masterclass' | 'feynman' | 'quiz'>('socratic');
 
   // Masterclass lesson state
@@ -70,6 +70,7 @@ export const TutorView: React.FC = () => {
   const [isClassroomLoading, setIsClassroomLoading] = useState(false);
   const [isClassroomMastered, setIsClassroomMastered] = useState(false);
   const [activeCheckInQuestion, setActiveCheckInQuestion] = useState('');
+  const [classroomError, setClassroomError] = useState<string | null>(null);
 
   // Feynman drill state
   const [feynmanConcept, setFeynmanConcept] = useState('');
@@ -237,6 +238,8 @@ export const TutorView: React.FC = () => {
     setIsClassroomMastered(false);
     setClassroomAnswer('');
 
+    setClassroomError(null);
+
     try {
       const initialTurn = await converseSocraticLessonWithAI(
         activeJourney.topic,
@@ -256,8 +259,17 @@ export const TutorView: React.FC = () => {
         }
       ]);
       setActiveCheckInQuestion(initialTurn.checkInQuestion || '');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to init live classroom', err);
+      if (err?.message === 'UNCONFIGURED_SERVER_KEY' || err?.message?.includes('UNCONFIGURED_SERVER_KEY')) {
+        setClassroomError(
+          'Shared Live AI is not configured on this host (missing GEMINI_SHARED_API_KEY). Add your personal Gemini or OpenRouter API key in Settings to unlock real-time conversational AI lessons.'
+        );
+      } else if (err?.message?.includes('free requests')) {
+        setClassroomError(err.message);
+      } else {
+        setClassroomError(`Socratic session error: ${err?.message || 'Check connection.'}`);
+      }
     } finally {
       setIsClassroomLoading(false);
     }
@@ -368,8 +380,17 @@ export const TutorView: React.FC = () => {
           score: 95
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to converse with live tutor', err);
+      if (err?.message === 'UNCONFIGURED_SERVER_KEY' || err?.message?.includes('UNCONFIGURED_SERVER_KEY')) {
+        setClassroomError(
+          'Shared Live AI is not configured on this host (missing GEMINI_SHARED_API_KEY). Add your personal Gemini or OpenRouter API key in Settings to unlock real-time conversational AI lessons.'
+        );
+      } else if (err?.message?.includes('free requests')) {
+        setClassroomError(err.message);
+      } else {
+        setClassroomError(`Socratic session error: ${err?.message || 'Check connection.'}`);
+      }
     } finally {
       setIsClassroomLoading(false);
     }
@@ -1314,6 +1335,23 @@ export const TutorView: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Error Banner */}
+            {classroomError && (
+              <div className="mx-4 my-2 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-500 animate-fade-in">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+                  <span className="leading-relaxed">{classroomError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsApiKeyModalOpen(true)}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs transition cursor-pointer flex-shrink-0 whitespace-nowrap shadow-xs"
+                >
+                  Configure API Key
+                </button>
+              </div>
+            )}
 
             {/* Input Bar */}
             <form

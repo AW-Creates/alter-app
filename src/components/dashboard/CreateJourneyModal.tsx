@@ -28,7 +28,7 @@ import { VoiceInputButton } from '../common/VoiceInputButton';
 import { DiagnosticQuestion, DiagnosticAssessment } from '../../types/alter';
 
 export const CreateJourneyModal: React.FC = () => {
-  const { isCreateModalOpen, setIsCreateModalOpen, createJourney, updateActiveJourney, setActiveJourneyId } = useJourney();
+  const { isCreateModalOpen, setIsCreateModalOpen, createJourney, updateActiveJourney, setActiveJourneyId, setIsApiKeyModalOpen } = useJourney();
 
   // Wizard Steps: 'input' | 'grill_loading' | 'grill_quiz' | 'grill_evaluating' | 'grill_summary'
   const [modalStep, setModalStep] = useState<'input' | 'grill_loading' | 'grill_quiz' | 'grill_evaluating' | 'grill_summary'>('input');
@@ -39,6 +39,7 @@ export const CreateJourneyModal: React.FC = () => {
   const [hoursPerWeek, setHoursPerWeek] = useState(8);
   const [depth, setDepth] = useState<'foundational' | 'practitioner' | 'expert' | 'researcher'>('practitioner');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   // Diagnostic Grill State
   const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
@@ -57,6 +58,7 @@ export const CreateJourneyModal: React.FC = () => {
     setCurrentAnswerText('');
     setAssessment(null);
 
+    setModalError(null);
     try {
       const qList = await generateDiagnosticQuestionsWithAI(
         topic.trim(),
@@ -65,8 +67,17 @@ export const CreateJourneyModal: React.FC = () => {
       );
       setQuestions(qList);
       setModalStep('grill_quiz');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to generate diagnostic probes', err);
+      if (err?.message === 'UNCONFIGURED_SERVER_KEY' || err?.message?.includes('UNCONFIGURED_SERVER_KEY')) {
+        setModalError(
+          'Shared live AI proxy is unconfigured (missing GEMINI_SHARED_API_KEY). You can add your personal Gemini or OpenRouter key in Settings, or use Direct Launch for our pre-built specialized curriculum.'
+        );
+      } else if (err?.message?.includes('free requests')) {
+        setModalError(err.message);
+      } else {
+        setModalError(`Diagnostic intake error: ${err?.message || 'Check connection.'}`);
+      }
       setModalStep('input');
     }
   };
@@ -289,6 +300,22 @@ export const CreateJourneyModal: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              {modalError && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-500 animate-fade-in">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span className="leading-relaxed">{modalError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsApiKeyModalOpen(true)}
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs transition cursor-pointer flex-shrink-0 whitespace-nowrap"
+                  >
+                    Configure Key
+                  </button>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="pt-3 flex flex-col sm:flex-row gap-2.5">

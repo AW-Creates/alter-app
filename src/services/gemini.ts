@@ -20,8 +20,10 @@ import {
   callSharedProxy,
   getStoredSharedUsage,
   updateStoredSharedUsage,
+  isSharedServerUnconfigured,
   DEFAULT_DAILY_LIMIT
 } from './sharedApi';
+import { getCurriculumForTopic } from './simulatedCurricula';
 
 const STORAGE_API_KEY = 'alter_gemini_api_key';
 
@@ -48,14 +50,27 @@ export const getSharedRemainingCount = (): number => {
 
 export const hasActiveApiKey = (): boolean => {
   if (hasPersonalApiKey()) return true;
-  return getSharedRemainingCount() > 0;
+  return !isSharedServerUnconfigured() && getSharedRemainingCount() > 0;
 };
 
 export const getGenerationTier = (): 'personal' | 'shared' | 'simulated' => {
   if (hasPersonalApiKey()) return 'personal';
-  if (getSharedRemainingCount() > 0) return 'shared';
+  if (!isSharedServerUnconfigured() && getSharedRemainingCount() > 0) return 'shared';
   return 'simulated';
 };
+
+/**
+ * Checks whether an error represents a real infrastructure or quota issue that should
+ * be propagated to the UI rather than silently swallowed into demo mode.
+ */
+export function shouldPropagateError(err: any): boolean {
+  const msg = err?.message || '';
+  return (
+    msg.includes('free requests') ||
+    msg === 'UNCONFIGURED_SERVER_KEY' ||
+    msg.includes('UNCONFIGURED_SERVER_KEY')
+  );
+}
 
 const extractJsonFromResponse = <T>(text: string): T => {
   try {
@@ -237,7 +252,7 @@ export async function chatWithPersona(
     );
     if (text) return text;
   } catch (err: any) {
-    if (err.message?.includes('free requests')) {
+    if (shouldPropagateError(err)) {
       throw err; // Honest quota limit error so UI can display friendly modal/warning
     }
   }
@@ -272,7 +287,7 @@ export async function generateCurriculumWithAI(
         true
       );
     } catch (err: any) {
-      if (err.message?.includes('free requests')) throw err;
+      if (shouldPropagateError(err)) throw err;
       // Fallback without search grounding if quota/search issues occur
       raw = await callGemini(prompt, 'You are an elite academic curriculum architect and dean.', 'gemini-2.0-flash', false);
     }
@@ -311,7 +326,7 @@ export async function generateCurriculumWithAI(
       chatHistory: []
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedCurriculum(topic, destination, diagnostic);
   }
 }
@@ -379,7 +394,7 @@ export async function generateSourcesWithAI(
         }
       }
     } catch (err: any) {
-      if (err.message?.includes('free requests')) throw err;
+      if (shouldPropagateError(err)) throw err;
     }
 
     // 2. Direct Gemini Search Grounding fallback
@@ -399,7 +414,7 @@ export async function generateSourcesWithAI(
       status: 'unread'
     }));
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedSources(topic);
   }
 }
@@ -426,7 +441,7 @@ export async function evaluateFeynmanWithAI(
       date: new Date().toLocaleDateString()
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedFeynman(concept, userExplanation);
   }
 }
@@ -453,7 +468,7 @@ export async function generateQuizWithAI(
       date: new Date().toLocaleDateString()
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedQuiz(topic, specificFocus);
   }
 }
@@ -487,7 +502,7 @@ export async function critiqueTextWithAI(
       date: new Date().toLocaleDateString()
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedCritique(draft, mode);
   }
 }
@@ -509,7 +524,7 @@ export async function generateCollisionWithAI(
       discussionStarters: parsed.discussionStarters || []
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedCollision(topic, candidateDomain);
   }
 }
@@ -588,7 +603,7 @@ export async function runAgentLoop(task: string, maxIterations = 5) {
       createdAt: new Date().toLocaleDateString()
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedLesson(topic, concept);
   }
 }
@@ -611,7 +626,7 @@ export async function evaluateLessonResponseWithAI(
       coachingVerdict: parsed.coachingVerdict || 'Review coaching feedback.'
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     
     // Dynamic Simulated Evaluation: Strict Grading
     const words = studentResponse.trim().split(/\s+/).filter(Boolean);
@@ -661,7 +676,7 @@ export async function generateDiagnosticQuestionsWithAI(
       }));
     }
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
   }
 
   return getSimulatedDiagnosticQuestions(topic, destination);
@@ -692,7 +707,7 @@ export async function conductAdvisorIntakeTurnWithAI(
       turnStage: parsed.turnStage || 'conversation'
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedAdvisorIntakeTurn(topic, history, userResponse);
   }
 }
@@ -743,7 +758,7 @@ export async function evaluateDiagnosticAnswersWithAI(
       ]
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedDiagnosticEvaluation(topic, qaPairs);
   }
 }
@@ -774,7 +789,7 @@ export async function converseSocraticLessonWithAI(
       isConceptMastered: parsed.isConceptMastered ?? false
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedSocraticTurn(concept, currentStage, studentInput);
   }
 }
@@ -841,7 +856,7 @@ export async function synthesizeSourceWithAI(
       }
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedSourceDeepDive(sourceTitle, author, topic);
   }
 }
@@ -877,7 +892,7 @@ export async function triageStuckStudentWithAI(
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
   } catch (err: any) {
-    if (err.message?.includes('free requests')) throw err;
+    if (shouldPropagateError(err)) throw err;
     return getSimulatedStuckTriage(topic, blockerType, blockerDetails);
   }
 }
@@ -1412,64 +1427,72 @@ function getSimulatedSocraticTurn(
 } {
   const safeConcept = (concept || '').trim() || 'Core Principles';
 
+  // Turn 1: Tutor TEACHES first before asking anything!
   if (!studentInput || studentInput.trim().length === 0) {
     return {
-      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${safeConcept}**! Let's start from first principles.\n\nImagine you are constructing a high-performance system. Before you focus on cosmetic details, you must identify the primary invariant: the single rule that guarantees reliability even when errors occur.\n\nIn **${safeConcept}**, master practitioners build tight feedback loops so they observe state before executing actions.`,
-      stageName: 'Level 1: Core Intuition & Invariant Check',
-      checkInQuestion: `In your own words: What is the single biggest misconception beginners have about ${safeConcept}, and what core mechanism prevents that failure?`,
+      tutorSpeech: `Welcome to our live 1-on-1 Socratic session on **${safeConcept}**! Let's build your understanding step-by-step from zero to hero.\n\n### Core Intuition & The Big Picture\nBefore diving into complex details, here is the fundamental concept:\nThink of **${safeConcept}** like laying the foundation of a building. Beginners often rush to put up walls and paint the roof before the concrete is set, which leads to fragile results and costly re-work.\n\n### How It Works in Practice\nMaster practitioners follow three core rules when applying **${safeConcept}**:\n1. **Isolate the Foundation**: Understand the single core principle that drives 80% of the results before worrying about cosmetic details.\n2. **Sequence the Steps**: Build step-by-step in logical order so each milestone validates the previous one.\n3. **Protect Your Downside**: Have clear guardrails and checklists in place so unexpected surprises don't derail your progress.`,
+      stageName: 'Level 1: Core Intuition & Foundational Teaching',
+      checkInQuestion: `To make sure this core intuition makes sense before we dive into hands-on mechanics: In your own words, how would you describe why ${safeConcept} is essential for your goal, or what part of this explanation stands out most to you?`,
       isConceptMastered: false
     };
   }
 
   const words = studentInput.trim().split(/\s+/).filter(Boolean);
-  const isTooBrief = words.length < 8;
-  const isVague = studentInput.toLowerCase().includes('idk') ||
+  const isTooBrief = words.length < 5;
+  const isVague =
+    studentInput.toLowerCase().includes('idk') ||
     studentInput.toLowerCase().includes('dunno') ||
     studentInput.toLowerCase().includes('not sure') ||
-    words.length < 4;
+    words.length < 3;
 
   if (isTooBrief || isVague) {
     return {
-      tutorSpeech: `That's a start, but in Socratic dialogue, we need to push past surface keywords.\n\nTo truly grasp **${safeConcept}**, you need to articulate the *why*: what specific steps or safeguards happen under the hood? If you don't define the boundary conditions, the system will fail in production.`,
+      tutorSpeech: `That's a good initial thought, but let's explore it a little deeper together.\n\nWhen we look at **${safeConcept}**, the key is connecting the *idea* to the *action*: What is the first concrete step or rule you need to keep in mind so you don't get stuck or overwhelmed?`,
       stageName: 'Level 1: Deepen First-Principles Breakdown',
-      tutorFeedbackOnStudent: `⚠️ Your answer is too brief or ambiguous to demonstrate applied mastery. Articulate the step-by-step logic.`,
-      checkInQuestion: `Let's refine: Imagine you are explaining ${safeConcept} to a junior builder. What concrete mechanism or invariant must they enforce to prevent failure?`,
+      tutorFeedbackOnStudent: `💡 You're on the right track! Try describing what happens in practice when you apply this concept.`,
+      checkInQuestion: `If you were explaining this to someone starting from scratch today, what is the single most important rule or takeaway you'd tell them about ${safeConcept}?`,
       isConceptMastered: false
     };
   }
 
-  const isLevel2OrHigher = currentStage.includes('Level 2') || currentStage.includes('Level 3') || currentStage.includes('Execution');
+  const isLevel2OrHigher =
+    currentStage.includes('Level 2') ||
+    currentStage.includes('Level 3') ||
+    currentStage.includes('Execution') ||
+    currentStage.includes('Application');
 
   if (!isLevel2OrHigher) {
     return {
-      tutorSpeech: `🎯 **Solid deduction!** You identified the core dynamic: focusing on explicit state boundaries rather than superficial syntax.\n\nNow let's elevate to **Level 2: Practical Mechanics & Edge-Case Sparring**.\n\nIn real-world deployment, systems rarely operate on the clean happy path. Downstream services time out, inputs arrive malformed, and resource constraints emerge. How your system handles those edge cases defines whether it is production-grade.`,
-      stageName: 'Level 2: Practical Mechanics & Edge-Case Sparring',
-      tutorFeedbackOnStudent: `Strong conceptual intuition! You clearly addressed the foundational problem.`,
-      checkInQuestion: `Scenario Dilemma: If an unexpected failure or timeout occurs while executing ${safeConcept}, what exact fallback path or recovery step should your loop execute to heal without crashing?`,
+      tutorSpeech: `🎯 **Excellent breakdown!** You hit the core insight right on the head: focusing on solid foundational principles and thoughtful sequencing rather than surface-level noise.\n\nNow let's elevate to **Level 2: Practical Application & Scenario Sparring**.\n\nIn real life, things don't always follow the textbook. You'll encounter unexpected roadblocks, conflicting advice, or sudden curveballs. How you navigate those real-world trade-offs is what separates a novice from an autonomous master.`,
+      stageName: 'Level 2: Practical Application & Scenario Sparring',
+      tutorFeedbackOnStudent: `Great job! You clearly articulated the core intuition behind ${safeConcept}.`,
+      checkInQuestion: `Real-World Dilemma: Imagine you are executing ${safeConcept} and hit a sudden obstacle where your first attempt doesn't produce the expected result. What step or checklist would you review first to diagnose the problem?`,
       isConceptMastered: false
     };
   }
 
   // Level 2+ Substantive Answer -> Mastery Awarded
   return {
-    tutorSpeech: `🏆 **Mastery Verified!** Outstanding first-principles deduction.\n\nYou correctly identified both the core mechanism and the self-healing recovery boundaries necessary for ${safeConcept}.\n\nYou have unlocked verified concept mastery and are ready to apply this directly in your milestone project!`,
+    tutorSpeech: `🏆 **Concept Mastery Verified!** Outstanding deduction.\n\nYou have demonstrated a clear, practical grasp of **${safeConcept}** — both the foundational intuition and how to handle real-world scenarios and trade-offs.\n\nYou have unlocked verified concept mastery for this module and are ready to apply it directly in your project deliverable!`,
     stageName: 'Level 3: Verified Concept Mastery',
-    tutorFeedbackOnStudent: `Outstanding applied reasoning! You proved you understand both the foundational invariants and real-world failure recovery.`,
-    checkInQuestion: `You've mastered this concept! Open your code scratchpad or continue to your milestone project deliverable.`,
+    tutorFeedbackOnStudent: `Outstanding reasoning! You proved you understand both the underlying principles and practical execution.`,
+    checkInQuestion: `You've mastered this concept! You can now continue to the next lesson or build your milestone project deliverable.`,
     isConceptMastered: true
   };
 }
 
 export function getSimulatedCurriculum(topic: string, destination?: string, diagnostic?: DiagnosticAssessment): AdvisorData {
   const t = topic.toLowerCase();
-  const isAgency = t.includes('agency') || t.includes('agent agency') || t.includes('ai agency') || t.includes('service business');
-  const isDigitalProduct = t.includes('digital product') || t.includes('saas') || t.includes('micro-saas') || t.includes('web app');
-  const isEBook = t.includes('e-book') || t.includes('ebook') || t.includes('book') || t.includes('write') || t.includes('publish');
-  const isGardening = t.includes('garden') || t.includes('plant') || t.includes('herb') || t.includes('hydroponic') || t.includes('soil');
-  const isSourdough = t.includes('sourdough') || t.includes('bread') || t.includes('baking') || t.includes('ferment');
-  const isSpeaking = t.includes('speak') || t.includes('presentation') || t.includes('persuasion') || t.includes('pitch');
-  const isTrading = t.includes('trading') || t.includes('futures') || t.includes('stock') || t.includes('invest') || t.includes('crypto');
-  const isAgent = t.includes('agent') || t.includes('autonomous');
+  const isFinanceOrCredit =
+    t.includes('credit') ||
+    t.includes('funding') ||
+    t.includes('capital') ||
+    t.includes('loan') ||
+    t.includes('finance') ||
+    t.includes('banking') ||
+    t.includes('cash flow');
+  const isAgency = !isFinanceOrCredit && (t.includes('agency') || t.includes('agent agency') || t.includes('ai agency') || t.includes('service business'));
+  const isDigitalProduct = !isFinanceOrCredit && (t.includes('digital product') || t.includes('saas') || t.includes('micro-saas') || t.includes('web app'));
 
   if (isAgency) {
     return {
@@ -1807,177 +1830,102 @@ export function getSimulatedCurriculum(topic: string, destination?: string, diag
     };
   }
 
-  // Universal Default for Any Topic
-  return {
-    overview: `A razor-sharp 6-week immersion roadmap engineered to take you from foundational concepts to building real-world proof-of-work in ${topic}.`,
-    estimatedWeeks: 6,
-    phases: [
-      {
-        id: `phase-1-${Date.now()}`,
-        phaseNumber: 1,
-        title: 'Core Fundamentals & Starter Project Setup',
-        duration: 'Weeks 1-2',
-        objective: 'Master the essential principles and build your initial working draft or prototype.',
-        tangibleAsset: 'A verified starter project blueprint and validated deliverable draft.',
-        coreConcepts: [
-          `Foundational Principles & Setup of ${topic}`,
-          `Practical Execution & Core Workflow Habits`,
-          `Initial Milestone Project Build & Quality Check`
-        ],
-        courses: [
-          {
-            id: `c-1-1-${Date.now()}`,
-            courseNumber: '1.1',
-            title: `What Is ${topic} & Core Principles (Zero Jargon)`,
-            description: `Understand the foundational intuition, why beginners get confused, and the 3 core pillars of ${topic}.`,
-            estimatedMinutes: 10,
-            completed: false
-          },
-          {
-            id: `c-1-2-${Date.now()}`,
-            courseNumber: '1.2',
-            title: `Step-by-Step Setup & Essential Execution Tools`,
-            description: `Set up your core workspace, gather your tools, and master the initial repeatable routine.`,
-            estimatedMinutes: 12,
-            completed: false
-          },
-          {
-            id: `c-1-3-${Date.now()}`,
-            courseNumber: '1.3',
-            title: `Building Your Phase 1 Starter Deliverable`,
-            description: `Apply your learnings to create your first tangible project asset and verify it against quality standards.`,
-            estimatedMinutes: 15,
-            completed: false
-          }
-        ],
-        checkpoint: {
-          id: `cp-1`,
-          title: 'Phase 1 Milestone Deliverable',
-          description: 'Build and validate your first working milestone project draft.',
-          tangibleAsset: 'Validated Phase 1 Milestone Project Draft',
-          completed: false
-        },
-        completed: false
-      },
-      {
-        id: `phase-2-${Date.now()}`,
-        phaseNumber: 2,
-        title: 'Intermediate Execution & Real-World System Build',
-        duration: 'Weeks 3-4',
-        objective: 'Deepen your mastery, resolve edge-case mistakes, and complete your core system build.',
-        tangibleAsset: 'A completed, functioning system build or deep practical case study.',
-        coreConcepts: [
-          `Advanced Mechanics & High-Leverage Techniques`,
-          `Troubleshooting Common Traps & Failure Modes`,
-          `System Integration & Real-World Testing`
-        ],
-        courses: [
-          {
-            id: `c-2-1-${Date.now()}`,
-            courseNumber: '2.1',
-            title: `Advanced Mechanics & High-Leverage Techniques`,
-            description: `Explore how top 1% masters achieve consistent high performance and speed.`,
-            estimatedMinutes: 12,
-            completed: false
-          },
-          {
-            id: `c-2-2-${Date.now()}`,
-            courseNumber: '2.2',
-            title: `Troubleshooting Common Traps & Failure Modes`,
-            description: `Learn the top 5 mistakes beginners make and exact protocols to diagnose and fix them.`,
-            estimatedMinutes: 12,
-            completed: false
-          },
-          {
-            id: `c-2-3-${Date.now()}`,
-            courseNumber: '2.3',
-            title: `System Integration & Practical Stress-Testing`,
-            description: `Test your project under realistic conditions to ensure durability and quality.`,
-            estimatedMinutes: 15,
-            completed: false
-          }
-        ],
-        checkpoint: {
-          id: `cp-2`,
-          title: 'Phase 2 Milestone Deliverable',
-          description: 'Build and test your complete intermediate system or second working project deliverable.',
-          tangibleAsset: 'Complete Intermediate System Project Deployed/Verified',
-          completed: false
-        },
-        completed: false
-      },
-      {
-        id: `phase-3-${Date.now()}`,
-        phaseNumber: 3,
-        title: 'Polish, Launch & Real-World Mastery Showcase',
-        duration: 'Weeks 5-6',
-        objective: `Achieve full mastery and launch your public capstone project in ${topic}.`,
-        tangibleAsset: 'A published public portfolio masterwork (live project, published work, or client case study).',
-        coreConcepts: [
-          `Refinement, Polish & Quality Assurance`,
-          `Public Launch, Publishing & Distribution`,
-          `Long-Term Maintenance & Continuous Growth`
-        ],
-        courses: [
-          {
-            id: `c-3-1-${Date.now()}`,
-            courseNumber: '3.1',
-            title: `Refinement, Polish & Quality Assurance`,
-            description: `Apply final professional polish to your project and verify all requirements.`,
-            estimatedMinutes: 10,
-            completed: false
-          },
-          {
-            id: `c-3-2-${Date.now()}`,
-            courseNumber: '3.2',
-            title: `Public Launch, Publishing & Sharing Your Work`,
-            description: `Step-by-step guide to publishing, sharing, or deploying your project for real-world audiences.`,
-            estimatedMinutes: 12,
-            completed: false
-          },
-          {
-            id: `c-3-3-${Date.now()}`,
-            courseNumber: '3.3',
-            title: `Long-Term Mastery & Next-Level Growth`,
-            description: `How to continue compounding your knowledge and scaling your results autonomously.`,
-            estimatedMinutes: 10,
-            completed: false
-          }
-        ],
-        checkpoint: {
-          id: `cp-3`,
-          title: 'Capstone Masterwork Artifact',
-          description: 'Publish a tangible, public asset or conduct final peer critique.',
-          tangibleAsset: 'Public Masterwork Artifact & Portfolio Showcase',
-          completed: false
-        },
-        completed: false
-      }
-    ],
-    cutList: [
-      {
-        id: 'cut-1',
-        topic: 'Introductory YouTube "Tutorial Hell" & 10-hour passive video courses',
-        reasonToSkip: 'Passive watching creates false competence without building cognitive retention or tactile muscle memory.',
-        alternativeFocus: 'Read concise masterclasses and build tangible milestone project deliverables immediately.'
-      },
-      {
-        id: 'cut-2',
-        topic: 'Premature polish and non-essential cosmetic customization',
-        reasonToSkip: 'Distracts from mastering core fundamentals and delays shipping real progress.',
-        alternativeFocus: 'Stick strictly to proven practical frameworks and core value deliverables.'
-      }
-    ],
-    chatHistory: []
-  };
+  return getCurriculumForTopic(topic, destination, diagnostic);
 }
 
 export function getSimulatedSources(topic: string): CuratedSource[] {
   const t = topic.toLowerCase();
-  const isAgency = t.includes('agency') || t.includes('agent agency') || t.includes('ai agency');
+  const isFinanceOrCredit =
+    t.includes('credit') ||
+    t.includes('funding') ||
+    t.includes('capital') ||
+    t.includes('loan') ||
+    t.includes('finance') ||
+    t.includes('banking') ||
+    t.includes('cash flow');
+  const isTrading =
+    (t.includes('trading') ||
+      t.includes('futures') ||
+      t.includes('stock') ||
+      t.includes('invest') ||
+      t.includes('crypto') ||
+      t.includes('forex') ||
+      t.includes('options')) &&
+    !isFinanceOrCredit;
+  const isAgency = !isFinanceOrCredit && (t.includes('agency') || t.includes('agent agency') || t.includes('ai agency'));
   const isEBook = t.includes('e-book') || t.includes('ebook') || t.includes('book');
   const isGardening = t.includes('garden') || t.includes('plant') || t.includes('herb');
   const isSourdough = t.includes('sourdough') || t.includes('bread');
+
+  if (isFinanceOrCredit) {
+    return [
+      {
+        id: `src-1`,
+        type: 'book',
+        title: 'Business Credit Decoded: Building Corporate Credit Without Personal Guarantees',
+        authorOrCreator: 'Commercial Credit Institute',
+        signalScore: 10,
+        whyEssential: 'The definitive blueprint for establishing Tier 1 commercial tradelines, Dun & Bradstreet Paydex ratings, and separation of corporate liability.',
+        keyTakeaway: 'Structure your entity compliance optics first before submitting applications to Tier 1 bank underwriting bots.',
+        status: 'reading'
+      },
+      {
+        id: `src-2`,
+        type: 'paper',
+        title: 'Bank Underwriting Protocols & Commercial Lending Risk Scoring',
+        authorOrCreator: 'Risk Analysis Review',
+        signalScore: 10,
+        whyEssential: 'Deconstructs how underwriting algorithms score NAICS risk codes, personal credit inquiry velocity, and debt service ratios.',
+        keyTakeaway: 'Inquiry sequencing across multiple bureaus within 24 hours prevents cross-reporting denials.',
+        status: 'unread'
+      },
+      {
+        id: `src-3`,
+        type: 'case_study',
+        title: 'The 0% Capital Playbook: Sequencing Revolving Business Lines for Operating Cash Flow',
+        authorOrCreator: 'Corporate Finance Practitioners',
+        signalScore: 9,
+        whyEssential: 'Field-tested case studies on securing $100K+ in 0% APR business lines and converting to working capital at minimal fee overhead.',
+        keyTakeaway: 'Maintain a minimum 1.5x Debt Service Coverage Ratio (DSCR) so operating profits cover debt amortizations effortlessly.',
+        status: 'unread'
+      }
+    ];
+  }
+
+  if (isTrading) {
+    return [
+      {
+        id: `src-1`,
+        type: 'book',
+        title: 'Trading in the Zone: Master the Market with Confidence, Discipline and a Winning Attitude',
+        authorOrCreator: 'Mark Douglas',
+        signalScore: 10,
+        whyEssential: 'The classic foundational masterwork on probabilistic thinking, emotional discipline, and risk acceptance in financial markets.',
+        keyTakeaway: 'Accept the risk of every trade before entering; edge plays out over hundreds of executions, not individual trades.',
+        status: 'reading'
+      },
+      {
+        id: `src-2`,
+        type: 'book',
+        title: 'One Good Trade: Inside the Highly Competitive World of Proprietary Trading',
+        authorOrCreator: 'Mike Bellafiore (SMB Capital)',
+        signalScore: 10,
+        whyEssential: 'Practical institutional rules for structuring daily pre-market preparation, executing high-probability setups, and auditing journals.',
+        keyTakeaway: 'Focus on executing "One Good Trade" that follows your rules, regardless of whether that specific trade makes or loses money.',
+        status: 'unread'
+      },
+      {
+        id: `src-3`,
+        type: 'paper',
+        title: 'Market Structure, Liquidity Provision and the Bid-Ask Spread',
+        authorOrCreator: 'Journal of Financial Economics',
+        signalScore: 9,
+        whyEssential: 'Demystifies how market makers provide liquidity, why resting limit orders matter, and where institutional order flow clusters.',
+        keyTakeaway: 'Trade where market makers absorb liquidity at key structural retests rather than chasing momentum indicators.',
+        status: 'unread'
+      }
+    ];
+  }
 
   if (isAgency) {
     return [
